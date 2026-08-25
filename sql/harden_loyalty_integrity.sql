@@ -81,11 +81,12 @@ begin
     alter table public.customers disable trigger tr_customers_guard_points;
   end if;
 
+  -- ::int จำเป็น — count(*) คืน bigint ทำให้หา fn_rfm_segment(int, timestamptz) ไม่เจอ
   update public.customers c
-  set points_balance  = coalesce(s.pts, 0),
-      visit_count     = coalesce(s.visits, 0),
+  set points_balance  = coalesce(s.pts, 0)::int,
+      visit_count     = coalesce(s.visits, 0)::int,
       last_visited_at = s.last_at,
-      rfm_segment     = public.fn_rfm_segment(coalesce(s.visits, 0), s.last_at)
+      rfm_segment     = public.fn_rfm_segment(coalesce(s.visits, 0)::int, s.last_at)
   from (
     select
       customer_id,
