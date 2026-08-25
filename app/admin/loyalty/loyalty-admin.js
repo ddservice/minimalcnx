@@ -12,7 +12,7 @@ import {
   toggleRewardAction,
 } from './actions';
 import { REWARD_ICON_OPTIONS } from '../../../lib/loyalty-rewards';
-import { sanitizeNumberString } from '../../../lib/format';
+import NumberInput from '../../../components/number-input';
 
 function cleanStaffCode(v) {
   return String(v || '').toUpperCase().replace(/[^A-Z0-9_-]/g, '');
@@ -513,11 +513,11 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
               </label>
               <label style={fieldLbl}>
                 แต้ม
-                <input
+                <NumberInput
                   className="input"
-                  inputMode="numeric"
+                  mode="numeric"
                   value={rewardForm.points}
-                  onChange={(e) => setRewardForm((f) => ({ ...f, points: sanitizeNumberString(e.target.value) }))}
+                  onChange={(v) => setRewardForm((f) => ({ ...f, points: v }))}
                   required
                 />
               </label>
@@ -535,11 +535,11 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
               </label>
               <label style={fieldLbl}>
                 ลำดับ
-                <input
+                <NumberInput
                   className="input"
-                  inputMode="numeric"
+                  mode="numeric"
                   value={rewardForm.sort_order}
-                  onChange={(e) => setRewardForm((f) => ({ ...f, sort_order: sanitizeNumberString(e.target.value) }))}
+                  onChange={(v) => setRewardForm((f) => ({ ...f, sort_order: v }))}
                 />
               </label>
             </div>

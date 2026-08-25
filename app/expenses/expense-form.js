@@ -6,7 +6,7 @@ import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../../lib/expense-categorie
 import { SUPPLIERS_ITEMS } from '../../lib/suppliers';
 import { BAKERY_DEFAULTS } from '../../lib/bakery';
 import { BASIC_UNITS } from '../../lib/units';
-import { sanitizeNumberString } from '../../lib/format';
+import NumberInput from '../../components/number-input';
 import DateField from '../../components/date-field';
 import { saveExpensesAction } from './actions';
 
@@ -177,7 +177,7 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
             )}
             <div>
               <label style={lbl}>จำนวน</label>
-              <input type="number" min="0" step="any" value={r.quantity} onChange={(e) => setRow(i, 'quantity', sanitizeNumberString(e.target.value))} style={inp} />
+              <NumberInput value={r.quantity} onChange={(v) => setRow(i, 'quantity', v)} style={inp} />
             </div>
             <div>
               <label style={lbl}>หน่วย</label>
@@ -185,7 +185,7 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
             </div>
             <div>
               <label style={lbl}>ราคา/หน่วย (฿) *</label>
-              <input type="number" min="0" step="any" value={r.unit_price} onChange={(e) => setRow(i, 'unit_price', sanitizeNumberString(e.target.value))} placeholder="0" style={inp} />
+              <NumberInput value={r.unit_price} onChange={(v) => setRow(i, 'unit_price', v)} placeholder="0" style={inp} />
             </div>
             <div>
               <label style={lbl}>ชำระด้วย</label>

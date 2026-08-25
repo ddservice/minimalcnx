@@ -3,7 +3,8 @@ import Icon from '../../components/icon';
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { sanitizeNumberString } from '../../lib/format';
+import { digitsOnly } from '../../lib/format';
+import NumberInput from '../../components/number-input';
 import { saveBizInfo } from './actions';
 import AccessBanner from '../../components/access-banner';
 
@@ -42,11 +43,11 @@ export default function SettingsForm({ biz, canEdit = true }) {
           <div className="field"><label>ชื่อบริษัท / ร้านค้า</label><input className="input" value={f.name} onChange={set('name')} placeholder="เช่น ห้างหุ้นส่วนจำกัด มินิมอลคอฟฟี่" /></div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
             <div className="field"><label>เบอร์โทรศัพท์</label><input className="input" value={f.phone} onChange={set('phone')} placeholder="0xx-xxx-xxxx" /></div>
-            <div className="field"><label>เลขผู้เสียภาษี (13 หลัก)</label><input className="input" value={f.tax_id} onChange={set('tax_id')} maxLength={13} placeholder="0000000000000" /></div>
+            <div className="field"><label>เลขผู้เสียภาษี (13 หลัก)</label><input className="input" inputMode="numeric" value={f.tax_id} onChange={(e) => setF({ ...f, tax_id: digitsOnly(e.target.value) })} maxLength={13} placeholder="0000000000000" /></div>
           </div>
           <div className="field"><label>ที่อยู่</label><input className="input" value={f.address} onChange={set('address')} placeholder="ที่อยู่เต็ม" /></div>
           <div className="field"><label>URL โลโก้ (ลิงก์รูปภาพ)</label><input className="input" value={f.logo_url} onChange={set('logo_url')} placeholder="https://..." /></div>
-          <div className="field"><label>ต้นทุนแก้วฟรี/แก้ว (บาท) — ค่าตั้งต้นหน้ายอดขาย</label><input className="input" type="number" min="0" step="any" value={f.free_cup_cost} onChange={(e) => setF({ ...f, free_cup_cost: sanitizeNumberString(e.target.value) })} placeholder="55" /></div>
+          <div className="field"><label>ต้นทุนแก้วฟรี/แก้ว (บาท) — ค่าตั้งต้นหน้ายอดขาย</label><NumberInput className="input" value={f.free_cup_cost} onChange={(v) => setF({ ...f, free_cup_cost: v })} placeholder="55" /></div>
         </div>
 
         {canEdit && (

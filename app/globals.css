@@ -90,6 +90,11 @@ body {
 
 input, select, textarea { font-family: inherit; }
 input[type="checkbox"] { accent-color: var(--color-primary); width: 16px; height: 16px; }
+/* ตาข่ายกันพลาด: ช่องตัวเลข/เงินทุกช่องควรใช้ <NumberInput> (components/number-input.js) ซึ่งเป็น type="text"
+   อยู่แล้ว — แต่ถ้ามี type="number" หลุดเข้ามาใหม่ ให้ซ่อนปุ่มเพิ่ม/ลดไว้ก่อน กันกดพลาด/หมุนลูกกลิ้งเมาส์ */
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 /* ================================================================
    APP SHELL — sidebar (desktop rail / mobile drawer) + main content

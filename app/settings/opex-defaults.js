@@ -4,7 +4,7 @@ import Icon from '../../components/icon';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { OPEX_OPERATING, OPEX_STAFF } from '../../lib/opex';
-import { sanitizeNumberString } from '../../lib/format';
+import NumberInput from '../../components/number-input';
 import { saveOpexDefaults } from './actions';
 
 const ITEMS = [...OPEX_OPERATING.items, ...OPEX_STAFF.fixed];
@@ -37,8 +37,8 @@ export default function OpexDefaults({ defaults }) {
           {ITEMS.map((it) => (
             <div className="field" key={it.key}>
               <label>{it.label}</label>
-              <input className="input" type="number" min="0" step="any" value={f[it.key]}
-                onChange={(e) => setF({ ...f, [it.key]: sanitizeNumberString(e.target.value) })} placeholder="0" />
+              <NumberInput className="input" value={f[it.key]}
+                onChange={(v) => setF({ ...f, [it.key]: v })} placeholder="0" />
             </div>
           ))}
         </div>

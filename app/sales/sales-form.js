@@ -4,9 +4,9 @@ import Icon from '../../components/icon';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { gpNet, computeNetRevenue } from '../../lib/gp';
-import { sanitizeNumberString } from '../../lib/format';
 import { createClient } from '../../lib/supabase/client';
 import DateField from '../../components/date-field';
+import NumberInput from '../../components/number-input';
 import AccessBanner from '../../components/access-banner';
 import { ACCESS_HINT } from '../../lib/perms';
 import { saveSalesAction, deleteSalesAction } from './actions';
@@ -48,7 +48,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
   const [evidenceUrl, setEvidenceUrl] = useState(existing?.free_cup_evidence_url || '');
   const [evidenceStatus, setEvidenceStatus] = useState(null); // { text, type }
 
-  const set = (k) => (e) => setF({ ...f, [k]: sanitizeNumberString(e.target.value) });
+  const set = (k) => (v) => setF({ ...f, [k]: v });
 
   // แนบหลักฐานแก้วฟรี (แคปจาก LINE OA / POS) → Supabase Storage bucket 'evidence'
   async function onEvidenceFile(e) {
@@ -229,7 +229,7 @@ function Field({ label, value, onChange }) {
   return (
     <div>
       <label style={lbl}>{label}</label>
-      <input type="number" min="0" step="any" value={value} onChange={onChange} placeholder="0" style={inp} />
+      <NumberInput value={value} onChange={onChange} placeholder="0" style={inp} />
     </div>
   );
 }
@@ -239,7 +239,7 @@ function FieldNet({ label, value, onChange, net }) {
   return (
     <div>
       <label style={lbl}>{label}</label>
-      <input type="number" min="0" step="any" value={value} onChange={onChange} placeholder="0" style={inp} />
+      <NumberInput value={value} onChange={onChange} placeholder="0" style={inp} />
       {raw > 0 && (
         <div style={{ fontSize: 11, color: 'var(--success, #1e7e34)', marginTop: 3 }}>
           หลังหัก GP: {Number(net).toLocaleString('th-TH', { minimumFractionDigits: 2 })} ฿

@@ -7,6 +7,7 @@ import { sanitizeNumberString, digitsOnly } from '../../lib/format';
 import { suggestPointsFromSpend } from '../../lib/loyalty-rewards';
 import { PRIVACY_CONSENT_TEXT } from '../../lib/privacy';
 import AccessBanner from '../../components/access-banner';
+import NumberInput from '../../components/number-input';
 
 const RFM_COLOR = {
   Champions: '#16a34a',
@@ -453,13 +454,11 @@ export default function LoyaltyClient({
               <form onSubmit={handleIssuePoints} style={{ display: 'grid', gap: 12 }}>
                 <div>
                   <label style={lbl}>ยอดซื้อสินค้า (บาท)</label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
+                  <NumberInput
                     className="input"
                     placeholder="เช่น 150"
                     value={spendAmount}
-                    onChange={(e) => handleSpendChange(e.target.value)}
+                    onChange={handleSpendChange}
                   />
                   <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
                     ทุก 50 บาท = 1 แต้ม {suggested > 0 ? `→ แนะนำ ${suggested} แต้ม` : ''}
@@ -480,13 +479,12 @@ export default function LoyaltyClient({
 
                 <div>
                   <label style={lbl}>จำนวนแต้ม (แก้ได้)</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
+                  <NumberInput
+                    mode="numeric"
                     className="input"
                     placeholder="ระบุจำนวนแต้ม..."
                     value={pointsInput}
-                    onChange={(e) => setPointsInput(sanitizeNumberString(e.target.value))}
+                    onChange={setPointsInput}
                   />
                 </div>
 

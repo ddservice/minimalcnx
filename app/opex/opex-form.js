@@ -5,7 +5,8 @@ import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { OPEX_OPERATING, OPEX_STAFF, OPEX_TAX, DEFAULT_EMPLOYEES } from '../../lib/opex';
 import { computePayslip } from '../../lib/payslip';
-import { sanitizeNumberString, stripDigits, digitsOnly } from '../../lib/format';
+import { stripDigits, digitsOnly } from '../../lib/format';
+import NumberInput from '../../components/number-input';
 import DateField from '../../components/date-field';
 import AccessBanner from '../../components/access-banner';
 import { ACCESS_HINT } from '../../lib/perms';
@@ -517,7 +518,7 @@ function Row({ label, value, onChange, placeholder }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
       <label style={{ flex: '1 1 160px', fontSize: 14 }}>{label}</label>
-      <input type="number" min="0" step="any" value={value} onChange={(e) => onChange(sanitizeNumberString(e.target.value))} placeholder={placeholder != null ? String(placeholder) : '0'} style={{ ...inp, flex: '0 1 160px' }} />
+      <NumberInput value={value} onChange={onChange} placeholder={placeholder != null ? String(placeholder) : '0'} style={{ ...inp, flex: '0 1 160px' }} />
       <span style={{ fontSize: 13, color: 'var(--muted)', width: 12 }}>฿</span>
     </div>
   );
@@ -527,23 +528,27 @@ function Row({ label, value, onChange, placeholder }) {
 // digitsOnly: กันตัวอักษรในช่องที่เป็นตัวเลขล้วนแต่ห้ามตัด leading zero (เลขบัตร ปชช./เลขบัญชี)
 function SlipField({ label, value, onChange, text, disabled, noDigits, onlyDigits }) {
   const clean = (v) => {
-    if (!text) return sanitizeNumberString(v);
     if (noDigits) return stripDigits(v);
     if (onlyDigits) return digitsOnly(v);
     return v;
   };
+  const style = disabled ? { ...inp, background: 'var(--beige)', color: 'var(--muted)', cursor: 'not-allowed' } : inp;
   return (
     <div>
       <label style={lbl}>{label}</label>
-      <input
-        type={text ? 'text' : 'number'}
-        {...(text ? {} : { min: '0', step: 'any' })}
-        value={value}
-        onChange={(e) => onChange(clean(e.target.value))}
-        placeholder={text ? '' : '0'}
-        disabled={disabled}
-        style={disabled ? { ...inp, background: 'var(--beige)', color: 'var(--muted)', cursor: 'not-allowed' } : inp}
-      />
+      {text ? (
+        <input
+          type="text"
+          inputMode={onlyDigits ? 'numeric' : undefined}
+          value={value}
+          onChange={(e) => onChange(clean(e.target.value))}
+          placeholder=""
+          disabled={disabled}
+          style={style}
+        />
+      ) : (
+        <NumberInput value={value} onChange={onChange} placeholder="0" disabled={disabled} style={style} />
+      )}
     </div>
   );
 }
