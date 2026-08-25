@@ -5,6 +5,7 @@ import { createClient } from '../../lib/supabase/server';
 import { getRewardFromDb } from '../../lib/loyalty-rewards';
 import { PRIVACY_CONSENT_VERSION } from '../../lib/privacy';
 import { requireCap } from '../../lib/access';
+import { customerSegment } from '../../lib/rfm';
 
 const ANALYTICS_ROLES = new Set(['admin', 'co-admin', 'manager']);
 const VOID_ROLES = new Set(['admin', 'co-admin', 'manager']);
@@ -77,25 +78,29 @@ export async function searchCustomerAction(query) {
   if (!raw) return { status: 'error', message: 'กรุณากรอกเบอร์โทรศัพท์หรือ LINE User ID' };
 
   const digits = raw.replace(/\D/g, '');
-  const phoneQuery = digits.length >= 9 && !/[a-zA-Z]/.test(raw) ? digits : null;
+  const SELECT = '*, branches(name)';
 
-  let q = supabase.from('customers').select('*, branches(name)').limit(1);
-  if (phoneQuery) {
-    q = q.eq('phone', phoneQuery);
-  } else if (digits.length >= 9) {
-    q = q.or(`phone.eq.${digits},line_user_id.eq.${raw}`);
-  } else {
-    q = q.or(`phone.eq.${raw},line_user_id.eq.${raw}`);
+  // แยกเป็นสองคิวรี แทนการต่อสตริงเข้า .or() — .or() รับ filter เป็นสตริงดิบ ค่าที่มี , หรือ .
+  // ปนเข้ามาจะทำให้เงื่อนไขเพี้ยนและคืน "ลูกค้าผิดคน" (แต้มไปเข้าคนอื่นโดยไม่มีใครรู้)
+  let found = null;
+
+  if (digits.length >= 9) {
+    const { data, error } = await supabase
+      .from('customers').select(SELECT).eq('phone', digits).maybeSingle();
+    if (error) return { status: 'error', message: error.message };
+    found = data;
   }
 
-  const { data: customers, error } = await q;
-  if (error) return { status: 'error', message: error.message };
-
-  if (customers && customers.length > 0) {
-    return { status: 'ok', customer: customers[0] };
+  if (!found) {
+    const { data, error } = await supabase
+      .from('customers').select(SELECT).eq('line_user_id', raw).maybeSingle();
+    if (error) return { status: 'error', message: error.message };
+    found = data;
   }
 
-  return { status: 'not_found', query: phoneQuery || raw };
+  if (found) return { status: 'ok', customer: found };
+
+  return { status: 'not_found', query: digits.length >= 9 ? digits : raw };
 }
 
 // 2. ลงทะเบียนลูกค้าใหม่ (บังคับความยินยอม PDPA)
@@ -206,6 +211,40 @@ export async function issuePointsAction({ customer_id, points, receipt_number, b
     return { status: 'error', message: 'ปฏิเสธคำขอ: สุ่มเสี่ยงการแจกแต้มถี่ผิดปกติ (เกิน 5 ครั้งใน 10 นาที)' };
   }
 
+  // Anti-fraud: ใบเสร็จใบเดียวแจกแต้มได้ครั้งเดียวต่อสาขา
+  // ด่านจริงคือ unique index uidx_point_tx_earn_receipt (sql/harden_loyalty_integrity.sql)
+  // ที่เช็คก่อนตรงนี้เพื่อให้ได้ข้อความบอกว่าใบนี้เคยใช้เมื่อไหร่/กับใคร แทน error 23505 ดิบๆ
+  const { data: dupe } = await supabase
+    .from('point_transactions')
+    .select('id, created_at, points, customers(name, phone)')
+    .eq('branch_id', ctx.branchId)
+    .eq('transaction_type', 'earn')
+    .eq('receipt_number', receipt)
+    .limit(1)
+    .maybeSingle();
+
+  if (dupe) {
+    await supabase.from('loyalty_audit_logs').insert({
+      action_type: 'FRAUD_ALERT_DUPLICATE_RECEIPT',
+      performed_by_staff_id: user.id,
+      customer_id,
+      branch_id: ctx.branchId,
+      details: {
+        receipt_number: receipt,
+        attempted_points: pts,
+        existing_tx_id: dupe.id,
+        existing_at: dupe.created_at,
+        reason: 'ใบเสร็จนี้ถูกใช้แจกแต้มที่สาขานี้ไปแล้ว',
+      },
+    });
+    const when = new Date(dupe.created_at).toLocaleString('th-TH');
+    const who = dupe.customers?.name ? ` ให้ ${dupe.customers.name}` : '';
+    return {
+      status: 'error',
+      message: `ใบเสร็จเลขที่ ${receipt} ถูกใช้แจกแต้มที่สาขานี้ไปแล้ว (${when}${who}) — ถ้าแจกผิด ให้ผู้จัดการยกเลิกรายการเดิมที่หน้าประวัติก่อน`,
+    };
+  }
+
   const { data: tx, error } = await supabase
     .from('point_transactions')
     .insert({
@@ -219,7 +258,16 @@ export async function issuePointsAction({ customer_id, points, receipt_number, b
     .select()
     .single();
 
-  if (error) return { status: 'error', message: error.message };
+  if (error) {
+    // unique index จับได้ (เช่นพิมพ์ต่างตัวพิมพ์เล็กใหญ่ หรือยิงพร้อมกันสองเครื่อง)
+    if (error.code === '23505') {
+      return {
+        status: 'error',
+        message: `ใบเสร็จเลขที่ ${receipt} ถูกใช้แจกแต้มที่สาขานี้ไปแล้ว — ถ้าแจกผิด ให้ผู้จัดการยกเลิกรายการเดิมที่หน้าประวัติก่อน`,
+      };
+    }
+    return { status: 'error', message: error.message };
+  }
 
   await supabase.from('loyalty_audit_logs').insert({
     action_type: 'ISSUE_POINTS',
@@ -238,6 +286,28 @@ export async function redeemRewardAction({ customer_id, reward_id, branch_id }) 
   const acc = await requireCap('/loyalty', 'create');
   if (!acc.allowed) return { status: 'error', message: acc.message };
   const { supabase, user, profile } = acc;
+
+  // เส้นทางหลัก: RPC อะตอมมิก — หักแต้ม + ลงประวัติแลก + audit จบในทรานแซกชันเดียว
+  // และ lock แถวลูกค้า (for update) กันแลกซ้อนพร้อมกันสองเครื่อง
+  const rpc = await supabase.rpc('loyalty_redeem_reward', {
+    p_customer_id: customer_id,
+    p_reward_id: reward_id,
+    p_branch_id: branch_id || null,
+  });
+
+  if (!rpc.error) {
+    if (rpc.data?.status === 'error') return { status: 'error', message: rpc.data.message };
+    revalidateLoyalty();
+    return {
+      status: 'ok',
+      message: rpc.data?.message || 'แลกของรางวัลสำเร็จ',
+      points_used: rpc.data?.points_used,
+    };
+  }
+
+  // ยังไม่ได้รัน sql/harden_loyalty_integrity.sql → ถอยไปใช้เส้นทางเดิม (ยังไม่อะตอมมิก)
+  const rpcMissing = rpc.error.code === '42883' || rpc.error.message?.includes('loyalty_redeem_reward');
+  if (!rpcMissing) return { status: 'error', message: rpc.error.message };
 
   const reward = await getRewardFromDb(supabase, reward_id);
   if (!reward) return { status: 'error', message: 'ไม่พบรางวัลนี้ในระบบ หรือถูกปิดใช้งาน' };
@@ -387,7 +457,7 @@ export async function getLoyaltyAnalyticsAction() {
 
   const [
     { data: txs },
-    { data: customers },
+    customerStats,
     { data: branches },
     { data: auditLogs },
     { data: staffProfiles },
@@ -398,9 +468,9 @@ export async function getLoyaltyAnalyticsAction() {
       .gte('created_at', sinceIso)
       .order('created_at', { ascending: false })
       .limit(3000),
-    supabase
-      .from('customers')
-      .select('id, name, phone, points_balance, visit_count, rfm_segment, last_visited_at, favorite_branch_id'),
+    // นับ RFM/แต้มคงค้างฝั่ง DB — เดิมดึง customers ทุกแถวมานับใน Node (ช้าเมื่อสมาชิกโต
+    // และถ้าโปรเจกต์ตั้ง db-max-rows ไว้ ตัวเลขจะถูกตัดเงียบๆ โดยไม่มี error)
+    loadCustomerStats(supabase),
     supabase.from('branches').select('id, code, name, is_active'),
     supabase
       .from('loyalty_audit_logs')
@@ -414,10 +484,41 @@ export async function getLoyaltyAnalyticsAction() {
     status: 'ok',
     data: {
       transactions: txs || [],
-      customers: customers || [],
+      customerStats,
       branches: branches || [],
       auditLogs: auditLogs || [],
       staffProfiles: staffProfiles || [],
     },
   };
+}
+
+/**
+ * สรุปฐานลูกค้า: จำนวนสมาชิก / แต้มคงค้างทั้งระบบ / จำนวนต่อกลุ่ม RFM
+ * ใช้ RPC get_loyalty_segment_counts() ซึ่งคำนวณ RFM สดจาก last_visited_at ทุกครั้ง
+ * ถ้ายังไม่ได้รัน sql/harden_loyalty_integrity.sql จะถอยไปนับฝั่ง Node แบบเดิม
+ */
+async function loadCustomerStats(supabase) {
+  const { data, error } = await supabase.rpc('get_loyalty_segment_counts');
+  if (!error && data) {
+    return {
+      total: Number(data.total) || 0,
+      pointsOutstanding: Number(data.points_outstanding) || 0,
+      segments: data.segments || {},
+      live: true,
+    };
+  }
+
+  const { data: rows } = await supabase
+    .from('customers')
+    .select('points_balance, visit_count, last_visited_at');
+
+  const segments = {};
+  let pointsOutstanding = 0;
+  (rows || []).forEach((c) => {
+    const seg = customerSegment(c);
+    segments[seg] = (segments[seg] || 0) + 1;
+    pointsOutstanding += Number(c.points_balance) || 0;
+  });
+
+  return { total: (rows || []).length, pointsOutstanding, segments, live: false };
 }

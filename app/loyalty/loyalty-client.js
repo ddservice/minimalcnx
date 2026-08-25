@@ -8,6 +8,7 @@ import { suggestPointsFromSpend } from '../../lib/loyalty-rewards';
 import { PRIVACY_CONSENT_TEXT } from '../../lib/privacy';
 import AccessBanner from '../../components/access-banner';
 import NumberInput from '../../components/number-input';
+import { customerSegment } from '../../lib/rfm';
 
 const RFM_COLOR = {
   Champions: '#16a34a',
@@ -392,10 +393,10 @@ export default function LoyaltyClient({
                   fontSize: 11,
                   fontWeight: 700,
                   color: '#fff',
-                  background: RFM_COLOR[customer.rfm_segment] || '#6b7280',
+                  background: RFM_COLOR[customerSegment(customer)] || '#6b7280',
                 }}
               >
-                {customer.rfm_segment || 'New'}
+                {customerSegment(customer)}
               </span>
             </div>
             <div className="card-body">

@@ -16,7 +16,8 @@ export default async function LoyaltyAnalyticsPage() {
   if (!CAN_VIEW.has(role)) redirect('/loyalty');
 
   const res = await getLoyaltyAnalyticsAction();
-  const { transactions = [], customers = [], branches = [], auditLogs = [] } = res?.data || {};
+  const { transactions = [], customerStats, branches = [], auditLogs = [] } = res?.data || {};
+  const stats = customerStats || { total: 0, pointsOutstanding: 0, segments: {}, live: false };
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -24,7 +25,7 @@ export default async function LoyaltyAnalyticsPage() {
   // 1. คำนวณ KPI รวม
   const totalIssued = transactions.filter((t) => t.points > 0).reduce((a, t) => a + t.points, 0);
   const totalRedeemed = Math.abs(transactions.filter((t) => t.points < 0 && t.transaction_type === 'redeem').reduce((a, t) => a + t.points, 0));
-  const activeCustomers = customers.length;
+  const activeCustomers = stats.total;
   const fraudAlertsCount = auditLogs.filter((l) => l.action_type?.startsWith('FRAUD_ALERT')).length;
 
   // 2. แยกแต้มตามสาขา (ทั้งหมด + เดือนนี้)
@@ -72,10 +73,10 @@ export default async function LoyaltyAnalyticsPage() {
   const staffRows = Object.values(staffMap).sort((a, b) => b.issued - a.issued);
 
   // 4. กลุ่มลูกค้า CDP (RFM Segments Breakdown)
+  // นับมาจาก DB แล้ว (RFM คำนวณสดจากวันที่มาล่าสุด ไม่ใช่คอลัมน์ที่ค้าง)
   const rfmCounts = { Champions: 0, Loyal: 0, Potential: 0, 'At-Risk': 0, Lost: 0, New: 0 };
-  customers.forEach((c) => {
-    const seg = c.rfm_segment || 'New';
-    rfmCounts[seg] = (rfmCounts[seg] || 0) + 1;
+  Object.entries(stats.segments || {}).forEach(([seg, cnt]) => {
+    rfmCounts[seg] = (rfmCounts[seg] || 0) + Number(cnt || 0);
   });
 
   return (
@@ -91,6 +92,7 @@ export default async function LoyaltyAnalyticsPage() {
 
       <p className="muted" style={{ fontSize: 13, margin: '0 0 12px' }}>
         สถิติธุรกรรมแสดงย้อนหลัง 90 วัน (เพื่อความเร็ว) · สมาชิก/RFM เป็นข้อมูลปัจจุบันทั้งระบบ
+        {!stats.live && ' · ยังไม่ได้รัน sql/harden_loyalty_integrity.sql — กำลังนับฝั่งแอปแทน'}
       </p>
 
       {/* KPI Tiles */}
@@ -98,6 +100,7 @@ export default async function LoyaltyAnalyticsPage() {
         <Kpi icon="ti-gift" label="แต้มที่แจก (90 วัน)" value={totalIssued.toLocaleString()} sub="แต้ม" cls="green" />
         <Kpi icon="ti-trophy" label="แต้มที่แลก (90 วัน)" value={totalRedeemed.toLocaleString()} sub="แต้ม" cls="blue" />
         <Kpi icon="ti-users" label="สมาชิกทั้งหมด" value={activeCustomers.toLocaleString()} sub="คน" plain />
+        <Kpi icon="ti-wallet" label="แต้มคงค้างทั้งระบบ" value={stats.pointsOutstanding.toLocaleString()} sub="แต้มที่ลูกค้ายังไม่ได้ใช้" cls="blue" />
         <Kpi icon="ti-alert-triangle" label="การแจ้งเตือนสุ่มเสี่ยง (Anti-Fraud)" value={fraudAlertsCount.toLocaleString()} sub="ครั้ง" cls={fraudAlertsCount > 0 ? 'red' : 'green'} />
       </div>
 

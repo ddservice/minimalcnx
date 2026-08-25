@@ -40,7 +40,10 @@ export default async function AuditPage({ searchParams }) {
   if (table) query = query.eq('table_name', table);
   if (action) query = query.eq('action', action);
   if (ip) query = query.ilike('ip_address', `%${ip}%`);
-  if (q) query = query.or(`actor_username.ilike.%${q}%,actor_role.ilike.%${q}%`);
+  // .or() รับ filter เป็นสตริงดิบ — ตัดอักขระที่มีความหมายในไวยากรณ์ของ PostgREST ออกก่อน
+  // ไม่งั้นค่าที่มี , . ( ) " หรือ % ปนมาจะทำให้เงื่อนไขเพี้ยนและกรองผิดโดยไม่มี error
+  const qSafe = q.replace(/[,.()"\\%*]/g, '');
+  if (qSafe) query = query.or(`actor_username.ilike.%${qSafe}%,actor_role.ilike.%${qSafe}%`);
 
   let { data: rows, error } = await query;
   let sqlHint = '';
