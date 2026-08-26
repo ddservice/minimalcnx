@@ -27,11 +27,21 @@
 ## 2. เตรียมเครื่องมือบน VPS
 
 ```bash
-# aws cli (คุยกับ R2 ผ่าน S3-compatible API)
+# aws cli (คุยกับ R2 ผ่าน S3-compatible API) — ต้อง sudo
 sudo apt-get update && sudo apt-get install -y awscli age
 # docker มีอยู่แล้ว — ใช้ image postgres:17 ยิง pg_dump ให้ major version ตรงกับเซิร์ฟเวอร์
 docker pull postgres:17-alpine
 ```
+
+ถ้า `age` ไม่มีใน repo ของรุ่นที่ใช้ (Ubuntu เก่ากว่า 22.04) ให้ลงจาก binary:
+
+```bash
+curl -fsSL https://github.com/FiloSottile/age/releases/latest/download/age-v1.2.1-linux-amd64.tar.gz \
+  | sudo tar -xz -C /usr/local/bin --strip-components=1 age/age age/age-keygen
+```
+
+> **ใช้ awscli จาก apt (v1) ก็พอ อย่าเพิ่งอัปเป็น v2** — aws cli v2 รุ่นใหม่ส่ง checksum header
+> เพิ่มเข้ามาซึ่ง S3-compatible บางเจ้ารวมถึง R2 บางช่วงปฏิเสธ ทำให้อัปโหลดล้มแบบงงๆ
 
 > **อย่าใช้ `pg_dump` ที่ติดมากับ VPS** — ถ้า major version เก่ากว่าเซิร์ฟเวอร์ มันจะปฏิเสธทำงานทันที
 > `docker run --rm` ตัวเดียวไม่กระทบ container อื่นบนเครื่อง (และไม่ต้อง restart docker daemon ซึ่งห้ามทำบน VPS นี้)
@@ -82,6 +92,7 @@ AWS_ACCESS_KEY_ID='<R2 Access Key ID>'
 AWS_SECRET_ACCESS_KEY='<R2 Secret Access Key>'
 BACKUP_AGE_RECIPIENT='age1...'                       # public key
 BACKUP_AGE_KEYFILE="$HOME/minimalcnx-backup.key"     # ใช้ตอนซ้อมกู้เท่านั้น
+AWS_DEFAULT_REGION='auto'                            # R2 ไม่มี region จริง แต่ aws cli บังคับต้องมี
 ```
 
 ```bash

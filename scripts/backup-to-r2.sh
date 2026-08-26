@@ -23,6 +23,9 @@ ENV_FILE="${BACKUP_ENV_FILE:-$HERE/../.backup.env}"
 : "${AWS_SECRET_ACCESS_KEY:?ต้องตั้ง AWS_SECRET_ACCESS_KEY (R2 Secret Access Key)}"
 : "${BACKUP_AGE_RECIPIENT:?ต้องตั้ง BACKUP_AGE_RECIPIENT (public key ของ age) — ห้ามอัปข้อมูลลูกค้าแบบไม่เข้ารหัส}"
 
+# R2 ไม่มี region จริงแต่ aws cli บังคับต้องมี — ไม่ตั้งแล้วจะฟ้อง "You must specify a region"
+export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+
 PG_IMAGE="${PG_IMAGE:-postgres:17-alpine}"
 PREFIX="${R2_PREFIX:-minimalcnx}"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"

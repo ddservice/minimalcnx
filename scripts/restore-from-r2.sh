@@ -22,6 +22,8 @@ ENV_FILE="${BACKUP_ENV_FILE:-$HERE/../.backup.env}"
 : "${AWS_ACCESS_KEY_ID:?ต้องตั้ง AWS_ACCESS_KEY_ID}"
 : "${AWS_SECRET_ACCESS_KEY:?ต้องตั้ง AWS_SECRET_ACCESS_KEY}"
 
+export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+
 PG_IMAGE="${PG_IMAGE:-postgres:17-alpine}"
 PREFIX="${R2_PREFIX:-minimalcnx}"
 KEY=""
