@@ -55,6 +55,13 @@ case "$SUPABASE_DB_URL" in
   *:6543*) fail "SUPABASE_DB_URL ชี้ไป transaction pooler (:6543) — pg_dump ใช้ไม่ได้ ต้องใช้ session pooler (:5432) หรือ direct connection" ;;
 esac
 
+# psql/pg_dump ที่ได้สตริงซึ่งไม่ใช่ URI จะตีความว่าเป็น "ชื่อฐานข้อมูล" แล้วเงียบๆ ไปต่อ socket
+# ในเครื่องแทน — error ที่ได้จะพูดถึง /var/run/postgresql ซึ่งชวนให้ไล่ผิดทางไปไกลมาก
+case "$SUPABASE_DB_URL" in
+  postgresql://*|postgres://*) : ;;
+  *) fail "SUPABASE_DB_URL ต้องขึ้นต้นด้วย postgresql:// — คัดลอกมาจาก Supabase → Project Settings → Database → Connection string → URI (เลือก Session pooler พอร์ต 5432) และถ้ารหัสผ่านมีอักขระพิเศษอย่าง @ # ? / ต้อง percent-encode ก่อน" ;;
+esac
+
 if [ "${1:-}" = "--check" ]; then
   log "เครื่องมือครบ และตัวแปรครบทุกตัว"
   log "ทดสอบต่อ Postgres..."
