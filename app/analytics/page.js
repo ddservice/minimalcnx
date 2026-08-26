@@ -7,6 +7,7 @@ import { computeEffectiveOpex } from '../../lib/opex';
 import ProfitChart from './profit-chart';
 import RangePicker from './range-picker';
 import DataTable from '../../components/data-table';
+import { readBusinessConfig } from '../../lib/config-store';
 import Kpi from '../../components/kpi';
 
 const isMonth = (s) => /^\d{4}-\d{2}$/.test(s || '');
@@ -43,8 +44,7 @@ export default async function AnalyticsPage({ searchParams }) {
   const { supabase, role, name, isAdmin, allowed } = await requirePage('/analytics');
   const sp = await searchParams;
 
-  const { data: opexCfg } = await supabase.from('business_config').select('value').eq('key', 'opex_defaults').maybeSingle();
-  const opexDefaults = opexCfg?.value || {};
+  const opexDefaults = await readBusinessConfig(supabase, 'opex_defaults', {});
 
   const now = new Date(Date.now() + 7 * 60 * 60 * 1000);
   const curInput = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;

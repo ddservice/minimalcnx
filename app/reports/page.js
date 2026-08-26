@@ -9,6 +9,7 @@ import MonthPicker from './month-picker';
 import RevenueChart from './revenue-chart';
 import ExpenseChart from './expense-chart';
 import DataTable from '../../components/data-table';
+import { readBusinessConfig } from '../../lib/config-store';
 import Kpi from '../../components/kpi';
 
 export default async function ReportsPage({ searchParams }) {
@@ -18,13 +19,12 @@ export default async function ReportsPage({ searchParams }) {
   const monthInput = /^\d{4}-\d{2}$/.test(sp?.month || '') ? sp.month : currentMonthInput();
   const monthLabel = monthInputToLabel(monthInput);
 
-  const [{ data: summary }, { data: opexCfg }] = await Promise.all([
+  const [{ data: summary }, opexDefaults] = await Promise.all([
     supabase.rpc('get_monthly_summary', { p_month_label: monthLabel }),
-    supabase.from('business_config').select('value').eq('key', 'opex_defaults').maybeSingle(),
+    readBusinessConfig(supabase, 'opex_defaults', {}),
   ]);
   const sales = summary?.sales || [];
   const expenses = summary?.expenses || [];
-  const opexDefaults = opexCfg?.value || {};
 
   const income = sales.reduce((a, s) => a + Number(s.net_revenue || 0), 0);
   const catSum = (c) =>

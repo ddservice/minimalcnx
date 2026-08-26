@@ -11,3 +11,7 @@ CLAUDE.local.md
 
 # Never commit (legacy helper; may have been used with tokens historically)
 push_to_github.bat
+
+# Backup credentials (DB connection string + R2 keys + age recipient) — see deploy/BACKUP.md
+.backup.env
+*.key

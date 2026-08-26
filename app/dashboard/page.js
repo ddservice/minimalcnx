@@ -5,6 +5,7 @@ import AppShell from '../../components/app-shell';
 import Kpi from '../../components/kpi';
 import { fmtMoney } from '../../lib/format';
 import { OPEX_ALL_CATEGORIES, computeEffectiveOpex } from '../../lib/opex';
+import { readBusinessConfig } from '../../lib/config-store';
 
 function monthLabel() {
   const d = new Date(Date.now() + 7 * 60 * 60 * 1000);
@@ -22,13 +23,12 @@ export default async function DashboardPage() {
   const { supabase, role, name, isAdmin, allowed } = await requirePage('/dashboard');
   const ml = monthLabel();
 
-  const [{ data: summary }, { data: opexCfg }] = await Promise.all([
+  const [{ data: summary }, opexDefaults] = await Promise.all([
     supabase.rpc('get_monthly_summary', { p_month_label: ml }),
-    supabase.from('business_config').select('value').eq('key', 'opex_defaults').maybeSingle(),
+    readBusinessConfig(supabase, 'opex_defaults', {}),
   ]);
   const sales = summary?.sales || [];
   const expenses = summary?.expenses || [];
-  const opexDefaults = opexCfg?.value || {};
 
   const income = sales.reduce((a, s) => a + Number(s.net_revenue || 0), 0);
   const regExp = expenses

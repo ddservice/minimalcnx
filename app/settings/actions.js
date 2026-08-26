@@ -221,10 +221,9 @@ export async function saveBizInfo(input) {
   const value = {};
   FIELDS.forEach((k) => { value[k] = String(input[k] || '').trim(); });
 
-  const { error } = await supabase
-    .from('business_config')
-    .upsert({ key: 'biz_info', value, updated_by: user.id });
-  if (error) return { status: 'error', message: error.message };
+  // ผ่าน helper เสมอ — เป็นจุดเดียวที่ล้างแคช business_config ให้ (กฎใน CLAUDE.md)
+  const res = await upsertBusinessConfig(supabase, 'biz_info', value, { updated_by: user.id });
+  if (!res.ok) return { status: 'error', message: res.message };
 
   revalidatePath('/settings');
   revalidatePath('/opex');
