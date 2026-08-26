@@ -33,15 +33,19 @@ sudo apt-get update && sudo apt-get install -y awscli age
 docker pull postgres:17-alpine
 ```
 
-ถ้า `age` ไม่มีใน repo ของรุ่นที่ใช้ (Ubuntu เก่ากว่า 22.04) ให้ลงจาก binary:
+ลงทีละตัว อย่ารวมบรรทัดเดียว — ถ้าตัวใดตัวหนึ่งไม่มีใน repo apt จะล้มทั้งคำสั่งและ**ไม่ลงอะไรเลย**
+แต่ข้อความ error พูดถึงแค่ตัวที่ขาด ทำให้เข้าใจผิดว่าอีกตัวลงไปแล้ว
+
+ถ้า `age` ไม่มีใน repo ของรุ่นที่ใช้ (Ubuntu เก่ากว่า 22.04) ให้ลงจาก binary — **ต้องระบุเลขเวอร์ชัน
+ในพาธด้วย** ไม่ใช่ `latest/download` เพราะ URL แบบนั้นต้องการชื่อไฟล์ของรุ่นล่าสุดพอดีเป๊ะ ไม่งั้นได้ 404:
 
 ```bash
-curl -fsSL https://github.com/FiloSottile/age/releases/latest/download/age-v1.2.1-linux-amd64.tar.gz \
+curl -fsSL https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz \
   | sudo tar -xz -C /usr/local/bin --strip-components=1 age/age age/age-keygen
 ```
 
-> **ใช้ awscli จาก apt (v1) ก็พอ อย่าเพิ่งอัปเป็น v2** — aws cli v2 รุ่นใหม่ส่ง checksum header
-> เพิ่มเข้ามาซึ่ง S3-compatible บางเจ้ารวมถึง R2 บางช่วงปฏิเสธ ทำให้อัปโหลดล้มแบบงงๆ
+> **aws cli v1 หรือ v2 ก็ได้** — v2 ตั้งแต่ 2.23 แนบ CRC32 checksum ไปทุก request ซึ่ง R2 ปฏิเสธ
+> สคริปต์ตั้ง `AWS_REQUEST_CHECKSUM_CALCULATION=when_required` ให้แล้ว (v1 ไม่รู้จักตัวแปรนี้ ใส่ไว้ไม่มีผล)
 
 > **อย่าใช้ `pg_dump` ที่ติดมากับ VPS** — ถ้า major version เก่ากว่าเซิร์ฟเวอร์ มันจะปฏิเสธทำงานทันที
 > `docker run --rm` ตัวเดียวไม่กระทบ container อื่นบนเครื่อง (และไม่ต้อง restart docker daemon ซึ่งห้ามทำบน VPS นี้)

@@ -25,6 +25,10 @@ ENV_FILE="${BACKUP_ENV_FILE:-$HERE/../.backup.env}"
 
 # R2 ไม่มี region จริงแต่ aws cli บังคับต้องมี — ไม่ตั้งแล้วจะฟ้อง "You must specify a region"
 export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+# aws cli v2 ตั้งแต่ 2.23 แนบ CRC32 checksum ไปทุก request ซึ่ง R2 ปฏิเสธ (ล้มแบบ error งงๆ)
+# ตัวแปรนี้สั่งให้แนบเฉพาะตอนจำเป็น — v1 ไม่รู้จักตัวแปรนี้ ใส่ไว้ก็ไม่มีผลข้างเคียง
+export AWS_REQUEST_CHECKSUM_CALCULATION="${AWS_REQUEST_CHECKSUM_CALCULATION:-when_required}"
+export AWS_RESPONSE_CHECKSUM_VALIDATION="${AWS_RESPONSE_CHECKSUM_VALIDATION:-when_required}"
 
 PG_IMAGE="${PG_IMAGE:-postgres:17-alpine}"
 PREFIX="${R2_PREFIX:-minimalcnx}"
