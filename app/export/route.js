@@ -1,6 +1,7 @@
 import ExcelJS from 'exceljs';
 import { createClient } from '../../lib/supabase/server';
-import { monthInputToLabel, currentMonthInput, OPEX_ALL_CATEGORIES } from '../../lib/opex';
+import { monthInputToLabel, currentMonthInput, OPEX_ALL_CATEGORIES, computeEffectiveOpex } from '../../lib/opex';
+import { readBusinessConfig } from '../../lib/config-store';
 import { logAuditEvent } from '../../lib/audit';
 
 export const runtime = 'nodejs';
@@ -20,9 +21,10 @@ export async function GET(request) {
   const monthInput = /^\d{4}-\d{2}$/.test(m || '') ? m : currentMonthInput();
   const monthLabel = monthInputToLabel(monthInput);
 
-  const { data: summary } = await supabase.rpc('get_monthly_summary', {
-    p_month_label: monthLabel,
-  });
+  const [{ data: summary }, opexDefaults] = await Promise.all([
+    supabase.rpc('get_monthly_summary', { p_month_label: monthLabel }),
+    readBusinessConfig(supabase, 'opex_defaults', {}),
+  ]);
   const sales = summary?.sales || [];
   const expenses = summary?.expenses || [];
 
@@ -33,9 +35,7 @@ export async function GET(request) {
   const matTotal = catSum('ต้นทุนวัตถุดิบ');
   const bakTotal = catSum('ต้นทุนขนมหน้าร้าน');
   const miscTotal = catSum('รายจ่ายจิปาถะ');
-  const opexTotal = expenses
-    .filter((e) => e.item_key && OPEX_ALL_CATEGORIES.includes(e.category))
-    .reduce((a, e) => a + Number(e.total_amount || 0), 0);
+  const opexTotal = computeEffectiveOpex(expenses, opexDefaults);
   const totalExp = matTotal + bakTotal + miscTotal + opexTotal;
   const profit = income - totalExp;
   const freeCups = sales.reduce((a, s) => a + Number(s.free_cups || 0), 0);

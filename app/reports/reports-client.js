@@ -213,47 +213,117 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
 
       {/* รายการรายจ่ายทั้งเดือน */}
       <div className="card">
-        <div className="card-head" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="card-head" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Icon name="ti-receipt-2" />
             <h2>รายการรายจ่ายทั้งเดือน — {monthLabel}</h2>
-            <span className="chip" style={{ background: 'var(--coffee)', fontSize: 11 }}>
+            <span
+              style={{
+                background: '#f4ece3',
+                color: 'var(--color-primary)',
+                border: '1px solid #e0d1bf',
+                borderRadius: 'var(--radius-full)',
+                padding: '2px 10px',
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: '0.02em',
+              }}
+            >
               {allItemRows.length} รายการ
             </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <select
-              className="input"
-              style={{ width: 'auto', minWidth: 130, padding: '6px 10px', fontSize: 12 }}
-              value={catFilter}
-              onChange={(e) => {
-                setCatFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              aria-label="กรองหมวดหมู่"
-            >
-              <option value="">ทุกหมวดหมู่</option>
-              {EXPENSE_CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-
-            <input
-              type="text"
-              className="input"
-              placeholder="ค้นหารายการ / ผู้ขาย..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-              style={{ width: 'min(200px, 100%)', padding: '6px 10px', fontSize: 12 }}
-            />
           </div>
         </div>
 
         <div className="card-body">
+          {/* แถบเครื่องมือ: กรองหมวดหมู่ (Pills) + กล่องค้นหา */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 10,
+              marginBottom: 16,
+              paddingBottom: 14,
+              borderBottom: '1px solid var(--color-border)',
+            }}
+          >
+            {/* ปุ่มเลือกหมวดหมู่ */}
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button
+                type="button"
+                className={`btn ${!catFilter ? 'btn-coffee' : 'btn-ghost'}`}
+                style={{ padding: '5px 12px', fontSize: 12, borderRadius: 'var(--radius-full)' }}
+                onClick={() => { setCatFilter(''); setCurrentPage(1); }}
+              >
+                ทั้งหมด
+              </button>
+              {EXPENSE_CATEGORIES.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  className={`btn ${catFilter === c.value ? 'btn-coffee' : 'btn-ghost'}`}
+                  style={{ padding: '5px 12px', fontSize: 12, borderRadius: 'var(--radius-full)' }}
+                  onClick={() => { setCatFilter(c.value); setCurrentPage(1); }}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
+            {/* กล่องค้นหา */}
+            <div style={{ position: 'relative', width: 'min(260px, 100%)' }}>
+              <Icon
+                name="ti-search"
+                style={{
+                  position: 'absolute',
+                  left: 10,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--color-text-muted)',
+                  fontSize: 14,
+                  pointerEvents: 'none',
+                }}
+              />
+              <input
+                type="text"
+                className="input"
+                placeholder="ค้นหารายการ, ผู้ขาย, วันที่..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+                style={{
+                  padding: '7px 10px 7px 32px',
+                  fontSize: 12.5,
+                  borderRadius: 'var(--radius-md)',
+                }}
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => { setSearch(''); setCurrentPage(1); }}
+                  style={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    border: 0,
+                    background: 'transparent',
+                    color: 'var(--color-text-muted)',
+                    cursor: 'pointer',
+                    fontSize: 14,
+                    padding: 2,
+                  }}
+                  aria-label="ล้างคำค้นหา"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
           <DataTable
             columns={itemCols}
             rows={paginatedRows}
@@ -271,18 +341,18 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                 flexWrap: 'wrap',
                 gap: 12,
                 marginTop: 16,
-                paddingTop: 12,
-                borderTop: '1px solid var(--border)',
+                paddingTop: 14,
+                borderTop: '1px solid var(--color-border)',
                 fontSize: 13,
               }}
             >
-              <div className="muted" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>แสดง {startRecord}–{endRecord} จากทั้งหมด {filteredRows.length} รายการ</span>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+              <div className="muted" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span>แสดง <strong>{startRecord}–{endRecord}</strong> จากทั้งหมด {filteredRows.length} รายการ</span>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <span>หน้าละ:</span>
                   <select
                     className="input"
-                    style={{ width: 'auto', padding: '4px 8px', fontSize: 12, fontWeight: 600 }}
+                    style={{ width: 'auto', padding: '4px 8px', fontSize: 12, fontWeight: 700, borderRadius: 'var(--radius-md)' }}
                     value={pageSize}
                     onChange={(e) => {
                       const v = e.target.value === 'all' ? 'all' : Number(e.target.value);
@@ -300,25 +370,25 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
               </div>
 
               {pageSize !== 'all' && totalPages > 1 && (
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    style={{ padding: '5px 10px', fontSize: 12 }}
+                    style={{ padding: '6px 12px', fontSize: 12 }}
                     disabled={safePage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   >
                     <Icon name="ti-chevron-left" /> ก่อนหน้า
                   </button>
 
-                  <span style={{ padding: '0 8px', fontWeight: 600, fontSize: 12 }}>
+                  <span style={{ padding: '0 8px', fontWeight: 600, fontSize: 12.5, color: 'var(--color-text)' }}>
                     หน้า {safePage} / {totalPages}
                   </span>
 
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    style={{ padding: '5px 10px', fontSize: 12 }}
+                    style={{ padding: '6px 12px', fontSize: 12 }}
                     disabled={safePage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   >
