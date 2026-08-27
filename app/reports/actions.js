@@ -16,14 +16,16 @@ export async function getMonthlyReportAction(monthInput) {
   }
 
   const monthLabel = monthInputToLabel(monthInput);
-  const [{ data: summary }, opexDefaults] = await Promise.all([
+  const [{ data: summary }, opexDefaults, bizInfo] = await Promise.all([
     supabase.rpc('get_monthly_summary', { p_month_label: monthLabel }),
     readBusinessConfig(supabase, 'opex_defaults', {}),
+    readBusinessConfig(supabase, 'biz_info', {}),
   ]);
 
   return {
     sales: summary?.sales || [],
     expenses: summary?.expenses || [],
     opexDefaults: opexDefaults || {},
+    bizInfo: bizInfo || {},
   };
 }

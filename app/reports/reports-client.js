@@ -13,6 +13,7 @@ import DataTable from '../../components/data-table';
 import Kpi from '../../components/kpi';
 import DateField from '../../components/date-field';
 import { getMonthlyReportAction } from './actions';
+import { printMonthlyReport } from './print-report';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 'all'];
 
@@ -82,10 +83,11 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
     }
   }
 
-  const currentData = cache[month] || initialData || { sales: [], expenses: [], opexDefaults: {} };
+  const currentData = cache[month] || initialData || { sales: [], expenses: [], opexDefaults: {}, bizInfo: {} };
   const sales = currentData.sales || [];
   const expenses = currentData.expenses || [];
   const opexDefaults = currentData.opexDefaults || {};
+  const bizInfo = currentData.bizInfo || initialData.bizInfo || {};
 
   const monthLabel = monthInputToLabel(month);
 
@@ -179,6 +181,17 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
     { key: 'total_amount', label: 'รวม', align: 'right', render: (r) => <strong>{fmtMoney(r.total_amount)} ฿</strong> },
   ];
 
+  function handlePrint() {
+    printMonthlyReport({
+      monthLabel,
+      sales,
+      expenses,
+      opexDefaults,
+      bizInfo,
+      printedBy: name || role || 'ผู้ดูแลระบบ',
+    });
+  }
+
   return (
     <AppShell role={role} name={name} isAdmin={isAdmin} allowed={allowed}>
       <PageHeader icon="ti-chart-bar" title="สรุปรายเดือน">
@@ -190,6 +203,14 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
             onChange={handleMonthChange}
           />
         </div>
+        <button
+          type="button"
+          className="link-btn"
+          onClick={handlePrint}
+          title="พิมพ์หรือบันทึกเป็น PDF สำหรับสำนักงานบัญชี"
+        >
+          <Icon name="ti-printer" /> พิมพ์ / PDF
+        </button>
         <a className="link-btn" href={`/export?month=${month}`}>
           <Icon name="ti-download" /> Excel
         </a>
