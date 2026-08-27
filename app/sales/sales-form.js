@@ -89,7 +89,11 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
     100;
 
   function onDateChange(d) {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) router.push(`/sales?date=${d}`);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      startTransition(() => {
+        router.push(`/sales?date=${d}`);
+      });
+    }
   }
 
   async function onSubmit(e) {
@@ -131,7 +135,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
       {/* วันที่ */}
       <div style={card}>
         <label style={lbl}>วันที่</label>
-        <DateField value={date} onChange={onDateChange} />
+        <DateField value={date} loading={isPending} onChange={onDateChange} />
         {existing && canEdit && (
           <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>
             (มีข้อมูลแล้ว — บันทึกจะทับของเดิม)

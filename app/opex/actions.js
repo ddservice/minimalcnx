@@ -157,6 +157,7 @@ export async function saveOpexAction(input) {
   revalidatePath('/opex');
   revalidatePath('/reports');
   revalidatePath('/dashboard');
+  revalidatePath('/analytics');
   return {
     status: 'ok',
     message: `บันทึก ${saved} รายการ รวม ${sum.toLocaleString('th-TH')} ฿${historyWarning}`,

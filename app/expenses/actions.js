@@ -18,6 +18,7 @@ function refresh() {
   revalidatePath('/expenses');
   revalidatePath('/reports');
   revalidatePath('/dashboard');
+  revalidatePath('/analytics');
 }
 
 // map row จากฟอร์ม → record สำหรับ insert/update (คำนวณ total ฝั่งเซิร์ฟเวอร์)

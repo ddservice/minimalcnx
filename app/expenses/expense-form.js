@@ -80,7 +80,9 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
 
   // เปลี่ยนวันที่ = โหลดข้อมูลวันใหม่ (คงหมวดเดิม); เปลี่ยนหมวด = ฝั่ง client ทันที
   function navDate(nextDate) {
-    router.push(`/expenses?date=${nextDate}&category=${encodeURIComponent(category)}`);
+    startTransition(() => {
+      router.push(`/expenses?date=${nextDate}&category=${encodeURIComponent(category)}`);
+    });
   }
 
   async function onSubmit(e) {
@@ -120,7 +122,7 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
         <div style={grid}>
           <div>
             <label style={lbl}>วันที่</label>
-            <DateField value={date} onChange={(v) => /^\d{4}-\d{2}-\d{2}$/.test(v) && navDate(v)} />
+            <DateField value={date} loading={isPending} onChange={(v) => /^\d{4}-\d{2}-\d{2}$/.test(v) && navDate(v)} />
           </div>
           <div>
             <label style={lbl}>หมวดหมู่</label>

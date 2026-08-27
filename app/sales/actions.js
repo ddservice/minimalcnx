@@ -55,6 +55,7 @@ export async function saveSalesAction(input) {
   revalidatePath('/sales');
   revalidatePath('/reports');
   revalidatePath('/dashboard');
+  revalidatePath('/analytics');
   return {
     status: 'ok',
     message: `บันทึกยอดขายวันที่ ${date} เรียบร้อย (สุทธิ ${payload.net_revenue.toLocaleString('th-TH')} ฿)`,
@@ -81,5 +82,6 @@ export async function deleteSalesAction(date) {
   revalidatePath('/sales');
   revalidatePath('/reports');
   revalidatePath('/dashboard');
+  revalidatePath('/analytics');
   return { status: 'ok', message: `ลบยอดขายวันที่ ${d} เรียบร้อย` };
 }

@@ -225,7 +225,11 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
   const vatAmt = Number(tax.vat) || 0;                                     // ภ.พ.30
 
   function onMonthChange(v) {
-    if (/^\d{4}-\d{2}$/.test(v)) router.push(`/opex?month=${v}`);
+    if (/^\d{4}-\d{2}$/.test(v)) {
+      startTransition(() => {
+        router.push(`/opex?month=${v}`);
+      });
+    }
   }
 
   const setEmp = (i, k, v) => setEmployees(employees.map((e, idx) => (idx === i ? { ...e, [k]: v } : e)));
@@ -252,7 +256,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
       )}
       <div style={card}>
         <label style={lbl}>เดือน</label>
-        <div style={{ maxWidth: 200 }}><DateField type="month" value={monthInput} onChange={onMonthChange} /></div>
+        <div style={{ maxWidth: 200 }}><DateField type="month" value={monthInput} loading={isPending} onChange={onMonthChange} /></div>
         <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>({monthLabel})</span>
       </div>
 

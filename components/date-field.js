@@ -11,19 +11,19 @@ import { useRef } from 'react';
 // ของ native input เท่านั้น (พิมพ์ในช่องข้อความจะแค่โฟกัส ไม่เปิดปฏิทิน) ต่างจาก iOS ที่แตะที่ไหนก็เปิด
 // เพราะ overlay โปร่งใสซ่อนไอคอนนั้นไปพร้อมกับซ่อนทุกอย่าง ผู้ใช้เลยหาตำแหน่งคลิกที่ถูกต้องไม่เจอ (ใช้งาน
 // ไม่ได้บนคอมทั้งที่มือถือปกติดี) — เรียก showPicker() เองตอนคลิกที่ไหนก็ได้ในกล่อง แก้ปัญหานี้ตรงจุด
-export default function DateField({ value, onChange, type = 'date', min, max, disabled, placeholder = 'เลือก' }) {
+export default function DateField({ value, onChange, type = 'date', min, max, disabled, loading = false, placeholder = 'เลือก' }) {
   const ref = useRef(null);
   const display = formatValue(value, type);
 
   const openPicker = () => {
-    if (disabled) return;
+    if (disabled || loading) return;
     try { ref.current?.showPicker?.(); } catch {}
   };
 
   return (
-    <div className={`date-field${disabled ? ' disabled' : ''}`} onClick={openPicker}>
+    <div className={`date-field${disabled ? ' disabled' : ''}${loading ? ' loading' : ''}`} onClick={openPicker}>
       <span className="date-field-display">
-        <Icon name="ti-calendar-event" />
+        <Icon name={loading ? 'ti-loader-2' : 'ti-calendar-event'} className={loading ? 'spin' : ''} />
         {display || <span className="muted">{placeholder}</span>}
       </span>
       <input
@@ -33,7 +33,7 @@ export default function DateField({ value, onChange, type = 'date', min, max, di
         value={value || ''}
         min={min}
         max={max}
-        disabled={disabled}
+        disabled={disabled || loading}
         onChange={(e) => onChange(e.target.value)}
         aria-label={placeholder}
       />
