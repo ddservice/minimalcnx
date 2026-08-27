@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useTransition, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Icon from '../../components/icon';
 import AppShell from '../../components/app-shell';
 import PageHeader from '../../components/page-header';
@@ -14,7 +14,7 @@ import Kpi from '../../components/kpi';
 import DateField from '../../components/date-field';
 import { getMonthlyReportAction } from './actions';
 
-const DEFAULT_PAGE_SIZE = 30;
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100, 'all'];
 
 function getPrevMonths(monthStr, count = 3) {
   const [yStr, mStr] = String(monthStr).split('-');
@@ -36,10 +36,14 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
   const [month, setMonth] = useState(initialMonth);
   const [cache, setCache] = useState({ [initialMonth]: initialData });
   const [isLoading, setIsLoading] = useState(false);
-  const [search, setSearch] = useState('');
-  const [showAllItems, setShowAllItems] = useState(false);
 
-  // Background prefetch: ดึงข้อมูลเดือนก่อนหน้า (เช่น July, June) มาเก็บไว้ใน Client Cache ล่วงหน้า
+  // Table controls
+  const [search, setSearch] = useState('');
+  const [catFilter, setCatFilter] = useState('');
+  const [pageSize, setPageSize] = useState(20);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Background prefetch
   useEffect(() => {
     const toPrefetch = getPrevMonths(month, 3);
     toPrefetch.forEach((m) => {
@@ -53,17 +57,18 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
     });
   }, [month]);
 
-  // เปลี่ยนเดือน: ถ้ามีใน cache แล้วจะเปลี่ยนทันทีใน 0ms
+  // เปลี่ยนเดือน
   async function handleMonthChange(newMonth) {
     if (!/^\d{4}-\d{2}$/.test(newMonth) || newMonth === month) return;
 
     setMonth(newMonth);
-    setShowAllItems(false);
     setSearch('');
+    setCatFilter('');
+    setCurrentPage(1);
     window.history.replaceState(null, '', `/reports?month=${newMonth}`);
 
     if (cache[newMonth]) {
-      return; // 0ms Instant render from cache!
+      return; // 0ms Instant render from cache
     }
 
     setIsLoading(true);
@@ -131,17 +136,37 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
       .sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   }, [expenses]);
 
-  const filteredItemRows = useMemo(() => {
-    if (!search.trim()) return allItemRows;
-    const q = search.trim().toLowerCase();
-    return allItemRows.filter((r) =>
-      (r.item_name || '').toLowerCase().includes(q) ||
-      (r.subcategory || '').toLowerCase().includes(q) ||
-      (r.category || '').toLowerCase().includes(q)
-    );
-  }, [allItemRows, search]);
+  // กรองตามหมวด + คำค้นหา
+  const filteredRows = useMemo(() => {
+    let list = allItemRows;
+    if (catFilter) {
+      list = list.filter((r) => r.category === catFilter);
+    }
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((r) =>
+        (r.item_name || '').toLowerCase().includes(q) ||
+        (r.subcategory || '').toLowerCase().includes(q) ||
+        (r.category || '').toLowerCase().includes(q) ||
+        (r.date || '').includes(q)
+      );
+    }
+    return list;
+  }, [allItemRows, catFilter, search]);
 
-  const displayItemRows = showAllItems ? filteredItemRows : filteredItemRows.slice(0, DEFAULT_PAGE_SIZE);
+  // คำนวณหน้า Pagination
+  const numericLimit = pageSize === 'all' ? filteredRows.length || 1 : Number(pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / numericLimit));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedRows = useMemo(() => {
+    if (pageSize === 'all') return filteredRows;
+    const start = (safePage - 1) * numericLimit;
+    return filteredRows.slice(start, start + numericLimit);
+  }, [filteredRows, safePage, numericLimit, pageSize]);
+
+  const startRecord = filteredRows.length === 0 ? 0 : (safePage - 1) * numericLimit + 1;
+  const endRecord = pageSize === 'all' ? filteredRows.length : Math.min(safePage * numericLimit, filteredRows.length);
 
   const itemCols = [
     { key: 'date', label: 'วันที่' },
@@ -186,38 +211,121 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
         </div>
       </div>
 
+      {/* รายการรายจ่ายทั้งเดือน */}
       <div className="card">
-        <div className="card-head" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        <div className="card-head" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <Icon name="ti-receipt-2" />
             <h2>รายการรายจ่ายทั้งเดือน — {monthLabel}</h2>
-            <span className="muted" style={{ fontSize: 12 }}>({allItemRows.length} รายการ)</span>
+            <span className="chip" style={{ background: 'var(--coffee)', fontSize: 11 }}>
+              {allItemRows.length} รายการ
+            </span>
           </div>
-          {allItemRows.length > 10 && (
-            <div style={{ width: 'min(240px, 100%)' }}>
-              <input
-                type="text"
-                className="input"
-                placeholder="ค้นหารายการ / ผู้ขาย..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{ padding: '6px 10px', fontSize: 12 }}
-              />
-            </div>
-          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <select
+              className="input"
+              style={{ width: 'auto', minWidth: 130, padding: '6px 10px', fontSize: 12 }}
+              value={catFilter}
+              onChange={(e) => {
+                setCatFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              aria-label="กรองหมวดหมู่"
+            >
+              <option value="">ทุกหมวดหมู่</option>
+              {EXPENSE_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              className="input"
+              placeholder="ค้นหารายการ / ผู้ขาย..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              style={{ width: 'min(200px, 100%)', padding: '6px 10px', fontSize: 12 }}
+            />
+          </div>
         </div>
+
         <div className="card-body">
-          <DataTable columns={itemCols} rows={displayItemRows} rowKey={(r) => r.id} emptyText="ยังไม่มีรายจ่ายในเดือนนี้" />
-          {!showAllItems && filteredItemRows.length > DEFAULT_PAGE_SIZE && (
-            <div style={{ textAlign: 'center', marginTop: 14 }}>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                style={{ fontSize: 13, padding: '7px 18px' }}
-                onClick={() => setShowAllItems(true)}
-              >
-                <Icon name="ti-list" /> ดูทั้งหมด ({filteredItemRows.length} รายการ)
-              </button>
+          <DataTable
+            columns={itemCols}
+            rows={paginatedRows}
+            rowKey={(r) => r.id}
+            emptyText={allItemRows.length === 0 ? 'ยังไม่มีรายจ่ายในเดือนนี้' : 'ไม่พบรายการที่ตรงกับเงื่อนไขค้นหา'}
+          />
+
+          {/* แถบควบคุม Pagination */}
+          {filteredRows.length > 0 && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12,
+                marginTop: 16,
+                paddingTop: 12,
+                borderTop: '1px solid var(--border)',
+                fontSize: 13,
+              }}
+            >
+              <div className="muted" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>แสดง {startRecord}–{endRecord} จากทั้งหมด {filteredRows.length} รายการ</span>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+                  <span>หน้าละ:</span>
+                  <select
+                    className="input"
+                    style={{ width: 'auto', padding: '4px 8px', fontSize: 12, fontWeight: 600 }}
+                    value={pageSize}
+                    onChange={(e) => {
+                      const v = e.target.value === 'all' ? 'all' : Number(e.target.value);
+                      setPageSize(v);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    {PAGE_SIZE_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt === 'all' ? 'ทั้งหมด' : opt}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {pageSize !== 'all' && totalPages > 1 && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    style={{ padding: '5px 10px', fontSize: 12 }}
+                    disabled={safePage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  >
+                    <Icon name="ti-chevron-left" /> ก่อนหน้า
+                  </button>
+
+                  <span style={{ padding: '0 8px', fontWeight: 600, fontSize: 12 }}>
+                    หน้า {safePage} / {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    style={{ padding: '5px 10px', fontSize: 12 }}
+                    disabled={safePage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    ถัดไป <Icon name="ti-chevron-right" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
