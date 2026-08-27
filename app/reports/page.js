@@ -38,6 +38,7 @@ export default async function ReportsPage({ searchParams }) {
 
   const totalCups = sales.reduce((a, s) => a + Number(s.total_cups || 0), 0);
   const pastryRev = sales.reduce((a, s) => a + Number(s.pastry_revenue || 0), 0);
+  const freeCups = sales.reduce((a, s) => a + Number(s.free_cups || 0), 0);
   const daysRecorded = sales.length;
 
   const expRows = [
@@ -110,6 +111,7 @@ export default async function ReportsPage({ searchParams }) {
           <Mini label="วันที่บันทึก" value={`${daysRecorded} วัน`} />
           <Mini label="ยอดขายรวม" value={`${fmtMoney(totalCups)} แก้ว`} />
           <Mini label="รายได้ขนม" value={`${fmtMoney(pastryRev)} ฿`} />
+          <Mini label="แก้วฟรี" value={`${fmtMoney(freeCups)} แก้ว`} />
         </div>
       </div>
 

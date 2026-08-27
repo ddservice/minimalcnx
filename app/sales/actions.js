@@ -53,6 +53,7 @@ export async function saveSalesAction(input) {
   if (error) return { status: 'error', message: error.message };
 
   revalidatePath('/sales');
+  revalidatePath('/reports');
   revalidatePath('/dashboard');
   return {
     status: 'ok',
@@ -78,6 +79,7 @@ export async function deleteSalesAction(date) {
   if (!data?.length) return { status: 'error', message: 'ลบไม่สำเร็จ — ต้องมีสิทธิ์ admin' };
 
   revalidatePath('/sales');
+  revalidatePath('/reports');
   revalidatePath('/dashboard');
   return { status: 'ok', message: `ลบยอดขายวันที่ ${d} เรียบร้อย` };
 }

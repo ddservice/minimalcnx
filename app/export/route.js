@@ -38,6 +38,7 @@ export async function GET(request) {
     .reduce((a, e) => a + Number(e.total_amount || 0), 0);
   const totalExp = matTotal + bakTotal + miscTotal + opexTotal;
   const profit = income - totalExp;
+  const freeCups = sales.reduce((a, s) => a + Number(s.free_cups || 0), 0);
 
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Minimal Maerim';
@@ -48,9 +49,9 @@ export async function GET(request) {
   s1.columns = [{ width: 32 }, { width: 18 }];
   s1.addRow([`สรุปรายเดือน — ${monthLabel}`]).font = { bold: true, size: 14 };
   s1.addRow([]);
-  const kv = (label, val, color) => {
+  const kv = (label, val, color, fmt) => {
     const r = s1.addRow([label, val]);
-    r.getCell(2).numFmt = money.numFmt;
+    r.getCell(2).numFmt = fmt || money.numFmt;
     if (color) r.getCell(2).font = { bold: true, color: { argb: color } };
     return r;
   };
@@ -63,12 +64,15 @@ export async function GET(request) {
   kv('รวมรายจ่าย', totalExp, 'FFC0392B');
   s1.addRow([]);
   kv(profit >= 0 ? 'กำไรสุทธิ' : 'ขาดทุนสุทธิ', profit, profit >= 0 ? 'FF1A5FA5' : 'FFC0392B');
+  s1.addRow([]);
+  kv('แก้วฟรี (แก้ว)', freeCups, null, '#,##0');
 
   // ── Sheet 2: ยอดขายรายวัน ──
   const s2 = wb.addWorksheet('ยอดขายรายวัน');
   s2.columns = [
     { header: 'วันที่', key: 'date', width: 14 },
     { header: 'แก้วรวม', key: 'cups', width: 10 },
+    { header: 'แก้วฟรี(แก้ว)', key: 'freeCups', width: 12 },
     { header: 'K-Shop', key: 'kshop', width: 12 },
     { header: 'เงินสด', key: 'cash', width: 12 },
     { header: 'Shopee(ก่อน GP)', key: 'shopee', width: 15 },
@@ -84,6 +88,7 @@ export async function GET(request) {
       const r = s2.addRow({
         date: s.date,
         cups: Number(s.total_cups || 0),
+        freeCups: Number(s.free_cups || 0),
         kshop: Number(s.kshop_amount || 0),
         cash: Number(s.cash_amount || 0),
         shopee: Number(s.shopee_before_gp || 0),
