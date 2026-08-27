@@ -40,7 +40,31 @@ ENC="$DUMP.age"
 KEY="$PREFIX/daily/$DAY/minimalcnx-$STAMP.dump.age"
 
 log()  { printf '[%s] %s\n' "$(date -u +%H:%M:%SZ)" "$*"; }
-fail() { printf '[%s] ❌ %s\n' "$(date -u +%H:%M:%SZ)" "$*" >&2; exit 1; }
+send_alert() {
+  local msg="$1"
+  if [ -n "${BACKUP_ALERT_WEBHOOK:-}" ]; then
+    curl -s -m 5 -X POST -H "Content-Type: application/json" \
+      -d "{\"content\":\"[MinimalCNX Backup] $msg\"}" \
+      "$BACKUP_ALERT_WEBHOOK" >/dev/null 2>&1 || true
+  fi
+}
+send_heartbeat() {
+  local stage="${1:-}"
+  if [ -n "${BACKUP_HEARTBEAT_URL:-}" ]; then
+    case "$stage" in
+      start) curl -fsS -m 5 "${BACKUP_HEARTBEAT_URL}/start" >/dev/null 2>&1 || true ;;
+      fail)  curl -fsS -m 5 "${BACKUP_HEARTBEAT_URL}/fail" >/dev/null 2>&1 || true ;;
+      *)     curl -fsS -m 5 "${BACKUP_HEARTBEAT_URL}" >/dev/null 2>&1 || true ;;
+    esac
+  fi
+}
+fail() {
+  local err="$*"
+  printf '[%s] ❌ %s\n' "$(date -u +%H:%M:%SZ)" "$err" >&2
+  send_alert "❌ สำรองข้อมูลล้มเหลว: $err"
+  send_heartbeat "fail"
+  exit 1
+}
 trap 'rm -rf "$WORK"' EXIT
 trap 'fail "ล้มเหลวที่บรรทัด $LINENO"' ERR
 
@@ -79,6 +103,7 @@ fi
 # ใช้ pg_dump จาก docker image ให้ major version ตรงกับเซิร์ฟเวอร์ — pg_dump ที่เก่ากว่า
 # เซิร์ฟเวอร์จะปฏิเสธทำงานทันที และของที่ติดมากับ VPS มักเป็นคนละเวอร์ชัน
 # -Fc = custom format (บีบอัดในตัว + restore ทีละตารางได้)
+send_heartbeat "start"
 log "กำลัง dump ฐานข้อมูล..."
 docker run --rm -e PGCONNECT_TIMEOUT=30 -v "$WORK:/out" "$PG_IMAGE" \
   pg_dump "$SUPABASE_DB_URL" \
@@ -126,4 +151,11 @@ if [ "$(date -u +%d)" = "01" ]; then
     && log "ทำสำเนารายเดือนไว้ที่ $MKEY"
 fi
 
+# ── 6) หมุนเวียน log อัตโนมัติ (เก็บไม่เกิน 2,000 บรรทัด) ─────────
+LOG_FILE="${BACKUP_LOG_FILE:-$HOME/backup.log}"
+if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)" -gt 2500 ]; then
+  tail -n 1500 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE" 2>/dev/null || true
+fi
+
+send_heartbeat "success"
 log "✅ สำรองข้อมูลสำเร็จ — $((LOCAL_SIZE / 1024)) KB → $KEY"
