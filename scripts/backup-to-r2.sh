@@ -157,5 +157,12 @@ if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)" -gt 25
   tail -n 1500 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE" 2>/dev/null || true
 fi
 
+# ── 7) ลบไฟล์ backup ท้องถิ่นที่เก่ากว่า 90 วัน (ถ้ามีการเก็บสำเนาไว้บน VPS) ──
+LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-$HOME/backups/minimalcnx}"
+if [ -d "$LOCAL_BACKUP_DIR" ]; then
+  log "ลบไฟล์ backup ท้องถิ่นที่เก่ากว่า 90 วันใน $LOCAL_BACKUP_DIR ..."
+  find "$LOCAL_BACKUP_DIR" -type f \( -name "*.dump" -o -name "*.dump.age" \) -mtime +90 -delete 2>/dev/null || true
+fi
+
 send_heartbeat "success"
 log "✅ สำรองข้อมูลสำเร็จ — $((LOCAL_SIZE / 1024)) KB → $KEY"

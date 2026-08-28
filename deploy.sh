@@ -52,6 +52,10 @@ docker rm -f "$NAME" marim69-beta 2>/dev/null || true
 wait_port_free
 docker run -d --name "$NAME" --restart unless-stopped -p "$PORT" "$IMAGE"
 
+echo "==> cleanup docker dangling images & build cache"
+docker image prune -f --filter "until=24h" 2>/dev/null || docker image prune -f 2>/dev/null || true
+docker builder prune -f --keep-storage 2GB 2>/dev/null || true
+
 echo "==> health check (รอจนกว่า Next.js จะพร้อมทำงาน)"
 for i in {1..15}; do
   CODE=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:${HOST_PORT}/login || echo "000")

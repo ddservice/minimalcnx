@@ -19,10 +19,11 @@
    - Specify bucket: `minimalcnx-backups` เท่านั้น — **อย่าให้สิทธิ์ทั้งบัญชี**
    - เก็บ **Access Key ID** / **Secret Access Key** / **Account ID** ไว้
 3. **Lifecycle rule** (bucket → Settings → Object lifecycle rules)
-   - prefix `minimalcnx/daily/` → ลบเมื่ออายุเกิน **30 วัน**
-   - prefix `minimalcnx/monthly/` → ลบเมื่ออายุเกิน **365 วัน**
+   - prefix `minimalcnx/daily/` → ลบเมื่ออายุเกิน **90 วัน** (หรือ 30 วันตามนโยบาย)
+   - prefix `minimalcnx/monthly/` → ลบเมื่ออายุเกิน **365 วัน** (หรือ 90 วันตามต้องการ)
 
 > R2 ไม่คิดค่า egress → ตอนกู้จริงไม่โดนบิลบานปลายแบบ S3
+> สคริปต์สำรองข้อมูลจะลบไฟล์ dump ชั่วคราวออกจาก VPS ทันทีหลังอัปโหลดเสร็จ และจะลบไฟล์ backup เก่าเกิน 90 วันใน `~/backups/minimalcnx` (ถ้ามี) อัตโนมัติ
 
 ## 2. เตรียมเครื่องมือบน VPS
 
