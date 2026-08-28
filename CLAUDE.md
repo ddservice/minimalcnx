@@ -42,6 +42,8 @@ Maintained by Claude. **Update this file after every change** to the project.
 - **`@supabase/ssr` speaks PostgREST over HTTPS, not the Postgres wire protocol — this repo opens zero direct Postgres connections.** So Supavisor pooler settings have **no effect on app latency**; that connection string exists only for backups. Don't "enable the transaction pooler to speed up the app" — it does nothing here.
 - `pg_dump` covers `public` + `storage` **schemas but not Storage file contents** — `scripts/sync-storage-to-r2.sh` handles checking and syncing the `evidence` bucket (free-cup proof images). `auth.users` is deliberately out of scope (Supabase-managed, not portable across projects). Credentials (`.backup.env`, `*.key`) are gitignored.
 - **Auto-trimming & Webhook Alerts:** `backup-to-r2.sh` automatically keeps `~/backup.log` under 2,500 lines (trims to latest 1,500) and supports optional `BACKUP_ALERT_WEBHOOK` for instant Discord/Slack/Telegram failure alerts. Restore drill container automatically pre-provisions `extensions` and `auth` schemas + `uuid-ossp` and `pgcrypto` before `pg_restore`.
+- **90-Day Retention Policy (2026-08-28):** Cloudflare R2 bucket uses Object Lifecycle Rules (`minimalcnx/daily/` expires after 90 days). `backup-to-r2.sh` and `scripts/vps-clean.sh` automatically purge any local backup dumps older than 90 days.
+- **VPS Housekeeping & Auto-Prune (2026-08-28):** `deploy.sh` automatically prunes Docker dangling images and builder cache on each deploy. Run `bash scripts/vps-clean.sh` on the VPS for periodic system cleanup (Docker cache, journal logs vacuum to 100MB, `/tmp` purge, and local backup retention).
 
 ## Performance
 
