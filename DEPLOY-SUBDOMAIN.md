@@ -58,8 +58,8 @@ git clone <YOUR_REPO_URL> .        # repo root = แอป (flatten แล้ว
 
 ```bash
 docker build \
-  --build-arg NEXT_PUBLIC_SUPABASE_URL="https://fkhfrylvronkmktlmmia.supabase.co" \
-  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_SoNHJNrw4yfgZI_RYHHTjg_WgQ0lan-" \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co" \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_xxxxxxxxxxxxxxxxxxxx" \
   -t minimalcnx:latest .
 
 # bind แค่ localhost:3001 — ออกเน็ตตรงไม่ได้ (nginx เท่านั้นที่ต่อได้)
@@ -175,8 +175,8 @@ curl -s -o /dev/null -w "%{http_code}\n" https://$DOMAIN/admin     # คาด�
 
 ```bash
 cd "$APPDIR" && git pull
-docker build --build-arg NEXT_PUBLIC_SUPABASE_URL="https://fkhfrylvronkmktlmmia.supabase.co" \
-             --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_SoNHJNrw4yfgZI_RYHHTjg_WgQ0lan-" \
+docker build --build-arg NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co" \
+             --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_xxxxxxxxxxxxxxxxxxxx" \
              -t minimalcnx:latest .
 docker rm -f minimalcnx
 docker run -d --name minimalcnx --restart unless-stopped -p 127.0.0.1:${PORT}:3000 minimalcnx:latest

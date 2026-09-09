@@ -90,7 +90,7 @@ Supabase Dashboard → **Project Settings → Database → Connection string →
 สร้าง `~/apps/minimalcnx/.backup.env` (**gitignored แล้ว — ห้าม commit**)
 
 ```bash
-SUPABASE_DB_URL='postgresql://postgres.fkhfrylvronkmktlmmia:<DB_PASSWORD>@aws-0-<region>.pooler.supabase.com:5432/postgres'
+SUPABASE_DB_URL='postgresql://postgres.<project-ref>:<DB_PASSWORD>@aws-0-<region>.pooler.supabase.com:5432/postgres'
 R2_BUCKET='minimalcnx-backups'
 R2_ENDPOINT='https://<ACCOUNT_ID>.r2.cloudflarestorage.com'
 AWS_ACCESS_KEY_ID='<R2 Access Key ID>'
@@ -101,7 +101,7 @@ AWS_DEFAULT_REGION='auto'                            # R2 ไม่มี region
 
 # ใช้โดย sync-storage-to-r2.sh (Storage API คนละอย่างกับ connection string ของ Postgres)
 # ไม่ใส่ก็ได้ — สคริปต์จะแกะ project ref จาก SUPABASE_DB_URL ให้เอง
-SUPABASE_URL='https://fkhfrylvronkmktlmmia.supabase.co'
+SUPABASE_URL='https://<project-ref>.supabase.co'
 ```
 
 ```bash
