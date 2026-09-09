@@ -155,6 +155,10 @@ bash scripts/migrate-storage-files.sh --list
 bash scripts/migrate-storage-files.sh --all
 ```
 
+**ถ้า `--list` ได้ `รวม 0 ไฟล์` ให้ข้ามข้อนี้ทั้งข้อ** — ยังไม่มีใครอัปรูปหลักฐานเลย
+ไม่มีอะไรให้ย้ายและไม่มี URL ให้เขียนทับ (ตรวจซ้ำได้จากบรรทัดสุดท้ายของ `--verify`
+ที่บอกจำนวนลิงก์ซึ่งยังชี้โปรเจกต์เก่า)
+
 `--all` = ดาวน์โหลดจาก bucket เก่า → อัปเข้า bucket ใหม่ → แล้ว **เขียนทับ URL ใน
 `sales_daily.free_cup_evidence_url`** ให้ชี้โปรเจกต์ใหม่
 
