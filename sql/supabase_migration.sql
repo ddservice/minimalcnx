@@ -1,6 +1,19 @@
 -- ================================================================
 -- Supabase Migration: Minimal Maerim 69 Coffee Shop Dashboard
 -- ================================================================
+--
+-- ⛔ ห้ามรันไฟล์นี้บนโปรเจกต์ที่มีข้อมูลอยู่แล้ว
+--
+-- นี่คือ schema ตั้งต้นสำหรับโปรเจกต์ Supabase "เปล่า" เท่านั้น
+-- ทุก create table เป็นแบบไม่มี if not exists รันทับของเดิมจะได้
+--   ERROR: 42P07: relation "profiles" already exists
+-- (ไม่เสียหายอะไร เพราะ SQL Editor รันทั้งสคริปต์ในทรานแซกชันเดียวแล้ว rollback
+--  และไม่มีคำสั่ง drop อยู่ก่อนหน้า — แต่ก็ไม่ได้ประโยชน์อะไรเช่นกัน)
+--
+-- ถ้าอยากรู้ว่าโปรเจกต์นี้ยังขาด migration ไฟล์ไหน ให้รัน sql/check_migrations.sql
+-- (อ่านอย่างเดียว ปลอดภัย) แล้วรันเฉพาะไฟล์ที่ขึ้น false
+-- ถ้าจะย้ายข้อมูลข้ามโปรเจกต์ ใช้ scripts/migrate-supabase-project.sh ไม่ใช่ไฟล์นี้
+-- ================================================================
 -- Schema ครอบคลุม: Sales, Expenses, OPEX, Users, Employees, Payroll
 -- CSV Source: Data_Expenses → date, category, subcategory, item_name,
 --             unit_price, quantity, total_amount, payment_method
