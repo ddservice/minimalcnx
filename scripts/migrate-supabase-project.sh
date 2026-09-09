@@ -205,6 +205,14 @@ run_sql_file() {
 do_load() {
   [ -f "$WORKDIR/01-schema-public.sql" ] || fail "ยังไม่มีไฟล์ dump — รัน --dump ก่อน"
 
+  # กันรัน --load ซ้ำบนปลายทางที่โหลดไปแล้ว — CREATE TABLE จะได้ "already exists"
+  # (ซึ่งถูกกรองว่าปกติ) แล้วไปตายที่ ALTER TABLE ... ADD PRIMARY KEY ว่ามี PK อยู่แล้ว
+  # เป็นกำแพง error ที่ดูน่ากลัวทั้งที่สาเหตุคือแค่ "ยังไม่ได้ --reset"
+  local existing
+  existing="$(psql_new -tAc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('sales_daily','expenses','profiles');")"
+  [ "${existing:-0}" = "0" ] \
+    || fail "ปลายทางมีตารางของแอปอยู่แล้ว (${existing}/3) — ล้างก่อนด้วย: bash scripts/migrate-supabase-project.sh --reset"
+
   run_sql_file schema "$WORKDIR/01-schema-public.sql"
 
   # ตั้ง replica ใน session เดียวกับตอน COPY (psql -c แล้วตามด้วย -f = session เดียว)
