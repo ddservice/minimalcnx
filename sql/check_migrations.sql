@@ -31,6 +31,17 @@ select
   exists (select 1 from information_schema.columns
             where table_schema = 'public' and table_name = 'audit_log'
               and column_name = 'session_id')                                                as add_audit_forensics,
+  -- ⚠️ ช่องนี้ต่างจากช่องบน และสำคัญกว่า: มันดู "เนื้อฟังก์ชัน" ไม่ใช่แค่คอลัมน์
+  -- การรัน harden_security.sql หรือ add_audit_context.sql ซ้ำ จะเขียนทับ fn_audit_log
+  -- ด้วยรุ่นเก่าที่ไม่รู้จักคอลัมน์ใหม่ — คอลัมน์ยังอยู่ ช่องบนจึงยัง true
+  -- แต่ audit จะหยุดบันทึก session/อีเมล/เบราว์เซอร์แบบเงียบๆ ตั้งแต่วินาทีนั้น
+  -- ถ้าช่องบน true แต่ช่องนี้ false → รัน sql/add_audit_forensics.sql ซ้ำทันที
+  (exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' and p.proname = 'fn_audit_log'
+              and p.prosrc like '%session_id%')
+   and exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' and p.proname = 'fn_audit_log_config'
+              and p.prosrc like '%session_id%'))                                             as audit_trigger_current,
   (to_regclass('public.price_list') is null
      and to_regclass('public.employees') is null
      and to_regclass('public.payroll_monthly') is null)                                      as cleanup_legacy_tables,

@@ -3,17 +3,33 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-# Supabase ที่แอปจะชี้ไป — แก้ได้โดยไม่ต้องแตะไฟล์นี้ผ่าน .deploy.env (gitignored)
-# ค่าที่ฝังไว้ข้างล่างคือโปรเจกต์เดิม (Sydney) ใช้เป็น fallback ระหว่างยังย้ายไม่เสร็จ
-# ตอนย้าย region: สร้าง ~/apps/minimalcnx/.deploy.env ใส่ค่าโปรเจกต์ใหม่ แล้ว deploy ตามปกติ
-#   SUPABASE_URL='https://<ref-ใหม่>.supabase.co'
+# Supabase ที่แอปจะชี้ไป — บังคับต้องมี .deploy.env (gitignored) ข้างๆ ไฟล์นี้เสมอ
+#   SUPABASE_URL='https://<project-ref>.supabase.co'
 #   SUPABASE_ANON_KEY='sb_publishable_...'
 DEPLOY_ENV="$(dirname "$0")/.deploy.env"
 # shellcheck disable=SC1090
 [ -f "$DEPLOY_ENV" ] && set -a && . "$DEPLOY_ENV" && set +a
 
-SUPABASE_URL="${SUPABASE_URL:-https://fkhfrylvronkmktlmmia.supabase.co}"
-SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-sb_publishable_SoNHJNrw4yfgZI_RYHHTjg_WgQ0lan-}"
+# ไม่มีค่า fallback โดยตั้งใจ — ของเดิม fallback ไปโปรเจกต์ Sydney ซึ่งกลายเป็นกับดัก
+# หลังย้าย region: วันที่ .deploy.env หายไปด้วยเหตุใดก็ตาม deploy จะ "สำเร็จ" แล้วพนักงาน
+# คีย์ยอดลงฐานที่ไม่มีใครดูอีกแล้ว โดยไม่มี error สักบรรทัด — ล้มดังๆ ดีกว่าต่อผิดฐานเงียบๆ
+if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+  cat >&2 <<EOF
+ไม่พบ SUPABASE_URL / SUPABASE_ANON_KEY — ต้องมี $DEPLOY_ENV
+
+สร้างไฟล์นี้ก่อน (ค่าจาก Supabase → Project Settings → Data API / API Keys):
+
+  cat > $DEPLOY_ENV <<'ENV'
+  SUPABASE_URL='https://<project-ref>.supabase.co'
+  SUPABASE_ANON_KEY='sb_publishable_xxxxxxxx'
+  ENV
+  chmod 600 $DEPLOY_ENV
+
+ถ้าต้องการย้อนกลับไปโปรเจกต์เดิม ให้ "แก้ค่าในไฟล์นี้" เป็น ref เก่า แล้ว deploy ใหม่
+(อย่าลบไฟล์ทิ้งเพื่อย้อน — สคริปต์ไม่มีค่าเดาให้แล้ว)
+EOF
+  exit 1
+fi
 
 # ค่าพวกนี้ถูก "อบ" เข้าไปใน JS ที่ส่งให้เบราว์เซอร์ตอน docker build (ดู Dockerfile)
 # ไม่ใช่อ่านตอนรัน — ชี้ผิดโปรเจกต์คือทั้งแอปคุยกับฐานข้อมูลผิดตัวโดยไม่มี error ให้เห็น

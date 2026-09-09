@@ -232,10 +232,14 @@ rm -rf ~/minimalcnx-migrate          # ลบ dump ที่มีข้อม�
 (สคริปต์อ่านอย่างเดียวจากฝั่งเก่า):
 
 ```bash
-rm ~/apps/minimalcnx/.deploy.env     # กลับไปใช้ค่า fallback = โปรเจกต์เดิม
+nano ~/apps/minimalcnx/.deploy.env   # แก้ SUPABASE_URL / SUPABASE_ANON_KEY กลับเป็น ref เก่า
 bash deploy.sh
 nano ~/apps/minimalcnx/.backup.env   # SUPABASE_DB_URL กลับเป็นของเก่า
 ```
+
+> **อย่าลบ `.deploy.env` เพื่อย้อนกลับ** — ตั้งแต่ 2026-09-09 `deploy.sh` ไม่มีค่า fallback แล้ว
+> ไม่มีไฟล์ = หยุดพร้อมบอกวิธี ของเดิม fallback ไปโปรเจกต์ Sydney เงียบๆ ซึ่งกลายเป็นกับดัก
+> ทันทีที่ย้ายเสร็จ (ไฟล์หายเมื่อไหร่ = deploy สำเร็จแต่ทั้งร้านคีย์ลงฐานที่เลิกใช้แล้ว)
 
 ปัญหาที่เจอบ่อย:
 
