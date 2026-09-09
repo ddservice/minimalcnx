@@ -28,6 +28,9 @@ select
   exists (select 1 from pg_indexes where schemaname = 'public'
             and indexname = 'idx_expenses_date_item_null')                                   as optimize_queries,
   (to_regprocedure('public.cleanup_old_audit_logs(integer)') is not null)                     as maintenance_audit_log,
+  exists (select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'audit_log'
+              and column_name = 'session_id')                                                as add_audit_forensics,
   -- แยกดูเฉพาะ index ใบเสร็จซ้ำ: ถ้า harden_loyalty_integrity = true แต่ช่องนี้ = false
   -- แปลว่าตอนรันมีใบเสร็จซ้ำค้างอยู่ ไฟล์เลยข้ามการสร้าง index ให้ (ดู NOTICE ตอนรัน)
   exists (select 1 from pg_indexes where schemaname = 'public'

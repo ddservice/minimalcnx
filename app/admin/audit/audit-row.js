@@ -108,13 +108,31 @@ export default function AuditRow({ row, performer }) {
         <span style={{ fontSize: 12, marginLeft: 'auto', textAlign: 'right' }}>
           <strong>{who}</strong>
           {whoRole ? <span className="muted"> ({whoRole})</span> : null}
-          {row.ip_address ? <div className="muted" style={{ fontSize: 11 }}>IP {row.ip_address}{row.country ? ` · ${row.country}` : ''}</div> : null}
+          {row.actor_email ? <div className="muted" style={{ fontSize: 11 }}>{row.actor_email}</div> : null}
+          {row.ip_address ? (
+            <div className="muted" style={{ fontSize: 11 }}>
+              IP {row.ip_address}
+              {row.country ? ` · ${row.country}` : ''}
+              {row.city ? ` · ${row.city}` : ''}
+            </div>
+          ) : null}
           {row.device_summary ? <div className="muted" style={{ fontSize: 11 }}>{row.device_summary}</div> : null}
+          {/* session ย่อ 8 ตัวพอให้ไล่จับกลุ่มด้วยตาว่าแถวไหนอยู่ในการล็อกอินเดียวกัน */}
+          {row.session_id ? <div className="muted" style={{ fontSize: 11 }}>session {String(row.session_id).slice(0, 8)}</div> : null}
         </span>
       </summary>
       <div style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 10, fontSize: 12 }}>
         <div style={{ display: 'grid', gap: 4, marginBottom: 10, color: 'var(--muted)' }}>
-          {row.request_path ? <div>หน้า: <code>{row.request_path}</code></div> : null}
+          {row.request_path ? <div>หน้า: <code>{row.request_path}</code>{row.http_method ? ` (${row.http_method})` : ''}</div> : null}
+          {row.session_id ? <div>session: <code>{row.session_id}</code> <span style={{ color: 'var(--success)' }}>· จาก JWT ปลอมไม่ได้</span></div> : null}
+          {row.actor_email ? <div>อีเมล: {row.actor_email} <span style={{ color: 'var(--success)' }}>· จาก JWT</span></div> : null}
+          {row.browser || row.os ? <div>เบราว์เซอร์/OS: {[row.browser, row.os, row.device_form].filter(Boolean).join(' · ')}</div> : null}
+          {row.forwarded_for && row.forwarded_for !== row.ip_address
+            ? <div style={{ wordBreak: 'break-all' }}>สาย proxy (X-Forwarded-For): {row.forwarded_for}</div> : null}
+          {row.asn ? <div>เครือข่าย (ASN): {row.asn}</div> : null}
+          {row.cf_ray ? <div>CF-Ray: <code>{row.cf_ray}</code> · เอาไปเทียบ log ฝั่ง Cloudflare ได้</div> : null}
+          {row.referer ? <div style={{ wordBreak: 'break-all' }}>มาจากหน้า: {row.referer}</div> : null}
+          {row.accept_language ? <div>ภาษาเบราว์เซอร์: {row.accept_language}</div> : null}
           {row.user_agent ? <div style={{ wordBreak: 'break-all' }}>User-Agent: {row.user_agent}</div> : null}
           {row.record_id ? <div>รหัสรายการ: {row.record_id}</div> : null}
           {failed ? <div style={{ color: 'var(--danger)' }}>ผลลัพธ์: ไม่สำเร็จ</div> : null}

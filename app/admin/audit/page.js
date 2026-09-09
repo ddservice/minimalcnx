@@ -18,7 +18,17 @@ const VALID_ACTIONS = new Set([
 ]);
 const PAGE_SIZES = [10, 20, 50, 100];
 const DEFAULT_LIMIT = 20;
-const SELECT_COLS = 'id, table_name, record_id, action, old_data, new_data, performed_by, performed_at, ip_address, user_agent, device_summary, request_path, actor_username, actor_role, outcome, country';
+
+// เลือกคอลัมน์แบบไล่ลง: ถ้า SQL ไฟล์ล่าสุดยังไม่ได้รัน คอลัมน์ที่ยังไม่มีจะทำให้ทั้ง query พัง
+// จึงถอยไปชุดที่แคบลงทีละขั้นแทนที่จะโชว์หน้าเปล่า (พร้อมบอกว่าต้องรันไฟล์ไหน)
+const COLS_BASE = 'id, table_name, record_id, action, old_data, new_data, performed_by, performed_at';
+const COLS_CONTEXT = `${COLS_BASE}, ip_address, user_agent, device_summary, request_path, actor_username, actor_role, outcome, country`;
+const COLS_FORENSICS = `${COLS_CONTEXT}, session_id, actor_email, cf_ray, referer, accept_language, forwarded_for, http_method, browser, os, device_form, asn, city`;
+const COL_TIERS = [
+  { cols: COLS_FORENSICS, hint: '' },
+  { cols: COLS_CONTEXT, hint: 'ยังไม่ได้รัน sql/add_audit_forensics.sql — ยังไม่มี session, อีเมล, CF-Ray, referer และเบราว์เซอร์/OS แยกช่อง' },
+  { cols: COLS_BASE, hint: 'ยังไม่ได้รัน sql/add_audit_context.sql ใน Supabase — ตอนนี้เห็นแค่ใคร/ทำอะไร/เมื่อไหร่ ยังไม่มี IP และเครื่อง' },
+];
 
 export default async function AuditPage({ searchParams }) {
   const { supabase, role, name, isAdmin, allowed } = await requireSession();
@@ -32,30 +42,32 @@ export default async function AuditPage({ searchParams }) {
   const parsed = Number(sp?.limit);
   const limit = PAGE_SIZES.includes(parsed) ? parsed : DEFAULT_LIMIT;
 
-  let query = supabase
-    .from('audit_log')
-    .select(SELECT_COLS)
-    .order('performed_at', { ascending: false })
-    .limit(limit);
-  if (table) query = query.eq('table_name', table);
-  if (action) query = query.eq('action', action);
-  if (ip) query = query.ilike('ip_address', `%${ip}%`);
   // .or() รับ filter เป็นสตริงดิบ — ตัดอักขระที่มีความหมายในไวยากรณ์ของ PostgREST ออกก่อน
   // ไม่งั้นค่าที่มี , . ( ) " หรือ % ปนมาจะทำให้เงื่อนไขเพี้ยนและกรองผิดโดยไม่มี error
   const qSafe = q.replace(/[,.()"\\%*]/g, '');
-  if (qSafe) query = query.or(`actor_username.ilike.%${qSafe}%,actor_role.ilike.%${qSafe}%`);
 
-  let { data: rows, error } = await query;
+  let rows = null;
+  let error = null;
   let sqlHint = '';
-  if (error && /column|does not exist/i.test(error.message || '')) {
-    sqlHint = 'ยังไม่ได้รัน sql/add_audit_context.sql ใน Supabase — ตอนนี้เห็นแค่ใคร/ทำอะไร/เมื่อไหร่ ยังไม่มี IP และเครื่อง';
-    const fallback = await supabase
+  for (const tier of COL_TIERS) {
+    let query = supabase
       .from('audit_log')
-      .select('id, table_name, record_id, action, old_data, new_data, performed_by, performed_at')
+      .select(tier.cols)
       .order('performed_at', { ascending: false })
       .limit(limit);
-    rows = fallback.data;
-    error = fallback.error;
+    if (table) query = query.eq('table_name', table);
+    if (action) query = query.eq('action', action);
+    if (ip && tier.cols !== COLS_BASE) query = query.ilike('ip_address', `%${ip}%`);
+    if (qSafe && tier.cols !== COLS_BASE) {
+      query = query.or(`actor_username.ilike.%${qSafe}%,actor_role.ilike.%${qSafe}%`);
+    }
+    const res = await query;
+    rows = res.data;
+    error = res.error;
+    if (!error || !/column|does not exist/i.test(error.message || '')) {
+      sqlHint = tier.hint;
+      break;
+    }
   }
 
   const userIds = [...new Set((rows || []).map((r) => r.performed_by).filter(Boolean))];
@@ -67,12 +79,17 @@ export default async function AuditPage({ searchParams }) {
 
   return (
     <AppShell role={role} name={name} isAdmin={isAdmin} allowed={allowed}>
-      <PageHeader icon="ti-history" title="บันทึกตรวจสอบ (Super Admin)">
+      <PageHeader icon="ti-history" title="log (Super Admin)">
         <Link className="link-btn" href="/admin">← กลับหน้าผู้ใช้</Link>
       </PageHeader>
 
       <p className="muted" style={{ fontSize: 12, marginTop: -8, marginBottom: 12 }}>
-        เห็นได้เฉพาะ Super Admin (ตำแหน่ง admin) · เก็บผู้ใช้, การกระทำ, เวลา, IP, ประเทศ, ชนิดเครื่อง และ User-Agent
+        เห็นได้เฉพาะ Super Admin (ตำแหน่ง admin) · เก็บผู้ใช้ · การกระทำ · เวลา · session · อีเมล · IP ·
+        ประเทศ/เมือง · เครื่อง/OS/เบราว์เซอร์ · หน้า · CF-Ray · User-Agent
+      </p>
+      <p className="muted" style={{ fontSize: 11, marginTop: -6, marginBottom: 12 }}>
+        หมายเหตุ: IP และ User-Agent เป็นค่าที่แอปรายงานมา ผู้ใช้ที่ล็อกอินแล้วปลอมได้ในทางทฤษฎี —
+        ช่อง session กับอีเมลมาจาก JWT ปลอมไม่ได้ ใช้ยึดเวลาสอบสวน
       </p>
 
       <div style={{ marginBottom: 12 }}>

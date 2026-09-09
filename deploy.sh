@@ -28,6 +28,7 @@ NAME="minimalcnx"
 # พอร์ตจริงบน VPS นี้ (อย่าสลับ — จะทับเว็บอื่น):
 #   3001 = mikrotik.conf
 #   3002 = cnxhaircutz (next-server บนโฮสต์)
+#   3003 = next-server อีกตัวบนโฮสต์ (ยังไม่ระบุว่าโปรเจกต์ไหน — ดูด้วย ss -tlnp)
 #   3005 = invest3 / apexlink-forensics
 #   3011 = minimal.conf + minimalcnx.conf  ← ร้านกาแฟ
 #   4000 = tmhccp5 + pems
@@ -72,7 +73,11 @@ docker run -d --name "$NAME" --restart unless-stopped -p "$PORT" "$IMAGE"
 
 echo "==> cleanup docker dangling images & build cache"
 docker image prune -f --filter "until=24h" 2>/dev/null || docker image prune -f 2>/dev/null || true
-docker builder prune -f --keep-storage 2GB 2>/dev/null || true
+# --keep-storage ถูก deprecate เปลี่ยนชื่อเป็น --reserved-space — ลองชื่อใหม่ก่อน
+# แล้วค่อยถอยไปชื่อเก่า เผื่อเครื่องไหนยังเป็น Docker รุ่นก่อนเปลี่ยนชื่อ
+docker builder prune -f --reserved-space 2GB 2>/dev/null \
+  || docker builder prune -f --keep-storage 2GB 2>/dev/null \
+  || true
 
 echo "==> health check (รอจนกว่า Next.js จะพร้อมทำงาน)"
 for i in {1..15}; do
