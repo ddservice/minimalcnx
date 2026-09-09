@@ -111,10 +111,10 @@ bash scripts/migrate-supabase-project.sh --verify
 bash scripts/migrate-supabase-project.sh --reset     # ต้องพิมพ์ ref ของโปรเจกต์ใหม่ยืนยัน
 ```
 
-> `--reset` ล้าง **schema public + `auth.users` ทั้งหมด** ของโปรเจกต์ปลายทาง แล้วคืน
-> `grant usage on schema public` ให้ `anon`/`authenticated`/`service_role` (การ `drop schema public`
-> ทำให้ grant ที่ Supabase ตั้งไว้ตอนสร้างโปรเจกต์หายไปด้วย ไม่คืนแล้วแอปจะเจอ permission denied
-> ทั้งระบบทั้งที่ตารางมาครบ) — และมันปฏิเสธถ้า ref ปลายทางเท่ากับ ref ต้นทาง
+> `--reset` ลบ **ทุก object ใน schema public + `auth.users` ทั้งหมด** ของโปรเจกต์ปลายทาง
+> มันตั้งใจ *ไม่* `drop schema public` เพราะการทำแบบนั้นจะล้าง ACL กับ `ALTER DEFAULT PRIVILEGES`
+> ที่ Supabase ตั้งไว้ตอนสร้างโปรเจกต์ไปด้วย — เดาค่าคืนผิดเมื่อไหร่แอปจะเจอ permission denied
+> ทั้งระบบทั้งที่ตารางมาครบ และมันปฏิเสธถ้า ref ปลายทางเท่ากับ ref ต้นทาง
 
 ## 4. ปิดหน้าร้านก่อนย้าย
 

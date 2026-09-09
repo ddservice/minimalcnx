@@ -170,7 +170,13 @@ do_dump() {
 }
 
 # error ที่เจอปกติเวลายัด dump ลง Supabase — ไม่ใช่สัญญาณว่าย้ายพัง
-BENIGN='already exists|must be owner of|permission denied for schema public|no privileges were granted|no privileges could be revoked'
+#
+# "permission denied to change default privileges" มาจากบรรทัด ALTER DEFAULT PRIVILEGES
+# ที่ pg_dump แถมมา ซึ่ง Supabase ตั้งไว้ในนามของ role ระบบ (supabase_admin ฯลฯ)
+# postgres แก้ default privileges ของ role อื่นไม่ได้ — แต่คำสั่งพวกนี้มีผลกับ object
+# ที่จะ "สร้างในอนาคต" เท่านั้น ไม่เกี่ยวกับตาราง/ฟังก์ชันที่เพิ่ง restore ไป
+# (GRANT จริงของแต่ละตาราง/RPC เป็นคำสั่งแยกและผ่านปกติ) และแอปนี้ไม่สร้างตารางตอนรัน
+BENIGN='already exists|must be owner of|permission denied for schema public|permission denied to change default privileges|no privileges were granted|no privileges could be revoked'
 
 run_sql_file() {
   local label="$1" file="$2" pre="${3:-}"
@@ -244,14 +250,37 @@ do_reset() {
   read -r typed < /dev/tty || true
   [ "$typed" = "$NEW_PROJECT_REF" ] || fail "ยืนยันไม่ตรง — ยกเลิก"
 
-  # drop schema public ทำให้ grant usage ที่ Supabase ตั้งไว้ตอนสร้างโปรเจกต์หายไปด้วย
-  # ถ้าไม่คืนให้ anon/authenticated แอปจะเจอ permission denied ทั้งระบบทั้งที่ตารางมาครบ
-  log "ล้าง schema public + auth.users ..."
+  # ตั้งใจ "ไม่" drop schema public แล้วสร้างใหม่ — การทำแบบนั้นจะล้าง ACL และ
+  # ALTER DEFAULT PRIVILEGES ที่ Supabase ตั้งไว้ตอนสร้างโปรเจกต์ไปด้วย ซึ่งเราไม่รู้ค่าที่แน่นอน
+  # ของมันและเดาผิดเมื่อไหร่แอปจะเจอ permission denied ทั้งระบบทั้งที่ตารางมาครบ
+  # จึงลบเฉพาะ object "ข้างใน" schema แล้วปล่อยตัว schema กับสิทธิ์ของมันไว้เหมือนเดิม
+  log "ล้าง object ใน schema public + auth.users ..."
   psql_new -v ON_ERROR_STOP=1 -f - >/dev/null <<'EOSQL' || fail "ล้างไม่สำเร็จ"
-drop schema if exists public cascade;
-create schema public;
-grant usage, create on schema public to postgres;
-grant usage on schema public to anon, authenticated, service_role;
+do $$
+declare r record;
+begin
+  for r in select table_name from information_schema.views where table_schema = 'public' loop
+    execute format('drop view if exists public.%I cascade', r.table_name);
+  end loop;
+  for r in select tablename from pg_tables where schemaname = 'public' loop
+    execute format('drop table if exists public.%I cascade', r.tablename);
+  end loop;
+  for r in select p.oid::regprocedure::text as sig, p.prokind
+             from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' loop
+    if    r.prokind = 'p' then execute format('drop procedure if exists %s cascade', r.sig);
+    elsif r.prokind = 'a' then execute format('drop aggregate if exists %s cascade', r.sig);
+    else                       execute format('drop function if exists %s cascade', r.sig);
+    end if;
+  end loop;
+  for r in select sequencename from pg_sequences where schemaname = 'public' loop
+    execute format('drop sequence if exists public.%I cascade', r.sequencename);
+  end loop;
+  for r in select t.typname from pg_type t join pg_namespace n on n.oid = t.typnamespace
+            where n.nspname = 'public' and t.typtype = 'e' loop
+    execute format('drop type if exists public.%I cascade', r.typname);
+  end loop;
+end $$;
 delete from auth.users;
 EOSQL
   log "ล้างเรียบร้อย — โปรเจกต์ '$NEW_PROJECT_REF' ว่างแล้ว พร้อม --load ใหม่"
