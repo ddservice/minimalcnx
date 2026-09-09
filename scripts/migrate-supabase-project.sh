@@ -8,6 +8,7 @@
 #   bash scripts/migrate-supabase-project.sh --load      # ยัดลงโปรเจกต์ใหม่
 #   bash scripts/migrate-supabase-project.sh --verify    # นับแถวเทียบเก่า/ใหม่
 #   bash scripts/migrate-supabase-project.sh --all       # dump → load → verify
+#   bash scripts/migrate-supabase-project.sh --reset     # ล้างโปรเจกต์ใหม่ให้ว่าง เพื่อโหลดซ้ำ
 #
 # ไฟล์ที่ dump ออกมามีข้อมูลส่วนบุคคลตาม PDPA เต็มๆ (เบอร์ลูกค้า / เลขบัตร ปชช.
 # + เลขบัญชีธนาคารพนักงาน / เลขผู้เสียภาษี / hash รหัสผ่านใน auth.users)
@@ -23,9 +24,9 @@ set -Eeuo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-usage() { sed -n '2,20p' "$0" | sed 's/^#\{1,\} \{0,1\}//'; }
+usage() { sed -n '2,21p' "$0" | sed 's/^#\{1,\} \{0,1\}//'; }
 case "${1:-}" in
-  --check|--dump|--load|--verify|--all) : ;;
+  --check|--dump|--load|--verify|--all|--reset) : ;;
   *) usage; exit 1 ;;
 esac
 
@@ -108,7 +109,7 @@ do_check() {
   existing="$(psql_new -tAc "select count(*) from information_schema.tables where table_schema='public' and table_name in ('sales_daily','expenses','profiles');")"
   if [ "${existing:-0}" != "0" ]; then
     warn "โปรเจกต์ใหม่มีตารางของแอปอยู่แล้ว ($existing ตาราง) — --load จะทับ/ซ้ำ"
-    warn "ถ้าจะเริ่มใหม่จริงๆ ให้รันบนโปรเจกต์ใหม่: drop schema public cascade; create schema public;"
+    warn "ถ้าจะเริ่มใหม่จริงๆ ให้ล้างก่อนด้วย: bash scripts/migrate-supabase-project.sh --reset"
   else
     log "โปรเจกต์ใหม่ยังว่าง (ยังไม่มีตารางของแอป) — พร้อมโหลด"
   fi
@@ -227,6 +228,35 @@ EOSQL
   log "โหลดเสร็จ — ต่อไปรัน --verify"
 }
 
+# ── ล้างโปรเจกต์ปลายทางให้ว่าง เพื่อโหลดใหม่ ────────────────────
+# ใช้ตอนซ้อมเสร็จแล้วจะทำรอบจริง หรือตอนโหลดพลาดกลางคัน
+# ต้องล้าง auth.users ด้วย ไม่ใช่แค่ drop schema public — ไม่งั้นโหลด 02-data-auth.sql
+# รอบสองจะชนกับ user เดิมที่ค้างอยู่ (duplicate key) แล้วสคริปต์จะหยุดกลางทาง
+do_reset() {
+  [ -n "$NEW_PROJECT_REF" ] || fail "แกะ NEW_PROJECT_REF ไม่ออก — ตั้งใน .migrate.env ก่อน (กันล้างผิดโปรเจกต์)"
+  [ "$NEW_PROJECT_REF" != "$OLD_PROJECT_REF" ] || fail "NEW_PROJECT_REF เท่ากับ OLD_PROJECT_REF — ปฏิเสธการล้าง"
+
+  echo
+  warn "กำลังจะลบข้อมูลทั้งหมดในโปรเจกต์ '$NEW_PROJECT_REF' (schema public + auth.users ทุกคน)"
+  warn "โปรเจกต์เก่า '$OLD_PROJECT_REF' ไม่ถูกแตะต้อง"
+  printf 'พิมพ์ ref ของโปรเจกต์ที่จะล้างเพื่อยืนยัน: ' >&2
+  local typed=""
+  read -r typed < /dev/tty || true
+  [ "$typed" = "$NEW_PROJECT_REF" ] || fail "ยืนยันไม่ตรง — ยกเลิก"
+
+  # drop schema public ทำให้ grant usage ที่ Supabase ตั้งไว้ตอนสร้างโปรเจกต์หายไปด้วย
+  # ถ้าไม่คืนให้ anon/authenticated แอปจะเจอ permission denied ทั้งระบบทั้งที่ตารางมาครบ
+  log "ล้าง schema public + auth.users ..."
+  psql_new -v ON_ERROR_STOP=1 -f - >/dev/null <<'EOSQL' || fail "ล้างไม่สำเร็จ"
+drop schema if exists public cascade;
+create schema public;
+grant usage, create on schema public to postgres;
+grant usage on schema public to anon, authenticated, service_role;
+delete from auth.users;
+EOSQL
+  log "ล้างเรียบร้อย — โปรเจกต์ '$NEW_PROJECT_REF' ว่างแล้ว พร้อม --load ใหม่"
+}
+
 # ── 3) เทียบจำนวนแถว ────────────────────────────────────────────
 do_verify() {
   [ -f "$WORKDIR/rowcount-old.txt" ] || fail "ไม่มี rowcount-old.txt — รัน --dump ก่อน"
@@ -259,5 +289,6 @@ case "${1:-}" in
   --dump)   do_dump ;;
   --load)   do_load ;;
   --verify) do_verify ;;
+  --reset)  do_reset ;;
   --all)    do_check; do_dump; do_load; do_verify ;;
 esac

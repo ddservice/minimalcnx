@@ -94,6 +94,28 @@ bash scripts/migrate-supabase-project.sh --check
 
 ---
 
+### ซ้อมก่อนหนึ่งรอบ (แนะนำ ถ้ายังไม่ถึงเวลาร้านปิด)
+
+`--dump` อ่านอย่างเดียวจากฐานเก่า และ `--load` ลงโปรเจกต์ใหม่ที่ยังว่าง — ซ้อมได้โดยไม่ต้องปิดร้าน
+ได้รู้ล่วงหน้าว่า schema/auth/data ติดครบไหม โดยไม่ต้องเอา downtime มาเสี่ยง
+
+```bash
+bash scripts/migrate-supabase-project.sh --dump
+bash scripts/migrate-supabase-project.sh --load
+bash scripts/migrate-supabase-project.sh --verify
+```
+
+ผ่านแล้วล้างทิ้ง แล้วค่อยทำรอบจริงตอนร้านปิด (ยอดที่คีย์ระหว่างวันจะติดไปกับ dump รอบจริงเอง):
+
+```bash
+bash scripts/migrate-supabase-project.sh --reset     # ต้องพิมพ์ ref ของโปรเจกต์ใหม่ยืนยัน
+```
+
+> `--reset` ล้าง **schema public + `auth.users` ทั้งหมด** ของโปรเจกต์ปลายทาง แล้วคืน
+> `grant usage on schema public` ให้ `anon`/`authenticated`/`service_role` (การ `drop schema public`
+> ทำให้ grant ที่ Supabase ตั้งไว้ตอนสร้างโปรเจกต์หายไปด้วย ไม่คืนแล้วแอปจะเจอ permission denied
+> ทั้งระบบทั้งที่ตารางมาครบ) — และมันปฏิเสธถ้า ref ปลายทางเท่ากับ ref ต้นทาง
+
 ## 4. ปิดหน้าร้านก่อนย้าย
 
 ต้องไม่มีใครเขียนลงฐานเก่าระหว่าง dump ไม่งั้นบิลที่บันทึกตอนนั้นจะหายไปเงียบๆ
@@ -218,7 +240,8 @@ nano ~/apps/minimalcnx/.backup.env   # SUPABASE_DB_URL กลับเป็น�
 | login ไม่ได้ทุกบัญชี | `02-data-auth.sql` ไม่ได้โหลด หรือ Confirm email เปิดอยู่ | ดู `~/minimalcnx-migrate/err-auth.log`, ปิด Confirm email (ข้อ 2) |
 | login ได้แต่หน้าไหนก็ว่าง / เด้งออก | `profiles` ไม่มีแถว หรือ UUID ไม่ตรง | `--verify` ต้องบอกอยู่แล้วว่าจำนวนแถวไม่ตรง — โหลดใหม่ |
 | กดปุ่มแล้วเงียบ ไม่มี error | `grant execute … to authenticated` หาย | ดู `err-schema.log`; รัน `sql/harden_security.sql` + ไฟล์ที่ `check_migrations.sql` บอกว่า false |
-| ยอดแต้มลูกค้าเพี้ยน | โหลดโดย trigger ยังทำงาน (ใช้ transaction pooler `:6543`) | `drop schema public cascade; create schema public;` บนโปรเจกต์ใหม่ แล้ว `--load` ใหม่ด้วย `:5432` |
+| ยอดแต้มลูกค้าเพี้ยน | โหลดโดย trigger ยังทำงาน (ใช้ transaction pooler `:6543`) | `--reset` แล้ว `--load` ใหม่ด้วย connection string `:5432` |
+| `duplicate key value violates unique constraint` ตอน `--load` | โหลดซ้ำทับของที่โหลดไปแล้ว | `--reset` ก่อน แล้วค่อย `--load` |
 | รูปหลักฐานขึ้นกากบาท | ยังไม่ได้รัน `migrate-storage-files.sh --all` | รันข้อ 6 |
 
 ---
