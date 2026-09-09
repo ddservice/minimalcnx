@@ -15,3 +15,11 @@ push_to_github.bat
 # Backup credentials (DB connection string + R2 keys + age recipient) — see deploy/BACKUP.md
 .backup.env
 *.key
+
+# Deploy target (Supabase URL + anon key per environment) — see deploy.sh
+.deploy.env
+
+# Region migration credentials + dumped data — see deploy/MIGRATE-REGION.md
+# ไฟล์ dump มีเบอร์ลูกค้า / เลขบัตร ปชช. / hash รหัสผ่าน — ห้ามหลุดเข้า git เด็ดขาด
+.migrate.env
+minimalcnx-migrate/

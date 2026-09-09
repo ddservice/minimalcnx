@@ -98,6 +98,10 @@ AWS_SECRET_ACCESS_KEY='<R2 Secret Access Key>'
 BACKUP_AGE_RECIPIENT='age1...'                       # public key
 BACKUP_AGE_KEYFILE="$HOME/minimalcnx-backup.key"     # ใช้ตอนซ้อมกู้เท่านั้น
 AWS_DEFAULT_REGION='auto'                            # R2 ไม่มี region จริง แต่ aws cli บังคับต้องมี
+
+# ใช้โดย sync-storage-to-r2.sh (Storage API คนละอย่างกับ connection string ของ Postgres)
+# ไม่ใส่ก็ได้ — สคริปต์จะแกะ project ref จาก SUPABASE_DB_URL ให้เอง
+SUPABASE_URL='https://fkhfrylvronkmktlmmia.supabase.co'
 ```
 
 ```bash
@@ -116,7 +120,16 @@ bash scripts/backup-to-r2.sh            # ลองจริงหนึ่ง�
 
 ```cron
 0 20 * * * cd $HOME/apps/minimalcnx && bash scripts/backup-to-r2.sh >> $HOME/backup.log 2>&1
+20 20 * * * cd $HOME/apps/minimalcnx && bash scripts/sync-storage-to-r2.sh >> $HOME/backup.log 2>&1
 ```
+
+บรรทัดที่สองสำรอง **ไฟล์รูปหลักฐานแก้วฟรี** ใน Storage — `pg_dump` ได้แค่แถวใน `storage.objects`
+ไม่ได้ตัวไฟล์ ถ้าไม่ตั้งบรรทัดนี้ กู้ฐานข้อมูลกลับมาแล้วรูปจะเสียทั้งหมด
+มันข้ามไฟล์ที่ขึ้น R2 ไปแล้ว จึงเบามากถ้าไม่มีรูปใหม่ (ลองด้วย `--dry-run` ก่อนได้)
+
+> ⚠️ ก่อน 2026-09-09 สคริปต์นี้เป็นโครงเปล่า: นับไฟล์แล้วพิมพ์ว่า "ซิงค์เสร็จสิ้น" โดยไม่ได้อัปอะไรเลย
+> ถ้า VPS เคยตั้ง cron บรรทัดนี้ไว้ตั้งแต่ก่อนวันนั้น ให้ถือว่า **ยังไม่เคยมีรูปหลักฐานสำรองอยู่จริง**
+> — `git pull` แล้วรัน `bash scripts/sync-storage-to-r2.sh` หนึ่งรอบเพื่ออัปย้อนหลังทั้งหมด
 
 ตรวจว่าทำงานอยู่: `tail -20 ~/backup.log` — ควรเห็น `✅ สำรองข้อมูลสำเร็จ` ของเมื่อคืน
 

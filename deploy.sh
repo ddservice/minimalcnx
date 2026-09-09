@@ -3,8 +3,26 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-SUPABASE_URL="https://fkhfrylvronkmktlmmia.supabase.co"
-SUPABASE_ANON_KEY="sb_publishable_SoNHJNrw4yfgZI_RYHHTjg_WgQ0lan-"
+# Supabase ที่แอปจะชี้ไป — แก้ได้โดยไม่ต้องแตะไฟล์นี้ผ่าน .deploy.env (gitignored)
+# ค่าที่ฝังไว้ข้างล่างคือโปรเจกต์เดิม (Sydney) ใช้เป็น fallback ระหว่างยังย้ายไม่เสร็จ
+# ตอนย้าย region: สร้าง ~/apps/minimalcnx/.deploy.env ใส่ค่าโปรเจกต์ใหม่ แล้ว deploy ตามปกติ
+#   SUPABASE_URL='https://<ref-ใหม่>.supabase.co'
+#   SUPABASE_ANON_KEY='sb_publishable_...'
+DEPLOY_ENV="$(dirname "$0")/.deploy.env"
+# shellcheck disable=SC1090
+[ -f "$DEPLOY_ENV" ] && set -a && . "$DEPLOY_ENV" && set +a
+
+SUPABASE_URL="${SUPABASE_URL:-https://fkhfrylvronkmktlmmia.supabase.co}"
+SUPABASE_ANON_KEY="${SUPABASE_ANON_KEY:-sb_publishable_SoNHJNrw4yfgZI_RYHHTjg_WgQ0lan-}"
+
+# ค่าพวกนี้ถูก "อบ" เข้าไปใน JS ที่ส่งให้เบราว์เซอร์ตอน docker build (ดู Dockerfile)
+# ไม่ใช่อ่านตอนรัน — ชี้ผิดโปรเจกต์คือทั้งแอปคุยกับฐานข้อมูลผิดตัวโดยไม่มี error ให้เห็น
+echo "==> Supabase: $SUPABASE_URL"
+case "$SUPABASE_ANON_KEY" in
+  sb_publishable_*|eyJ*) : ;;
+  *) echo "SUPABASE_ANON_KEY หน้าตาไม่เหมือน publishable/anon key — ยกเลิก"; exit 1 ;;
+esac
+
 IMAGE="minimalcnx:latest"
 NAME="minimalcnx"
 # พอร์ตจริงบน VPS นี้ (อย่าสลับ — จะทับเว็บอื่น):
