@@ -31,6 +31,9 @@ select
   exists (select 1 from information_schema.columns
             where table_schema = 'public' and table_name = 'audit_log'
               and column_name = 'session_id')                                                as add_audit_forensics,
+  (to_regclass('public.price_list') is null
+     and to_regclass('public.employees') is null
+     and to_regclass('public.payroll_monthly') is null)                                      as cleanup_legacy_tables,
   -- แยกดูเฉพาะ index ใบเสร็จซ้ำ: ถ้า harden_loyalty_integrity = true แต่ช่องนี้ = false
   -- แปลว่าตอนรันมีใบเสร็จซ้ำค้างอยู่ ไฟล์เลยข้ามการสร้าง index ให้ (ดู NOTICE ตอนรัน)
   exists (select 1 from pg_indexes where schemaname = 'public'

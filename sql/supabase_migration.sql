@@ -127,6 +127,9 @@ order by month_label desc, category;
 
 -- ================================================================
 -- 4. EMPLOYEES  (ข้อมูลพนักงาน)
+--
+-- ⚠️ เลิกใช้แล้ว — ข้อมูลพนักงานจริงอยู่ใน business_config.emp_details
+-- sql/cleanup_legacy_tables.sql ลบตารางนี้ทิ้ง (2026-09-09)
 -- ================================================================
 
 create table public.employees (
@@ -151,6 +154,9 @@ create table public.employees (
 
 -- ================================================================
 -- 5. PAYROLL_MONTHLY  (บันทึกเงินเดือนรายเดือน)
+--
+-- ⚠️ เลิกใช้แล้ว — เงินเดือนคำนวณสดจาก lib/payslip.js และเก็บประวัติใน
+-- business_config.emp_pay_history · sql/cleanup_legacy_tables.sql ลบตารางนี้ทิ้ง (2026-09-09)
 -- ================================================================
 
 create table public.payroll_monthly (
@@ -175,6 +181,10 @@ create table public.payroll_monthly (
 
 -- ================================================================
 -- 6. PRICE_LIST  (ราคาสินค้า / ขนม)
+--
+-- ⚠️ เลิกใช้แล้ว — ราคาอยู่ในแคตตาล็อกที่ expense-form สร้างจาก expenses เอง
+-- นโยบายอ่านของเดิม "using (true)" เปิดถึง role anon ด้วย (ไม่มี to authenticated)
+-- sql/cleanup_legacy_tables.sql รัดนโยบายแล้วลบตารางนี้ทิ้ง (2026-09-09)
 -- ================================================================
 
 create table public.price_list (
