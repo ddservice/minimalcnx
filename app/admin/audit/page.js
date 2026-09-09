@@ -5,6 +5,7 @@ import AppShell from '../../../components/app-shell';
 import PageHeader from '../../../components/page-header';
 import AuditFilters from './audit-filters';
 import AuditRow from './audit-row';
+import AuditPurge from './audit-purge';
 
 const VALID_TABLES = new Set([
   'sales_daily', 'expenses', 'business_config', 'profiles',
@@ -124,6 +125,8 @@ export default async function AuditPage({ searchParams }) {
           แสดง {limit} รายการล่าสุด — เลือกจำนวนด้านบนหรือใช้ตัวกรองเพื่อดูเพิ่ม
         </p>
       )}
+
+      <AuditPurge />
     </AppShell>
   );
 }

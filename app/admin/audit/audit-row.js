@@ -1,4 +1,5 @@
 import { fmtMoney } from '../../../lib/format';
+import DataTable from '../../../components/data-table';
 
 const ACTION_LABEL = {
   INSERT: 'เพิ่ม',
@@ -144,28 +145,32 @@ export default function AuditRow({ row, performer }) {
         ) : changes.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>ไม่มีรายละเอียดเพิ่มเติม</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ textAlign: 'left', color: 'var(--muted)' }}>
-                <th style={th}>ฟิลด์</th>
-                <th style={th}>ค่าเดิม</th>
-                <th style={th}>ค่าใหม่</th>
-              </tr>
-            </thead>
-            <tbody>
-              {changes.map((c) => (
-                <tr key={c.field} style={{ borderTop: '1px solid var(--border)' }}>
-                  <td style={{ ...td, fontWeight: 600 }}>{c.field}</td>
-                  <td style={{ ...td, color: row.action !== 'INSERT' ? 'var(--danger)' : 'var(--muted)' }}>
+          // DataTable แปลงเป็นการ์ดเองบนจอ <720px — ของเดิมเป็น <table> ดิบที่ล้นขอบจอมือถือ
+          <DataTable
+            columns={[
+              { key: 'field', label: 'ฟิลด์', render: (c) => <strong>{c.field}</strong> },
+              {
+                key: 'old',
+                label: 'ค่าเดิม',
+                render: (c) => (
+                  <span style={{ color: row.action !== 'INSERT' ? 'var(--danger)' : 'var(--muted)' }}>
                     {row.action === 'INSERT' ? '—' : fmtVal(c.field, c.old)}
-                  </td>
-                  <td style={{ ...td, color: row.action !== 'DELETE' ? 'var(--success)' : 'var(--muted)' }}>
+                  </span>
+                ),
+              },
+              {
+                key: 'new',
+                label: 'ค่าใหม่',
+                render: (c) => (
+                  <span style={{ color: row.action !== 'DELETE' ? 'var(--success)' : 'var(--muted)' }}>
                     {row.action === 'DELETE' ? '—' : fmtVal(c.field, c.new)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </span>
+                ),
+              },
+            ]}
+            rows={changes}
+            rowKey={(c) => c.field}
+          />
         )}
       </div>
     </details>
@@ -174,6 +179,4 @@ export default function AuditRow({ row, performer }) {
 
 const rowBox = { border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', background: 'var(--surface)' };
 const summaryStyle = { display: 'flex', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', cursor: 'pointer', listStyle: 'none' };
-const badge = { color: '#fff', padding: '3px 11px', borderRadius: 'var(--radius-full)', fontSize: 11, fontWeight: 700, flexShrink: 0 };
-const th = { padding: '5px 8px', fontWeight: 600 };
-const td = { padding: '5px 8px', fontVariantNumeric: 'tabular-nums', wordBreak: 'break-word' };
+const badge = { color: '#fff', padding: '3px 11px', borderRadius: 'var(--radius-full)', fontSize: 11, fontWeight: 700, flexShrink: 0 };

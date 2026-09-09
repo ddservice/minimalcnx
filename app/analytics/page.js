@@ -27,7 +27,7 @@ function monthsBetween(from, to) {
 
 function fromKpi(row, opexDefaults = {}) {
   if (!row) {
-    return { income: 0, exp: 0, profit: 0, hasData: false, materials: [] };
+    return { income: 0, exp: 0, profit: 0, hasData: false, materials: [], freeCups: null };
   }
   const income = Number(row.income || 0);
   const reg = Number(row.expenses_reg || 0);
@@ -35,7 +35,10 @@ function fromKpi(row, opexDefaults = {}) {
   const opex = computeEffectiveOpex(row.opex_items || [], opexDefaults);
   const exp = reg + opex;
   const hasData = !!(row.has_data || income > 0 || exp > 0);
-  return { income, exp, profit: income - exp, hasData, materials: row.materials || [] };
+  // null = RPC รุ่นเก่าที่ยังไม่คืน free_cups (ยังไม่ได้รัน add_analytics_range_kpis.sql รอบใหม่)
+  // ต่างจาก 0 ที่แปลว่า "เดือนนั้นไม่มีแก้วฟรีจริงๆ" — หน้าเว็บจะได้ไม่โชว์ 0 หลอกตา
+  const freeCups = row.free_cups == null ? null : Number(row.free_cups);
+  return { income, exp, profit: income - exp, hasData, materials: row.materials || [], freeCups };
 }
 
 const pct = (cur, prev) => (prev ? ((cur - prev) / Math.abs(prev)) * 100 : null);
@@ -97,6 +100,7 @@ export default async function AnalyticsPage({ searchParams }) {
           profit: income - exp,
           hasData: sales.length > 0 || expenses.length > 0,
           materials: Object.values(matMap),
+          freeCups: sales.reduce((a, s) => a + Number(s.free_cups || 0), 0),
         };
       })
     );
@@ -104,11 +108,11 @@ export default async function AnalyticsPage({ searchParams }) {
 
   const results = months.map((mo) => ({
     label: mo.label,
-    ...(byLabel[mo.label] || { income: 0, exp: 0, profit: 0, hasData: false, materials: [] }),
+    ...(byLabel[mo.label] || { income: 0, exp: 0, profit: 0, hasData: false, materials: [], freeCups: null }),
   }));
   const yearResults = yearMonths.map((mo) => ({
     label: mo.label,
-    ...(byLabel[mo.label] || { income: 0, exp: 0, profit: 0, hasData: false, materials: [] }),
+    ...(byLabel[mo.label] || { income: 0, exp: 0, profit: 0, hasData: false, materials: [], freeCups: null }),
   }));
 
   const matAgg = {};
@@ -133,6 +137,9 @@ export default async function AnalyticsPage({ searchParams }) {
   const totalProfit = withData.reduce((a, r) => a + r.profit, 0);
   const avgProfit = withData.length ? totalProfit / withData.length : 0;
   const best = withData.slice().sort((a, b) => b.profit - a.profit)[0];
+  // null ทุกเดือน = RPC ยังไม่คืน free_cups → แสดง — แทน 0 ที่จะอ่านผิดเป็น "ไม่มีแก้วฟรีเลย"
+  const freeCupsKnown = withData.some((r) => r.freeCups != null);
+  const totalFreeCups = withData.reduce((a, r) => a + Number(r.freeCups || 0), 0);
   const tableRows = [...results].reverse();
 
   return (
@@ -146,6 +153,13 @@ export default async function AnalyticsPage({ searchParams }) {
         <Kpi icon="ti-sum" label="กำไรรวม" value={fmtMoney(totalProfit)} sub="บาท" cls={totalProfit >= 0 ? 'blue' : 'red'} />
         <Kpi icon="ti-scale" label="กำไรเฉลี่ย/เดือน" value={fmtMoney(avgProfit)} sub="บาท" cls={avgProfit >= 0 ? 'green' : 'red'} />
         <Kpi icon="ti-trophy" label="เดือนกำไรสูงสุด" value={best ? best.label : '—'} sub={best ? `${fmtMoney(best.profit)} ฿` : ''} plain />
+        <Kpi
+          icon="ti-coffee"
+          label="แก้วฟรี"
+          value={freeCupsKnown ? totalFreeCups.toLocaleString('th-TH') : '—'}
+          sub={freeCupsKnown ? 'แก้ว (รวมทั้งช่วง)' : 'ต้องรัน add_analytics_range_kpis.sql'}
+          plain
+        />
       </div>
 
       <ProfitChart data={yearResults} />

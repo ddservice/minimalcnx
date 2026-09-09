@@ -16,6 +16,7 @@ declare
   _label text;
   _months jsonb := '[]'::jsonb;
   _income numeric;
+  _free_cups int;
   _reg numeric;
   _opex jsonb;
   _materials jsonb;
@@ -25,7 +26,9 @@ begin
   end if;
 
   foreach _label in array p_month_labels loop
-    select coalesce(sum(s.net_revenue), 0) into _income
+    -- ดึงพร้อมกันในสแกนเดียว — แก้วฟรีมาจากตารางเดียวกับรายรับ ไม่ต้องยิงซ้ำ
+    select coalesce(sum(s.net_revenue), 0), coalesce(sum(s.free_cups), 0)
+      into _income, _free_cups
     from public.sales_daily s
     where to_char(s.date, 'MM/YYYY') = _label;
 
@@ -68,6 +71,7 @@ begin
     _months := _months || jsonb_build_array(jsonb_build_object(
       'month', _label,
       'income', _income,
+      'free_cups', _free_cups,
       'expenses_reg', _reg,
       'opex_items', _opex,
       'materials', _materials,
