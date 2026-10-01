@@ -25,8 +25,8 @@ export default function AppShell({ name, role, isAdmin, allowed, children }) {
           <button type="button" className="mobile-topbar-btn" onClick={() => setMobileOpen(true)} aria-label="เปิดเมนู">
             <Icon name="ti-menu-2" />
           </button>
-          <div className="brand-icon sidebar-brand-icon" style={{ width: 30, height: 30, fontSize: 15 }}><Icon name="ti-coffee" /></div>
-          <strong style={{ fontSize: 14 }}>Minimal Maerim</strong>
+          <div className="brand-icon sidebar-brand-icon" style={{ width: 30, height: 30, fontSize: 'var(--fs-lg)' }}><Icon name="ti-coffee" /></div>
+          <strong style={{ fontSize: 'var(--fs-md)' }}>Minimal Maerim</strong>
         </div>
 
         {/* บริบทผู้ใช้งานที่มองเห็นได้แม้ sidebar จะถูกยุบเป็นแบบไอคอนอย่างเดียว (ตอนนั้นชื่อใน sidebar จะถูกซ่อน) */}

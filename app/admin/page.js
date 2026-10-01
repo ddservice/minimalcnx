@@ -19,7 +19,7 @@ export default async function AdminPage() {
     <AppShell role={role} name={name} isAdmin={isAdmin} allowed={allowed}>
       <PageHeader icon="ti-users" title="จัดการผู้ใช้งาน">
         <Link className="link-btn" href="/admin/loyalty"><Icon name="ti-gift" /> สาขา / พนักงานสะสมแต้ม</Link>
-        <Link className="link-btn" href="/admin/audit"><Icon name="ti-history" /> log</Link>
+        <Link className="link-btn" href="/admin/audit"><Icon name="ti-history" /> ประวัติการใช้งาน</Link>
       </PageHeader>
       <UserManager initialUsers={users || []} myUsername={profile?.username} />
     </AppShell>

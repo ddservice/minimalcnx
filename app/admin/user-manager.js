@@ -83,7 +83,7 @@ export default function UserManager({ initialUsers, myUsername }) {
     <div>
       {/* ── ฟอร์มสร้างผู้ใช้ ── */}
       <form onSubmit={onCreate} style={cardStyle}>
-        <h2 style={{ marginTop: 0, fontSize: 16 }}>+ สร้างผู้ใช้ใหม่</h2>
+        <h2 style={{ marginTop: 0, fontSize: 'var(--fs-xl)' }}>+ สร้างผู้ใช้ใหม่</h2>
         <div style={grid2}>
           <input style={inp} placeholder="ชื่อผู้ใช้ (username)" value={form.username}
             onChange={(e) => setForm({ ...form, username: e.target.value })} />
@@ -102,7 +102,7 @@ export default function UserManager({ initialUsers, myUsername }) {
       </form>
 
       {msg && (
-        <div style={{ margin: '14px 0', color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 14 }}>
+        <div style={{ margin: '14px 0', color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 'var(--fs-md)' }}>
           {/* React escape ค่าให้อัตโนมัติ */}
           {msg.text}
         </div>
@@ -139,14 +139,14 @@ function UserCard({ user, isSelf, editing, onEdit, onCancel, onSave, onResetPw, 
     <div style={{ ...cardStyle, opacity: isActive ? 1 : 0.6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div>
-          <strong style={{ fontSize: 15 }}>{user.username}</strong>{' '}
+          <strong style={{ fontSize: 'var(--fs-lg)' }}>{user.username}</strong>{' '}
           <span style={{ ...chip, background: ROLE_COLORS[user.role] || '#999' }}>{user.role}</span>{' '}
           {!isActive && <span style={{ ...chip, background: 'var(--danger)' }}>ปิดใช้งาน</span>}
           {user.full_name && (
-            <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>{user.full_name}</div>
+            <div style={{ fontSize: 'var(--fs-base)', color: 'var(--muted)', marginTop: 4 }}>{user.full_name}</div>
           )}
           {user.nickname && (
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>ชื่อเล่น: {user.nickname}</div>
+            <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>ชื่อเล่น: {user.nickname}</div>
           )}
         </div>
         {!editing && (
@@ -188,9 +188,9 @@ const cardStyle = {
   marginBottom: 12,
 };
 const grid2 = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginTop: 10 };
-const inp = { padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14 };
-const chip = { color: '#fff', padding: '3px 11px', borderRadius: 'var(--radius-full)', fontSize: 11 };
-const btnBase = { border: 0, borderRadius: 'var(--radius-md)', padding: '9px 14px', fontSize: 13, cursor: 'pointer', fontWeight: 600 };
+const inp = { padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--fs-md)' };
+const chip = { color: '#fff', padding: '3px 11px', borderRadius: 'var(--radius-full)', fontSize: 'var(--fs-xs)' };
+const btnBase = { border: 0, borderRadius: 'var(--radius-md)', padding: '9px 14px', fontSize: 'var(--fs-base)', cursor: 'pointer', fontWeight: 600 };
 const btnPrimary = { ...btnBase, background: 'var(--coffee)', color: '#fff' };
 const btnGhost = { ...btnBase, background: '#f5ede3', color: 'var(--coffee)' };
 const btnDanger = { ...btnBase, background: '#fff0f0', color: 'var(--danger)' };

@@ -122,7 +122,7 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
     <div className="card" style={{ marginTop: 12 }}>
       <div className="card-head"><Icon name="ti-file-invoice" /><h2>หนังสือรับรองหัก ณ ที่จ่าย (50 ทวิ)</h2></div>
       <div className="card-body">
-        <p className="muted" style={{ fontSize: 12, marginTop: -4, marginBottom: 14 }}>
+        <p className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: -4, marginBottom: 14 }}>
           ออกให้ผู้รับเงิน (เจ้าของที่เช่า / ผู้รับเหมา) — ยอดดึงจากที่บันทึกในเดือน {monthLabel}
         </p>
         {ITEMS.map((it) => {
@@ -132,8 +132,8 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
           return (
             <div key={it.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14, marginBottom: 12, background: 'var(--beige)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
-                <strong style={{ fontSize: 14 }}>{it.label} — หัก ณ ที่จ่าย {it.rateLabel}</strong>
-                <span style={{ fontSize: 13, color: 'var(--muted)' }}>ยอด {fmt(amt)} · หัก <strong style={{ color: 'var(--danger)' }}>{fmt(wht)}</strong> ฿</span>
+                <strong style={{ fontSize: 'var(--fs-md)' }}>{it.label} — หัก ณ ที่จ่าย {it.rateLabel}</strong>
+                <span style={{ fontSize: 'var(--fs-base)', color: 'var(--muted)' }}>ยอด {fmt(amt)} · หัก <strong style={{ color: 'var(--danger)' }}>{fmt(wht)}</strong> ฿</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8 }}>
                 <input className="input" disabled={!canEdit} placeholder="ชื่อผู้รับเงิน" value={pv.name} onChange={(e) => set(it.id, 'name', stripDigits(e.target.value))} />
@@ -150,7 +150,7 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
                   จนกว่าจะล้าง/เปลี่ยน (ไม่ใช่แค่ครั้งเดียว) */}
               {isAdmin && (
                 <div style={{ marginTop: 8 }}>
-                  <label style={{ display: 'block', fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 'var(--fs-xs)', color: 'var(--muted)', marginBottom: 4 }}>
                     ตั้งวันที่ตายตัวแทนวันพิมพ์จริง (ไม่บังคับ — เฉพาะ Admin)
                   </label>
                   <div style={{ maxWidth: 200 }}>
@@ -169,9 +169,9 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
             <Icon name="ti-device-floppy" /> {isPending ? 'กำลังบันทึก...' : 'บันทึกข้อมูลผู้รับเงิน'}
           </button>
         ) : (
-          <p className="muted" style={{ fontSize: 12 }}><Icon name="ti-lock" /> เฉพาะ Admin หรือ Co-Admin แก้ไขข้อมูลผู้รับเงินได้ (พิมพ์เอกสารได้ตามปกติ)</p>
+          <p className="muted" style={{ fontSize: 'var(--fs-sm)' }}><Icon name="ti-lock" /> เฉพาะ Admin หรือ Co-Admin แก้ไขข้อมูลผู้รับเงินได้ (พิมพ์เอกสารได้ตามปกติ)</p>
         )}
-        {msg && <div style={{ marginTop: 12, fontSize: 14, color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</div>}
+        {msg && <div style={{ marginTop: 12, fontSize: 'var(--fs-md)', color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</div>}
       </div>
     </div>
   );

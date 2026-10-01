@@ -5,7 +5,7 @@ import { fmtMoney } from '../../../lib/format';
 export default function PointDistributionChart({ branchMetrics = [] }) {
   if (!branchMetrics.length) {
     return (
-      <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted)', fontSize: 13 }}>
+      <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--muted)', fontSize: 'var(--fs-base)' }}>
         ยังไม่มีข้อมูลการออกแต้มแยกตามสาขา
       </div>
     );
@@ -89,7 +89,7 @@ export default function PointDistributionChart({ branchMetrics = [] }) {
           );
         })}
       </svg>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontSize: 12, marginTop: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontSize: 'var(--fs-sm)', marginTop: 8 }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#16a34a' }} /> แจกแต้ม (Earned)</span>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: '#ea580c' }} /> แลดแต้ม (Redeemed)</span>
       </div>

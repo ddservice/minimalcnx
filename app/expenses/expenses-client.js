@@ -31,7 +31,7 @@ export default function ExpensesClient({ date, initialCategory, allExisting, cat
           <AccessBanner level={access.level || 'view'} />
           <div className="card" style={{ marginBottom: 12 }}>
             <div className="card-body">
-              <label className="muted" style={{ display: 'block', fontSize: 12, marginBottom: 4 }}>วันที่</label>
+              <label className="muted" style={{ display: 'block', fontSize: 'var(--fs-sm)', marginBottom: 4 }}>วันที่</label>
               <DateField value={date} loading={isPending} onChange={navDate} />
             </div>
           </div>

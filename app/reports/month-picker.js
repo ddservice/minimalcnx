@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useTransition } from 'react';
 import DateField from '../../components/date-field';
 
-export default function MonthPicker({ value }) {
+// basePath: หน้าที่จะพาไปพร้อม ?month= — ใช้ร่วมกันระหว่าง /reports และ /dashboard
+export default function MonthPicker({ value, basePath = '/reports', max }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [localVal, setLocalVal] = useState(value);
@@ -17,7 +18,7 @@ export default function MonthPicker({ value }) {
     if (/^\d{4}-\d{2}$/.test(v) && v !== localVal) {
       setLocalVal(v);
       startTransition(() => {
-        router.push(`/reports?month=${v}`);
+        router.push(`${basePath}?month=${v}`);
       });
     }
   };
@@ -27,6 +28,7 @@ export default function MonthPicker({ value }) {
       <DateField
         type="month"
         value={localVal}
+        max={max}
         loading={isPending}
         onChange={handleChange}
       />

@@ -55,8 +55,8 @@ export default function DataTools() {
           <button className="btn btn-danger" type="button" onClick={onDelete} disabled={isPending}><Icon name="ti-trash" /> ลบข้อมูลทั้งเดือน</button>
           <button className="btn btn-ghost" type="button" onClick={onDedup} disabled={isPending}><Icon name="ti-copy-off" /> ลบรายจ่ายซ้ำ</button>
         </div>
-        {msg && <div style={{ marginTop: 12, fontSize: 14, color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</div>}
-        <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>⚠️ การลบเป็นการลบถาวรจาก database ตรวจเดือนให้ถูกก่อนกดยืนยัน</p>
+        {msg && <div style={{ marginTop: 12, fontSize: 'var(--fs-md)', color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</div>}
+        <p className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 10 }}>⚠️ การลบเป็นการลบถาวรจาก database ตรวจเดือนให้ถูกก่อนกดยืนยัน</p>
       </div>
     </div>
   );

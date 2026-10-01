@@ -16,7 +16,7 @@ export default function AccessBanner({ level, extra }) {
         borderRadius: 'var(--radius-md)',
         background: 'var(--color-info-bg)',
         color: 'var(--color-info)',
-        fontSize: 13,
+        fontSize: 'var(--fs-base)',
         fontWeight: 600,
       }}
     >

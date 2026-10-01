@@ -245,7 +245,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                 border: '1px solid #e0d1bf',
                 borderRadius: 'var(--radius-full)',
                 padding: '2px 10px',
-                fontSize: 12,
+                fontSize: 'var(--fs-sm)',
                 fontWeight: 700,
                 letterSpacing: '0.02em',
               }}
@@ -274,7 +274,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
               <button
                 type="button"
                 className={`btn ${!catFilter ? 'btn-coffee' : 'btn-ghost'}`}
-                style={{ padding: '5px 12px', fontSize: 12, borderRadius: 'var(--radius-full)' }}
+                style={{ padding: '5px 12px', fontSize: 'var(--fs-sm)', borderRadius: 'var(--radius-full)' }}
                 onClick={() => { setCatFilter(''); setCurrentPage(1); }}
               >
                 ทั้งหมด
@@ -284,7 +284,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                   key={c.value}
                   type="button"
                   className={`btn ${catFilter === c.value ? 'btn-coffee' : 'btn-ghost'}`}
-                  style={{ padding: '5px 12px', fontSize: 12, borderRadius: 'var(--radius-full)' }}
+                  style={{ padding: '5px 12px', fontSize: 'var(--fs-sm)', borderRadius: 'var(--radius-full)' }}
                   onClick={() => { setCatFilter(c.value); setCurrentPage(1); }}
                 >
                   {c.label}
@@ -302,7 +302,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                   top: '50%',
                   transform: 'translateY(-50%)',
                   color: 'var(--color-text-muted)',
-                  fontSize: 14,
+                  fontSize: 'var(--fs-md)',
                   pointerEvents: 'none',
                 }}
               />
@@ -317,7 +317,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                 }}
                 style={{
                   padding: '7px 10px 7px 32px',
-                  fontSize: 12.5,
+                  fontSize: 'var(--fs-sm)',
                   borderRadius: 'var(--radius-md)',
                 }}
               />
@@ -334,7 +334,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                     background: 'transparent',
                     color: 'var(--color-text-muted)',
                     cursor: 'pointer',
-                    fontSize: 14,
+                    fontSize: 'var(--fs-md)',
                     padding: 2,
                   }}
                   aria-label="ล้างคำค้นหา"
@@ -364,7 +364,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                 marginTop: 16,
                 paddingTop: 14,
                 borderTop: '1px solid var(--color-border)',
-                fontSize: 13,
+                fontSize: 'var(--fs-base)',
               }}
             >
               <div className="muted" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -373,7 +373,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                   <span>หน้าละ:</span>
                   <select
                     className="input"
-                    style={{ width: 'auto', padding: '4px 8px', fontSize: 12, fontWeight: 700, borderRadius: 'var(--radius-md)' }}
+                    style={{ width: 'auto', padding: '4px 8px', fontSize: 'var(--fs-sm)', fontWeight: 700, borderRadius: 'var(--radius-md)' }}
                     value={pageSize}
                     onChange={(e) => {
                       const v = e.target.value === 'all' ? 'all' : Number(e.target.value);
@@ -395,21 +395,21 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    style={{ padding: '6px 12px', fontSize: 12 }}
+                    style={{ padding: '6px 12px', fontSize: 'var(--fs-sm)' }}
                     disabled={safePage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   >
                     <Icon name="ti-chevron-left" /> ก่อนหน้า
                   </button>
 
-                  <span style={{ padding: '0 8px', fontWeight: 600, fontSize: 12.5, color: 'var(--color-text)' }}>
+                  <span style={{ padding: '0 8px', fontWeight: 600, fontSize: 'var(--fs-sm)', color: 'var(--color-text)' }}>
                     หน้า {safePage} / {totalPages}
                   </span>
 
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    style={{ padding: '6px 12px', fontSize: 12 }}
+                    style={{ padding: '6px 12px', fontSize: 'var(--fs-sm)' }}
                     disabled={safePage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   >
@@ -432,7 +432,7 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
         </div>
       </div>
 
-      {daysRecorded === 0 && <p className="muted" style={{ fontSize: 13 }}>ยังไม่มีข้อมูลยอดขายในเดือนนี้</p>}
+      {daysRecorded === 0 && <p className="muted" style={{ fontSize: 'var(--fs-base)' }}>ยังไม่มีข้อมูลยอดขายในเดือนนี้</p>}
     </AppShell>
   );
 }
@@ -440,8 +440,8 @@ export default function ReportsClient({ initialMonth, initialData, role, name, i
 function Mini({ label, value }) {
   return (
     <div>
-      <div className="muted" style={{ fontSize: 12 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{value}</div>
+      <div className="muted" style={{ fontSize: 'var(--fs-sm)' }}>{label}</div>
+      <div style={{ fontSize: 'var(--fs-2xl)', fontWeight: 700, marginTop: 2 }}>{value}</div>
     </div>
   );
 }

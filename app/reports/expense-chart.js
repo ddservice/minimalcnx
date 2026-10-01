@@ -22,7 +22,7 @@ export default function ExpenseChart({ mat, bak, misc, opex }) {
 
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'var(--surface)', marginBottom: 12 }}>
-      <h2 style={{ marginTop: 0, fontSize: 15, marginBottom: 12 }}>สัดส่วนรายจ่าย</h2>
+      <h2 style={{ marginTop: 0, fontSize: 'var(--fs-lg)', marginBottom: 12 }}>สัดส่วนรายจ่าย</h2>
 
       {/* stacked bar — gap 2px ระหว่าง segment, ปลายโค้งจาก container */}
       <div style={{ display: 'flex', gap: 2, height: 26, borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
@@ -34,7 +34,7 @@ export default function ExpenseChart({ mat, bak, misc, opex }) {
       {/* legend + direct labels (identity = swatch, ตัวเลข = ink token) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8, marginTop: 12 }}>
         {parts.map((p) => (
-          <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+          <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-base)' }}>
             <span style={{ width: 12, height: 12, borderRadius: 3, background: p.color, flexShrink: 0 }} />
             <span style={{ color: 'var(--text)' }}>{p.label}</span>
             <span style={{ marginLeft: 'auto', color: 'var(--muted)' }}>

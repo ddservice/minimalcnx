@@ -257,7 +257,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
       <div style={card}>
         <label style={lbl}>เดือน</label>
         <div style={{ maxWidth: 200 }}><DateField type="month" value={monthInput} loading={isPending} onChange={onMonthChange} /></div>
-        <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>({monthLabel})</span>
+        <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginLeft: 8 }}>({monthLabel})</span>
       </div>
 
       <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minInlineSize: 0 }}>
@@ -314,7 +314,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
           return <Row key={it.key} label={it.label} value={staff[it.key]} onChange={onCh} />;
         })}
         <div style={{ borderTop: '1px dashed var(--border)', margin: '8px 0', paddingTop: 8 }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>พนักงาน</div>
+          <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginBottom: 6 }}>พนักงาน</div>
           {employees.map((e, i) => {
             const ps = payslip(e, income);
             return (
@@ -337,7 +337,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
                   >
                     {fmt(ps.companyCost)}
                   </div>
-                  <span style={{ fontSize: 13, color: 'var(--muted)' }}>฿</span>
+                  <span style={{ fontSize: 'var(--fs-base)', color: 'var(--muted)' }}>฿</span>
                   <button type="button" onClick={() => setEmp(i, 'showSlip', !e.showSlip)} style={btnSlip}>
                     <Icon name="ti-calculator" /> คำนวณเงินเดือน
                   </button>
@@ -385,17 +385,17 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
                           <button type="button" onClick={onSaveEmpDetails} style={btnSaveDetail}>
                             <Icon name="ti-device-floppy" /> บันทึกข้อมูลพนักงาน
                           </button>
-                          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                          <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)' }}>
                             <Icon name="ti-cloud-check" /> เก็บลงระบบกลาง ใช้ร่วมกันได้ทุกเครื่อง
                           </span>
                         </div>
                       ) : (
-                        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 12 }}>
+                        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)', marginTop: 12 }}>
                           <Icon name="ti-lock" /> เฉพาะ Admin หรือ Co-Admin แก้ไขข้อมูลพนักงานได้
                         </div>
                       )}
                       {detailMsg && (
-                        <div style={{ fontSize: 12, marginTop: 6, color: detailMsg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{detailMsg.text}</div>
+                        <div style={{ fontSize: 'var(--fs-sm)', marginTop: 6, color: detailMsg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{detailMsg.text}</div>
                       )}
                     </div>
 
@@ -407,7 +407,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
                       <SlipRow label="+ ประกันสังคม (บริษัท 5%)" value={`+ ${fmt(ps.ssoCo)}`} color="var(--muted)" />
                       <SlipRow label="รวมค่าใช้จ่ายบริษัท" value={fmt(ps.companyCost)} strong />
                     </div>
-                    <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
+                    <p className="muted" style={{ fontSize: 'var(--fs-xs)', marginTop: 6 }}>
                       <Icon name="ti-refresh" /> ยอดรวมค่าใช้จ่ายบริษัทด้านบนจะถูกใช้เป็นยอดค่าดำเนินการของพนักงานคนนี้โดยอัตโนมัติเมื่อบันทึก
                     </p>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
@@ -421,7 +421,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
                         <Icon name="ti-printer" /> พิมพ์หนังสือรับรองเงินเดือน
                       </button>
                     </div>
-                    {income <= 0 && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 6 }}>* คอมมิชชั่นคำนวณจากยอดขายเดือนนี้ (ยังไม่มีข้อมูลขาย)</div>}
+                    {income <= 0 && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)', marginTop: 6 }}>* คอมมิชชั่นคำนวณจากยอดขายเดือนนี้ (ยังไม่มีข้อมูลขาย)</div>}
                   </div>
                 )}
 
@@ -463,7 +463,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
         <div style={{ ...card, borderColor: 'var(--taupe)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <Icon name="ti-file-invoice" style={{ color: 'var(--taupe-dark)' }} />
-            <h2 style={{ margin: 0, fontSize: 15 }}>สรุปยอดนำส่งหน่วยงาน (สำหรับสำนักงานบัญชี)</h2>
+            <h2 style={{ margin: 0, fontSize: 'var(--fs-lg)' }}>สรุปยอดนำส่งหน่วยงาน (สำหรับสำนักงานบัญชี)</h2>
           </div>
           <div style={slipCalc}>
             <SlipRow label="ประกันสังคม (สปส.1-10) — พนักงาน + บริษัท" value={fmt(remitSSO)} strong />
@@ -473,7 +473,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
             <SlipRow label="• คอมมิชชั่น 3%" value={fmt(commWht)} color="var(--muted)" />
             <SlipRow label="ภาษีมูลค่าเพิ่ม (ภ.พ.30)" value={fmt(vatAmt)} strong />
           </div>
-          <p style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+          <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)', marginTop: 8 }}>
             * นำส่งประกันสังคมภายในวันที่ 15 · ภาษีหัก ณ ที่จ่าย (ภ.ง.ด.) ภายในวันที่ 7 ของเดือนถัดไป
           </p>
         </div>
@@ -482,7 +482,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
       {/* รวม + บันทึก */}
       <div style={{ ...card, background: '#f5ede3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>ยอดรวมค่าดำเนินการทั้งหมด</div>
+          <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>ยอดรวมค่าดำเนินการทั้งหมด</div>
           <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--coffee)' }}>{fmt(grand)} ฿</div>
         </div>
         {canSave && (
@@ -493,13 +493,13 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
       </div>
 
       {canSave && (
-      <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+      <p style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginTop: 4 }}>
         เว้นว่าง = ไม่บันทึกช่องนั้น · บันทึกซ้ำเดือนเดิม = อัปเดตทับ
       </p>
       )}
 
       {msg && (
-        <div style={{ marginTop: 8, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 14 }}>{msg.text}</div>
+        <div style={{ marginTop: 8, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 'var(--fs-md)' }}>{msg.text}</div>
       )}
       </fieldset>
     </form>
@@ -510,8 +510,8 @@ function Section({ title, total, children }) {
   return (
     <div style={card}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: 15 }}>{title}</h2>
-        <span style={{ fontSize: 13, color: 'var(--muted)' }}>รวม <strong style={{ color: 'var(--coffee)' }}>{fmt(total)} ฿</strong></span>
+        <h2 style={{ margin: 0, fontSize: 'var(--fs-lg)' }}>{title}</h2>
+        <span style={{ fontSize: 'var(--fs-base)', color: 'var(--muted)' }}>รวม <strong style={{ color: 'var(--coffee)' }}>{fmt(total)} ฿</strong></span>
       </div>
       {children}
     </div>
@@ -521,9 +521,9 @@ function Section({ title, total, children }) {
 function Row({ label, value, onChange, placeholder }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
-      <label style={{ flex: '1 1 160px', fontSize: 14 }}>{label}</label>
+      <label style={{ flex: '1 1 160px', fontSize: 'var(--fs-md)' }}>{label}</label>
       <NumberInput value={value} onChange={onChange} placeholder={placeholder != null ? String(placeholder) : '0'} style={{ ...inp, flex: '0 1 160px' }} />
-      <span style={{ fontSize: 13, color: 'var(--muted)', width: 12 }}>฿</span>
+      <span style={{ fontSize: 'var(--fs-base)', color: 'var(--muted)', width: 12 }}>฿</span>
     </div>
   );
 }
@@ -570,7 +570,7 @@ function SlipRow({ label, value, color, strong }) {
 function PayHistory({ hist, employee, bizInfo, isAdmin, onMsg }) {
   if (!hist.length) {
     return (
-      <div style={{ ...slipBox, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
+      <div style={{ ...slipBox, textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--fs-sm)' }}>
         ยังไม่มีประวัติการจ่ายเงิน — บันทึกค่าดำเนินการอย่างน้อย 1 เดือนก่อน
       </div>
     );
@@ -595,7 +595,7 @@ function PayHistory({ hist, employee, bizInfo, isAdmin, onMsg }) {
 
   return (
     <div style={slipBox}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8, marginBottom: 10, fontSize: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8, marginBottom: 10, fontSize: 'var(--fs-sm)' }}>
         <div><div className="muted" style={{ color: 'var(--muted)' }}>จำนวนเดือน</div><strong>{hist.length} เดือน</strong></div>
         <div><div className="muted" style={{ color: 'var(--muted)' }}>รวมโอนพนักงาน</div><strong>{fmt(totalNet)} ฿</strong></div>
         <div><div className="muted" style={{ color: 'var(--muted)' }}>เฉลี่ย/เดือน</div><strong>{fmt(avgNet)} ฿</strong></div>
@@ -603,7 +603,7 @@ function PayHistory({ hist, employee, bizInfo, isAdmin, onMsg }) {
       </div>
       <div style={{ display: 'grid', gap: 6 }}>
         {hist.map((r) => (
-          <div key={r.month} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 12 }}>
+          <div key={r.month} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', borderTop: '1px solid var(--border)', paddingTop: 6, fontSize: 'var(--fs-sm)' }}>
             <strong style={{ minWidth: 60 }}>{r.month}</strong>
             <span style={{ color: 'var(--muted)' }}>โอน {fmt(r.netTransfer)} ฿ · ต้นทุน {fmt(r.companyCost)} ฿</span>
             <button type="button" onClick={() => onReprint(r)} style={{ ...btnMini, marginLeft: 'auto' }}>
@@ -617,19 +617,19 @@ function PayHistory({ hist, employee, bizInfo, isAdmin, onMsg }) {
 }
 
 const card = { border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'var(--surface)', marginBottom: 12 };
-const lbl = { display: 'block', fontSize: 12, color: 'var(--muted)', marginBottom: 4 };
-const inp = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14 };
-const btnRemove = { border: 0, background: '#fff0f0', color: 'var(--danger)', borderRadius: 'var(--radius-md)', padding: '6px 12px', fontSize: 12, cursor: 'pointer' };
-const btnAdd = { border: '1px dashed var(--border)', background: 'var(--surface)', color: 'var(--coffee)', borderRadius: 'var(--radius-md)', padding: '8px', width: '100%', fontSize: 13, cursor: 'pointer', fontWeight: 600 };
-const btnSave = { border: 0, borderRadius: 'var(--radius-md)', padding: '12px 22px', fontSize: 15, fontWeight: 700, background: 'var(--coffee)', color: '#fff', cursor: 'pointer' };
-const whtBox = { border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', margin: '-2px 0 12px', fontSize: 12 };
+const lbl = { display: 'block', fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginBottom: 4 };
+const inp = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--fs-md)' };
+const btnRemove = { border: 0, background: '#fff0f0', color: 'var(--danger)', borderRadius: 'var(--radius-md)', padding: '6px 12px', fontSize: 'var(--fs-sm)', cursor: 'pointer' };
+const btnAdd = { border: '1px dashed var(--border)', background: 'var(--surface)', color: 'var(--coffee)', borderRadius: 'var(--radius-md)', padding: '8px', width: '100%', fontSize: 'var(--fs-base)', cursor: 'pointer', fontWeight: 600 };
+const btnSave = { border: 0, borderRadius: 'var(--radius-md)', padding: '12px 22px', fontSize: 'var(--fs-lg)', fontWeight: 700, background: 'var(--coffee)', color: '#fff', cursor: 'pointer' };
+const whtBox = { border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', margin: '-2px 0 12px', fontSize: 'var(--fs-sm)' };
 const whtRow = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '7px 11px', fontWeight: 600 };
-const hintBox = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', background: 'var(--beige)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '8px 11px', margin: '-2px 0 12px', fontSize: 12, color: 'var(--muted)' };
-const btnMini = { border: '1px solid var(--taupe)', background: 'var(--surface)', color: 'var(--taupe-dark)', borderRadius: 'var(--radius-md)', padding: '5px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 };
-const btnSlip = { border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--taupe-dark)', borderRadius: 'var(--radius-md)', padding: '6px 10px', fontSize: 12, cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 };
+const hintBox = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', background: 'var(--beige)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '8px 11px', margin: '-2px 0 12px', fontSize: 'var(--fs-sm)', color: 'var(--muted)' };
+const btnMini = { border: '1px solid var(--taupe)', background: 'var(--surface)', color: 'var(--taupe-dark)', borderRadius: 'var(--radius-md)', padding: '5px 12px', fontSize: 'var(--fs-sm)', cursor: 'pointer', fontWeight: 600 };
+const btnSlip = { border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--taupe-dark)', borderRadius: 'var(--radius-md)', padding: '6px 10px', fontSize: 'var(--fs-sm)', cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 };
 const slipBox = { border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--beige)', padding: 12, marginTop: 8 };
-const slipCalc = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', fontSize: 13 };
+const slipCalc = { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', fontSize: 'var(--fs-base)' };
 const detailWrap = { border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', padding: 12, marginBottom: 10 };
-const detailHead = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: 'var(--taupe-dark)', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 8 };
+const detailHead = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-sm)', fontWeight: 700, color: 'var(--taupe-dark)', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 8 };
 const detailGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10 };
-const btnSaveDetail = { border: 0, background: 'var(--coffee)', color: '#fff', borderRadius: 'var(--radius-md)', padding: '9px 16px', fontSize: 13, cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 };
+const btnSaveDetail = { border: 0, background: 'var(--coffee)', color: '#fff', borderRadius: 'var(--radius-md)', padding: '9px 16px', fontSize: 'var(--fs-base)', cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 };

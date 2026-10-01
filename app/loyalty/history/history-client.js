@@ -126,7 +126,7 @@ export default function HistoryClient({
             </button>
           </form>
           {msg && (
-            <div style={{ marginTop: 12, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 14 }}>
+            <div style={{ marginTop: 12, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 'var(--fs-md)' }}>
               {msg.text}
             </div>
           )}
@@ -170,7 +170,7 @@ export default function HistoryClient({
                   <span>
                     {r.customers?.name || '—'}
                     <br />
-                    <span className="muted" style={{ fontSize: 11 }}>{r.customers?.phone}</span>
+                    <span className="muted" style={{ fontSize: 'var(--fs-xs)' }}>{r.customers?.phone}</span>
                   </span>
                 ),
               },
@@ -188,7 +188,7 @@ export default function HistoryClient({
                 key: 'receipt',
                 label: 'ใบเสร็จ / หมายเหตุ',
                 render: (r) => (
-                  <span style={{ fontSize: 12 }}>
+                  <span style={{ fontSize: 'var(--fs-sm)' }}>
                     {r.receipt_number || '—'}
                     {r.note ? <><br /><span className="muted">{r.note}</span></> : null}
                   </span>
@@ -202,7 +202,7 @@ export default function HistoryClient({
                       <button
                         type="button"
                         className="btn btn-secondary"
-                        style={{ fontSize: 11, padding: '4px 8px' }}
+                        style={{ fontSize: 'var(--fs-xs)', padding: '4px 8px' }}
                         disabled={isPending || (r.transaction_type === 'adjust' && String(r.note || '').startsWith('VOID:'))}
                         onClick={() => onVoid(r)}
                       >
@@ -219,4 +219,4 @@ export default function HistoryClient({
   );
 }
 
-const lbl = { display: 'grid', gap: 4, fontSize: 12, fontWeight: 600 };
+const lbl = { display: 'grid', gap: 4, fontSize: 'var(--fs-sm)', fontWeight: 600 };

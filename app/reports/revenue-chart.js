@@ -45,8 +45,8 @@ export default function RevenueChart({ sales }) {
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'var(--surface)', marginBottom: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-        <h2 style={{ margin: 0, fontSize: 15 }}>ยอดขายสุทธิรายวัน</h2>
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>สูงสุด {fmtMoney(maxV)} ฿</span>
+        <h2 style={{ margin: 0, fontSize: 'var(--fs-lg)' }}>ยอดขายสุทธิรายวัน</h2>
+        <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>สูงสุด {fmtMoney(maxV)} ฿</span>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
@@ -99,18 +99,18 @@ export default function RevenueChart({ sales }) {
                 xmlns="http://www.w3.org/1999/xhtml"
                 style={{
                   background: 'var(--coffee)', color: '#fff', borderRadius: 8, padding: '6px 10px',
-                  fontSize: 11, lineHeight: 1.4, boxShadow: 'var(--shadow-md)', textAlign: 'center',
+                  fontSize: 'var(--fs-xs)', lineHeight: 1.4, boxShadow: 'var(--shadow-md)', textAlign: 'center',
                 }}
               >
                 <div style={{ opacity: 0.8 }}>{thShortDate(hoverDay.date)}</div>
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{fmtMoney(hoverDay.v)} ฿</div>
+                <div style={{ fontWeight: 700, fontSize: 'var(--fs-base)' }}>{fmtMoney(hoverDay.v)} ฿</div>
               </div>
             </foreignObject>
           )}
         </svg>
         </div>
       </div>
-      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>วันที่ในเดือน · เลื่อนชี้ที่แท่งเพื่อดูยอด</div>
+      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)', marginTop: 4 }}>วันที่ในเดือน · เลื่อนชี้ที่แท่งเพื่อดูยอด</div>
     </div>
   );
 }

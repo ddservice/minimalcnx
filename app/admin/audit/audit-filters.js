@@ -67,7 +67,7 @@ export default function AuditFilters({ table, action, ip, q, limit = 20 }) {
         </select>
         <input className="input" style={{ maxWidth: 160 }} placeholder="กรอง IP" value={ipDraft} onChange={(e) => setIpDraft(e.target.value)} />
         <input className="input" style={{ maxWidth: 180 }} placeholder="ชื่อผู้ใช้" value={qDraft} onChange={(e) => setQDraft(e.target.value)} />
-        <label className="muted" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginLeft: 'auto' }}>
+        <label className="muted" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-sm)', marginLeft: 'auto' }}>
           แสดง
           <select
             className="input"

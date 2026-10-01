@@ -5,7 +5,7 @@
 // rows: array of objects; ต้องมี rowKey(row) คืนค่า unique key
 export default function DataTable({ columns, rows, rowKey, emptyText = 'ไม่มีข้อมูล' }) {
   if (!rows?.length) {
-    return <p className="muted" style={{ fontSize: 13, margin: 0 }}>{emptyText}</p>;
+    return <p className="muted" style={{ fontSize: 'var(--fs-base)', margin: 0 }}>{emptyText}</p>;
   }
   return (
     <div className="rtable-wrap">

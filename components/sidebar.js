@@ -38,7 +38,7 @@ export default function Sidebar({ name, role, isAdmin, allowed, mobileOpen, setM
     ? [
         ...visible,
         { href: '/admin', label: 'ผู้ใช้งาน', icon: 'ti-users' },
-        { href: '/admin/audit', label: 'log', icon: 'ti-history' },
+        { href: '/admin/audit', label: 'ประวัติการใช้งาน', icon: 'ti-history' },
       ]
     : visible;
 

@@ -241,7 +241,7 @@ export default function LoyaltyClient({
             border: '1px solid #fecaca',
             color: '#dc2626',
             fontWeight: 600,
-            fontSize: 13,
+            fontSize: 'var(--fs-base)',
           }}
         >
           <Icon name="ti-alert-triangle" /> บัญชียังไม่ได้ผูกกับสาขา — แจก/แลกแต้มไม่ได้จนกว่า Admin จะตั้งค่าที่เมนูตั้งค่าสาขา
@@ -252,7 +252,7 @@ export default function LoyaltyClient({
         <div className="card-head">
           <Icon name="ti-search" /> <h2>ค้นหาลูกค้าสะสมแต้ม</h2>
           {staffCode && (
-            <span className="muted" style={{ marginLeft: 'auto', fontSize: 12 }}>รหัสพนักงาน: {staffCode}</span>
+            <span className="muted" style={{ marginLeft: 'auto', fontSize: 'var(--fs-sm)' }}>รหัสพนักงาน: {staffCode}</span>
           )}
         </div>
         <div className="card-body">
@@ -280,13 +280,13 @@ export default function LoyaltyClient({
 
           {recent.length > 0 && (
             <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-              <span className="muted" style={{ fontSize: 12 }}>เบอร์ล่าสุด:</span>
+              <span className="muted" style={{ fontSize: 'var(--fs-sm)' }}>เบอร์ล่าสุด:</span>
               {recent.map((p) => (
                 <button
                   key={p}
                   type="button"
                   className="btn btn-secondary"
-                  style={{ fontSize: 12, padding: '4px 10px' }}
+                  style={{ fontSize: 'var(--fs-sm)', padding: '4px 10px' }}
                   onClick={() => {
                     setQuery(p);
                     runSearch(p);
@@ -305,7 +305,7 @@ export default function LoyaltyClient({
                 marginTop: 14,
                 padding: '10px 14px',
                 borderRadius: 'var(--radius-md)',
-                fontSize: 13,
+                fontSize: 'var(--fs-base)',
                 fontWeight: 600,
                 background: msg.type === 'ok' ? '#f0fdf4' : '#fef2f2',
                 color: msg.type === 'ok' ? '#16a34a' : '#dc2626',
@@ -321,7 +321,7 @@ export default function LoyaltyClient({
       {!canCreate && <AccessBanner level="view" extra="ค้นหาและดูยอดแต้มได้ — ไม่มีสิทธิ์สมัคร / แจก / แลก" />}
 
       {notFound && !canCreate && (
-        <p className="muted" style={{ fontSize: 13 }}>ไม่พบลูกค้านี้ — ไม่มีสิทธิ์สมัครสมาชิกใหม่</p>
+        <p className="muted" style={{ fontSize: 'var(--fs-base)' }}>ไม่พบลูกค้านี้ — ไม่มีสิทธิ์สมัครสมาชิกใหม่</p>
       )}
       {notFound && canCreate && (
         <div className="card" style={{ borderColor: 'var(--color-primary)' }}>
@@ -357,7 +357,7 @@ export default function LoyaltyClient({
                   display: 'flex',
                   gap: 10,
                   alignItems: 'flex-start',
-                  fontSize: 13,
+                  fontSize: 'var(--fs-base)',
                   lineHeight: 1.45,
                   color: 'var(--color-text-muted)',
                   cursor: 'pointer',
@@ -390,7 +390,7 @@ export default function LoyaltyClient({
                   marginLeft: 'auto',
                   padding: '2px 10px',
                   borderRadius: 'var(--radius-full)',
-                  fontSize: 11,
+                  fontSize: 'var(--fs-xs)',
                   fontWeight: 700,
                   color: '#fff',
                   background: RFM_COLOR[customerSegment(customer)] || '#6b7280',
@@ -400,9 +400,9 @@ export default function LoyaltyClient({
               </span>
             </div>
             <div className="card-body">
-              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{customer.name}</div>
-              <div className="muted" style={{ fontSize: 13 }}><Icon name="ti-phone" /> {customer.phone}</div>
-              {customer.line_user_id && <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>LINE: {customer.line_user_id}</div>}
+              <div style={{ fontSize: 'var(--fs-2xl)', fontWeight: 700, marginBottom: 4 }}>{customer.name}</div>
+              <div className="muted" style={{ fontSize: 'var(--fs-base)' }}><Icon name="ti-phone" /> {customer.phone}</div>
+              {customer.line_user_id && <div className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 2 }}>LINE: {customer.line_user_id}</div>}
 
               <div
                 style={{
@@ -413,11 +413,11 @@ export default function LoyaltyClient({
                   textAlign: 'center',
                 }}
               >
-                <div className="muted" style={{ fontSize: 12 }}>แต้มสะสมคงเหลือ</div>
+                <div className="muted" style={{ fontSize: 'var(--fs-sm)' }}>แต้มสะสมคงเหลือ</div>
                 <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--color-primary)', margin: '4px 0' }}>
-                  {customer.points_balance || 0} <span style={{ fontSize: 16, fontWeight: 600 }}>แต้ม</span>
+                  {customer.points_balance || 0} <span style={{ fontSize: 'var(--fs-xl)', fontWeight: 600 }}>แต้ม</span>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+                <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)' }}>
                   เข้ามาใช้บริการแล้ว {customer.visit_count || 0} ครั้ง
                 </div>
               </div>
@@ -437,7 +437,7 @@ export default function LoyaltyClient({
                   ))}
                 </select>
                 {!canPickBranch && (
-                  <div className="muted" style={{ fontSize: 11, marginTop: 4 }}>
+                  <div className="muted" style={{ fontSize: 'var(--fs-xs)', marginTop: 4 }}>
                     พนักงานใช้สาขาที่ผูกไว้เท่านั้น (เปลี่ยนได้เฉพาะ manager+)
                   </div>
                 )}
@@ -461,7 +461,7 @@ export default function LoyaltyClient({
                     value={spendAmount}
                     onChange={handleSpendChange}
                   />
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
+                  <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)', marginTop: 4 }}>
                     ทุก 50 บาท = 1 แต้ม {suggested > 0 ? `→ แนะนำ ${suggested} แต้ม` : ''}
                   </div>
                 </div>
@@ -511,7 +511,7 @@ export default function LoyaltyClient({
             </div>
             <div className="card-body">
               {(rewards || []).length === 0 ? (
-                <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+                <p className="muted" style={{ margin: 0, fontSize: 'var(--fs-base)' }}>
                   ยังไม่มีรางวัลที่เปิดใช้ — ให้ Admin ตั้งค่าที่เมนูตั้งค่าสาขา
                 </p>
               ) : null}
@@ -543,14 +543,14 @@ export default function LoyaltyClient({
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: 18,
+                            fontSize: 'var(--fs-2xl)',
                           }}
                         >
                           <Icon name={rw.icon} />
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: 14 }}>{rw.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--color-primary)', fontWeight: 600 }}>
+                          <div style={{ fontWeight: 700, fontSize: 'var(--fs-md)' }}>{rw.name}</div>
+                          <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--color-primary)', fontWeight: 600 }}>
                             {rw.points} แต้ม
                           </div>
                         </div>
@@ -561,7 +561,7 @@ export default function LoyaltyClient({
                         className={`btn ${canRedeem ? 'btn-primary' : ''}`}
                         onClick={() => handleRedeem(rw)}
                         disabled={!canRedeem || isPending}
-                        style={{ width: '100%', fontSize: 12, padding: '6px 12px' }}
+                        style={{ width: '100%', fontSize: 'var(--fs-sm)', padding: '6px 12px' }}
                       >
                         {canRedeem ? 'กดแลกรางวัล' : `แต้มไม่พอ (ขาด ${Math.max(0, rw.points - (customer.points_balance || 0))} แต้ม)`}
                       </button>
@@ -570,7 +570,7 @@ export default function LoyaltyClient({
                 })}
               </div>
               {canVoid && (
-                <p className="muted" style={{ marginTop: 12, fontSize: 12, marginBottom: 0 }}>
+                <p className="muted" style={{ marginTop: 12, fontSize: 'var(--fs-sm)', marginBottom: 0 }}>
                   ต้องการยกเลิกรายการผิดพลาด → ไปที่เมนูประวัติธุรกรรม
                 </p>
               )}
@@ -584,4 +584,4 @@ export default function LoyaltyClient({
   );
 }
 
-const lbl = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 };
+const lbl = { display: 'block', fontSize: 'var(--fs-sm)', fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 };

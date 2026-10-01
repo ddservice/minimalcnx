@@ -50,24 +50,24 @@ export default function RolePerms({ perms }) {
     <div className="card">
       <div className="card-head"><Icon name="ti-lock-access" /><h2>สิทธิ์ตามตำแหน่ง — ดู / กรอก / แก้ได้</h2></div>
       <div className="card-body" style={{ overflowX: 'auto' }}>
-        <p className="muted" style={{ fontSize: 12, marginTop: -4, marginBottom: 10 }}>
+        <p className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: -4, marginBottom: 10 }}>
           Super Admin (admin) เต็มสิทธิ์เสมอ · กดปุ่ม <strong>แก้ได้</strong> เมื่อต้องการให้แก้ของเดิมได้ ·
           <strong> กรอกอย่างเดียว</strong> = เพิ่มใหม่ได้แต่ห้ามแก้/ลบ · ระดับสูงรวมระดับล่าง
         </p>
-        <p className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
+        <p className="muted" style={{ fontSize: 'var(--fs-sm)', marginBottom: 10 }}>
           เพดานฐานข้อมูล (RLS) ที่เมทริกซ์ขยายเกินไม่ได้: Staff เพิ่มยอดขาย/รายจ่ายได้ แต่แก้ของเดิมและลบรายจ่ายต้องเป็น Manager+ · ลบยอดขายทั้งวันได้เฉพาะ Admin · ยกเลิกธุรกรรมแต้มได้เฉพาะ Manager+
         </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, fontSize: 11, color: 'var(--muted)' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, fontSize: 'var(--fs-xs)', color: 'var(--muted)' }}>
           {['none', 'view', 'create', 'edit'].map((lv) => (
             <span key={lv}><strong>{ACCESS_LABEL[lv]}</strong> = {ACCESS_HINT[lv]}</span>
           ))}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-          <button type="button" className="btn btn-ghost" onClick={applyRecommended} disabled={isPending} style={{ padding: '8px 12px', fontSize: 13 }}>
+          <button type="button" className="btn btn-ghost" onClick={applyRecommended} disabled={isPending} style={{ padding: '8px 12px', fontSize: 'var(--fs-base)' }}>
             ใช้ค่าแนะนำ (Staff กรอก / Manager แก้ไข)
           </button>
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 640 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 'var(--fs-base)', minWidth: 640 }}>
           <thead>
             <tr>
               <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: 600 }}>เมนู</th>
@@ -110,7 +110,7 @@ export default function RolePerms({ perms }) {
         <button className="btn btn-coffee" type="button" onClick={() => persist(state)} disabled={isPending} style={{ marginTop: 14 }}>
           <Icon name="ti-device-floppy" /> {isPending ? 'กำลังบันทึก...' : 'บันทึกสิทธิ์'}
         </button>
-        {msg && <div style={{ marginTop: 12, fontSize: 14, color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</div>}
+        {msg && <div style={{ marginTop: 12, fontSize: 'var(--fs-md)', color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</div>}
       </div>
     </div>
   );

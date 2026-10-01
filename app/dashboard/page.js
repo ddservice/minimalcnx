@@ -4,13 +4,10 @@ import { requirePage } from '../../lib/session';
 import AppShell from '../../components/app-shell';
 import Kpi from '../../components/kpi';
 import { fmtMoney } from '../../lib/format';
-import { OPEX_ALL_CATEGORIES, computeEffectiveOpex } from '../../lib/opex';
+import PageHeader from '../../components/page-header';
+import MonthPicker from '../reports/month-picker';
+import { computeEffectiveOpex, currentMonthInput, monthInputToLabel } from '../../lib/opex';
 import { readBusinessConfig } from '../../lib/config-store';
-
-function monthLabel() {
-  const d = new Date(Date.now() + 7 * 60 * 60 * 1000);
-  return `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-}
 
 const ACTIONS = [
   { href: '/sales', label: 'บันทึกยอดขาย', icon: 'ti-cash', desc: 'ยอดขายรายวัน + delivery' },
@@ -19,9 +16,16 @@ const ACTIONS = [
   { href: '/reports', label: 'สรุปรายเดือน', icon: 'ti-chart-bar', desc: 'รายรับ-รายจ่าย + กราฟ' },
 ];
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }) {
   const { supabase, role, name, isAdmin, allowed } = await requirePage('/dashboard');
-  const ml = monthLabel();
+
+  const sp = await searchParams;
+  const thisMonth = currentMonthInput();
+  // เดือนในอนาคตยังไม่มีข้อมูล — ถ้า ?month= เกินเดือนนี้ (แก้ URL เอง) ให้ถอยกลับมาเดือนปัจจุบัน
+  const monthInput = /^\d{4}-\d{2}$/.test(sp?.month || '') && sp.month <= thisMonth ? sp.month : thisMonth;
+  const isThisMonth = monthInput === thisMonth;
+  const ml = monthInputToLabel(monthInput);
+  const suffix = isThisMonth ? 'เดือนนี้' : ` ${ml}`;
 
   const [{ data: summary }, opexDefaults] = await Promise.all([
     supabase.rpc('get_monthly_summary', { p_month_label: ml }),
@@ -43,9 +47,14 @@ export default async function DashboardPage() {
 
   return (
     <AppShell role={role} name={name} isAdmin={isAdmin} allowed={allowed}>
+      <PageHeader icon="ti-layout-dashboard" title="ภาพรวม">
+        {!isThisMonth && <Link className="link-btn" href="/dashboard">กลับเดือนนี้</Link>}
+        <MonthPicker value={monthInput} basePath="/dashboard" max={thisMonth} />
+      </PageHeader>
+
       <div className="kpis">
-        <Kpi icon="ti-trending-up" label="รายรับเดือนนี้" value={fmtMoney(income)} sub={`บาท (หัก GP) · ${ml}`} cls="green" />
-        <Kpi icon="ti-trending-down" label="รายจ่ายเดือนนี้" value={fmtMoney(totalExp)} sub="บาท" cls="red" />
+        <Kpi icon="ti-trending-up" label={`รายรับ${suffix}`} value={fmtMoney(income)} sub={`บาท (หัก GP) · ${ml}`} cls="green" />
+        <Kpi icon="ti-trending-down" label={`รายจ่าย${suffix}`} value={fmtMoney(totalExp)} sub="บาท" cls="red" />
         <Kpi icon="ti-scale" label={profit >= 0 ? 'กำไรสุทธิ' : 'ขาดทุนสุทธิ'} value={fmtMoney(profit)} sub="บาท / เดือน" cls={profit >= 0 ? 'blue' : 'red'} />
         <Kpi icon="ti-cup" label="ยอดขายรวม" value={fmtMoney(totalCups)} sub="แก้ว" />
         <Kpi icon="ti-cookie" label="ขนม" value={fmtMoney(pastryPieces)} sub="ชิ้น" />
@@ -57,14 +66,14 @@ export default async function DashboardPage() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
         {ACTIONS.filter((a) => !allowed || allowed.includes(a.href)).map((a) => (
-          <Link key={a.href} href={a.href} className="card" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 0 }}>
+          <Link key={a.href} href={a.href === '/reports' && !isThisMonth ? `/reports?month=${monthInput}` : a.href} className="card" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 0 }}>
             <div className="card-body" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <div className="brand-icon" style={{ width: 42, height: 42, fontSize: 21, boxShadow: 'none' }}>
                 <Icon name={a.icon} />
               </div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{a.label}</div>
-                <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>{a.desc}</div>
+                <div style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>{a.label}</div>
+                <div className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 2 }}>{a.desc}</div>
               </div>
             </div>
           </Link>

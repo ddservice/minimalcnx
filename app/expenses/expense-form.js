@@ -139,7 +139,7 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
       {rows.map((r, i) => (
         <div key={i} style={card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <strong style={{ fontSize: 13, color: 'var(--muted)' }}>รายการที่ {i + 1}</strong>
+            <strong style={{ fontSize: 'var(--fs-base)', color: 'var(--muted)' }}>รายการที่ {i + 1}</strong>
             {rows.length > 1 && (
               <button type="button" onClick={() => removeRow(i)} style={btnRemove}>ลบ</button>
             )}
@@ -196,15 +196,15 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
               </select>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-base)', cursor: 'pointer' }}>
                 <input type="checkbox" checked={r.vat} onChange={(e) => setRow(i, 'vat', e.target.checked)} />
                 VAT 7%
               </label>
             </div>
           </div>
-          <div style={{ textAlign: 'right', marginTop: 8, fontSize: 13 }}>
+          <div style={{ textAlign: 'right', marginTop: 8, fontSize: 'var(--fs-base)' }}>
             รวม: <strong style={{ color: 'var(--coffee)' }}>{fmt(rowTotal(r))} ฿</strong>
-            {r.vat && <span style={{ color: 'var(--muted)', fontSize: 11 }}> (รวม VAT)</span>}
+            {r.vat && <span style={{ color: 'var(--muted)', fontSize: 'var(--fs-xs)' }}> (รวม VAT)</span>}
           </div>
         </div>
       ))}
@@ -214,7 +214,7 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
       {/* สรุป + บันทึก */}
       <div style={{ ...card, background: '#f5ede3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>ยอดรวมที่จะบันทึก</div>
+          <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>ยอดรวมที่จะบันทึก</div>
           <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--coffee)' }}>{fmt(grand)} ฿</div>
         </div>
         <button type="submit" style={btnSave} disabled={isPending}>
@@ -223,7 +223,7 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
       </div>
 
       {msg && (
-        <div style={{ marginTop: 14, marginBottom: 20, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 14 }}>
+        <div style={{ marginTop: 14, marginBottom: 20, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 'var(--fs-md)' }}>
           {msg.text}
         </div>
       )}
@@ -237,11 +237,11 @@ function LastPrice({ catMap, name }) {
   if (!hit || hit.unit_price == null) return null;
   const hist = hit.history || [];
   return (
-    <div style={{ fontSize: 11, color: 'var(--taupe-dark)', marginTop: 3 }}>
+    <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--taupe-dark)', marginTop: 3 }}>
       ราคาล่าสุด: {fmt(hit.unit_price)} ฿{hit.unit ? ` / ${hit.unit}` : ''}
       {hist.length > 1 && (
         <button type="button" onClick={() => setOpen(!open)}
-          style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--taupe-dark)', textDecoration: 'underline', cursor: 'pointer', fontSize: 11, padding: 0 }}>
+          style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--taupe-dark)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'var(--fs-xs)', padding: 0 }}>
           {open ? 'ซ่อน' : `ประวัติราคา (${hist.length})`}
         </button>
       )}
@@ -256,8 +256,8 @@ function LastPrice({ catMap, name }) {
 
 const card = { border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'var(--surface)', marginBottom: 12 };
 const grid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 };
-const lbl = { display: 'block', fontSize: 12, color: 'var(--muted)', marginBottom: 4 };
-const inp = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14 };
-const btnRemove = { border: 0, background: '#fff0f0', color: 'var(--danger)', borderRadius: 'var(--radius-md)', padding: '5px 12px', fontSize: 12, cursor: 'pointer' };
-const btnAdd = { border: '1px dashed var(--border)', background: 'var(--surface)', color: 'var(--coffee)', borderRadius: 'var(--radius-md)', padding: '10px', width: '100%', fontSize: 14, cursor: 'pointer', marginBottom: 12, fontWeight: 600 };
-const btnSave = { border: 0, borderRadius: 'var(--radius-md)', padding: '12px 22px', fontSize: 15, fontWeight: 700, background: 'var(--coffee)', color: '#fff', cursor: 'pointer' };
+const lbl = { display: 'block', fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginBottom: 4 };
+const inp = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--fs-md)' };
+const btnRemove = { border: 0, background: '#fff0f0', color: 'var(--danger)', borderRadius: 'var(--radius-md)', padding: '5px 12px', fontSize: 'var(--fs-sm)', cursor: 'pointer' };
+const btnAdd = { border: '1px dashed var(--border)', background: 'var(--surface)', color: 'var(--coffee)', borderRadius: 'var(--radius-md)', padding: '10px', width: '100%', fontSize: 'var(--fs-md)', cursor: 'pointer', marginBottom: 12, fontWeight: 600 };
+const btnSave = { border: 0, borderRadius: 'var(--radius-md)', padding: '12px 22px', fontSize: 'var(--fs-lg)', fontWeight: 700, background: 'var(--coffee)', color: '#fff', cursor: 'pointer' };

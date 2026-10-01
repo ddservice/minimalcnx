@@ -137,7 +137,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
         <label style={lbl}>วันที่</label>
         <DateField value={date} loading={isPending} onChange={onDateChange} />
         {existing && canEdit && (
-          <span style={{ fontSize: 12, color: 'var(--muted)', marginLeft: 8 }}>
+          <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginLeft: 8 }}>
             (มีข้อมูลแล้ว — บันทึกจะทับของเดิม)
           </span>
         )}
@@ -157,7 +157,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
 
       {/* Delivery — หัก GP อัตโนมัติ */}
       <div style={card}>
-        <h2 style={h2}>Delivery Platforms <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--muted)' }}>(กรอกยอดก่อนหัก GP)</span></h2>
+        <h2 style={h2}>Delivery Platforms <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 400, color: 'var(--muted)' }}>(กรอกยอดก่อนหัก GP)</span></h2>
         <div style={grid}>
           <FieldNet label="Shopee Food" value={f.shopee_before_gp} onChange={set('shopee_before_gp')} net={shopeeNet} />
           <FieldNet label="Grab" value={f.grab_before_gp} onChange={set('grab_before_gp')} net={grabNet} />
@@ -174,7 +174,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
           <Field label="แก้วฟรี (แก้ว)" value={f.free_cups} onChange={set('free_cups')} />
           <Field label="ต้นทุน/แก้วฟรี (฿)" value={f.coffee_price} onChange={set('coffee_price')} />
         </div>
-        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
+        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginTop: 8 }}>
           ต้นทุนแก้วฟรีรวม: <strong>{fmt(freeCupCost)} ฿</strong>
         </div>
 
@@ -183,12 +183,12 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
             <label style={lbl}>แนบหลักฐานแก้วฟรี (แคปจาก LINE OA / POS)</label>
             <input type="file" accept="image/*,.pdf" onChange={onEvidenceFile} style={inp} />
             {evidenceStatus && (
-              <div style={{ fontSize: 12, marginTop: 4, color: evidenceStatus.type === 'ok' ? 'var(--success)' : evidenceStatus.type === 'err' ? 'var(--danger)' : 'var(--muted)' }}>
+              <div style={{ fontSize: 'var(--fs-sm)', marginTop: 4, color: evidenceStatus.type === 'ok' ? 'var(--success)' : evidenceStatus.type === 'err' ? 'var(--danger)' : 'var(--muted)' }}>
                 {evidenceStatus.text}
               </div>
             )}
             {evidenceUrl && (
-              <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 6, fontSize: 12, color: 'var(--taupe-dark)' }}>
+              <a href={evidenceUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 6, fontSize: 'var(--fs-sm)', color: 'var(--taupe-dark)' }}>
                 <Icon name="ti-paperclip" /> ดูหลักฐานที่แนบไว้
               </a>
             )}
@@ -200,9 +200,9 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
       <div style={{ ...card, background: '#f5ede3' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>รายรับสุทธิ (หัก GP แล้ว)</div>
+            <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>รายรับสุทธิ (หัก GP แล้ว)</div>
             <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--coffee)' }}>{fmt(netRevenue)} ฿</div>
-            <div style={{ fontSize: 11, color: 'var(--muted)' }}>= K-Shop + เงินสด + Delivery(หลัง GP)</div>
+            <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)' }}>= K-Shop + เงินสด + Delivery(หลัง GP)</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {existing && canDelete && (
@@ -221,7 +221,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
       </fieldset>
 
       {msg && (
-        <div style={{ marginTop: 14, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 14 }}>
+        <div style={{ marginTop: 14, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b', fontSize: 'var(--fs-md)' }}>
           {msg.text}
         </div>
       )}
@@ -245,7 +245,7 @@ function FieldNet({ label, value, onChange, net }) {
       <label style={lbl}>{label}</label>
       <NumberInput value={value} onChange={onChange} placeholder="0" style={inp} />
       {raw > 0 && (
-        <div style={{ fontSize: 11, color: 'var(--success, #1e7e34)', marginTop: 3 }}>
+        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--success, #1e7e34)', marginTop: 3 }}>
           หลังหัก GP: {Number(net).toLocaleString('th-TH', { minimumFractionDigits: 2 })} ฿
         </div>
       )}
@@ -260,9 +260,9 @@ const card = {
   background: 'var(--surface)',
   marginBottom: 12,
 };
-const h2 = { marginTop: 0, marginBottom: 12, fontSize: 15 };
+const h2 = { marginTop: 0, marginBottom: 12, fontSize: 'var(--fs-lg)' };
 const grid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 };
-const lbl = { display: 'block', fontSize: 12, color: 'var(--muted)', marginBottom: 4 };
-const inp = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14 };
-const btn = { border: 0, borderRadius: 'var(--radius-md)', padding: '12px 22px', fontSize: 15, fontWeight: 700, background: 'var(--coffee)', color: '#fff', cursor: 'pointer', alignSelf: 'center' };
-const btnDelete = { border: 0, borderRadius: 'var(--radius-md)', padding: '12px 16px', fontSize: 14, fontWeight: 600, background: '#fff0f0', color: 'var(--danger)', cursor: 'pointer' };
+const lbl = { display: 'block', fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginBottom: 4 };
+const inp = { width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--fs-md)' };
+const btn = { border: 0, borderRadius: 'var(--radius-md)', padding: '12px 22px', fontSize: 'var(--fs-lg)', fontWeight: 700, background: 'var(--coffee)', color: '#fff', cursor: 'pointer', alignSelf: 'center' };
+const btnDelete = { border: 0, borderRadius: 'var(--radius-md)', padding: '12px 16px', fontSize: 'var(--fs-md)', fontWeight: 600, background: '#fff0f0', color: 'var(--danger)', cursor: 'pointer' };

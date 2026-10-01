@@ -35,7 +35,7 @@ export default function SettingsForm({ biz, canEdit = true }) {
       <div className="card-head"><Icon name="ti-building" /><h2>ข้อมูลบริษัท / ร้านค้า</h2></div>
       <div className="card-body">
         {!canEdit && <AccessBanner level="view" />}
-        <p className="muted" style={{ fontSize: 12, marginTop: -4, marginBottom: 14 }}>
+        <p className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: -4, marginBottom: 14 }}>
           ใช้ในหัวเอกสารสลิปเงินเดือนและรายงาน
         </p>
         <fieldset disabled={!canEdit} style={{ border: 0, padding: 0, margin: 0, minInlineSize: 0 }}>
@@ -56,7 +56,7 @@ export default function SettingsForm({ biz, canEdit = true }) {
         </button>
         )}
         {msg && (
-          <div style={{ marginTop: 12, fontSize: 14, color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</div>
+          <div style={{ marginTop: 12, fontSize: 'var(--fs-md)', color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</div>
         )}
         </fieldset>
       </div>

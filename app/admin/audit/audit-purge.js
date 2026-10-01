@@ -14,7 +14,7 @@ export default function AuditPurge() {
     // ยืนยันสองชั้นเหมือนเครื่องมือลบข้อมูลใน /settings — ลบ audit ย้อนกลับไม่ได้
     // และมันคือหลักฐานว่าใครทำอะไร ไม่ใช่ข้อมูลที่กรอกใหม่ได้
     if (!window.confirm(`ลบบันทึกที่เก่ากว่า ${days} วันทิ้งถาวร ย้อนกลับไม่ได้ — ยืนยันหรือไม่?`)) return;
-    if (!window.confirm('ยืนยันอีกครั้ง: การลบบันทึกตรวจสอบจะทำให้ไล่ย้อนเหตุการณ์ช่วงนั้นไม่ได้อีก')) return;
+    if (!window.confirm('ยืนยันอีกครั้ง: การลบประวัติการใช้งานจะทำให้ไล่ย้อนเหตุการณ์ช่วงนั้นไม่ได้อีก')) return;
 
     start(async () => {
       const res = await purgeAuditLogsAction(days);
@@ -28,13 +28,13 @@ export default function AuditPurge() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>
           <Icon name="ti-trash" /> ล้างบันทึกเก่า
         </div>
-        <p className="muted" style={{ fontSize: 12, margin: 0 }}>
+        <p className="muted" style={{ fontSize: 'var(--fs-sm)', margin: 0 }}>
           กันไม่ให้ตารางโตไม่มีที่สิ้นสุด และสอดคล้องกับหลัก PDPA ที่ไม่เก็บข้อมูลนานเกินจำเป็น
           เก็บย้อนหลังได้ต่ำสุด 90 วัน (ฝั่งฐานข้อมูลบังคับไว้อีกชั้น)
-          การล้างแต่ละครั้งจะถูกบันทึกไว้ในบันทึกตรวจสอบเองด้วย
+          การล้างแต่ละครั้งจะถูกบันทึกไว้ในประวัติการใช้งานเองด้วย
         </p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <label className="muted" style={{ fontSize: 12 }} htmlFor="retention">เก็บย้อนหลัง</label>
+          <label className="muted" style={{ fontSize: 'var(--fs-sm)' }} htmlFor="retention">เก็บย้อนหลัง</label>
           <select
             id="retention"
             value={days}
@@ -53,7 +53,7 @@ export default function AuditPurge() {
         {msg && (
           <div
             style={{
-              fontSize: 13,
+              fontSize: 'var(--fs-base)',
               color: msg.status === 'ok' ? 'var(--success)' : 'var(--danger)',
             }}
           >

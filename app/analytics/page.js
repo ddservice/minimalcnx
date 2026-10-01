@@ -187,7 +187,7 @@ export default async function AnalyticsPage({ searchParams }) {
           <div className="card-body">
             {topOrders.length ? topOrders.map((m, i) => (
               <div key={m.n} style={rankRow}><span>{i + 1}. {m.n}</span><strong>{m.count} ครั้ง</strong></div>
-            )) : <p className="muted" style={{ fontSize: 13, margin: 0 }}>—</p>}
+            )) : <p className="muted" style={{ fontSize: 'var(--fs-base)', margin: 0 }}>—</p>}
           </div>
         </div>
         <div className="card">
@@ -195,7 +195,7 @@ export default async function AnalyticsPage({ searchParams }) {
           <div className="card-body">
             {topSup.length ? topSup.map((s, i) => (
               <div key={s.n} style={rankRow}><span>{i + 1}. {s.n}</span><strong>{fmtMoney(s.total)} ฿</strong></div>
-            )) : <p className="muted" style={{ fontSize: 13, margin: 0 }}>—</p>}
+            )) : <p className="muted" style={{ fontSize: 'var(--fs-base)', margin: 0 }}>—</p>}
           </div>
         </div>
       </div>
@@ -226,4 +226,4 @@ export default async function AnalyticsPage({ searchParams }) {
   );
 }
 
-const rankRow = { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 13 };
+const rankRow = { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 'var(--fs-base)' };

@@ -80,15 +80,15 @@ export default async function AuditPage({ searchParams }) {
 
   return (
     <AppShell role={role} name={name} isAdmin={isAdmin} allowed={allowed}>
-      <PageHeader icon="ti-history" title="log (Super Admin)">
+      <PageHeader icon="ti-history" title="ประวัติการใช้งาน (Audit Log)">
         <Link className="link-btn" href="/admin">← กลับหน้าผู้ใช้</Link>
       </PageHeader>
 
-      <p className="muted" style={{ fontSize: 12, marginTop: -8, marginBottom: 12 }}>
+      <p className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: -8, marginBottom: 12 }}>
         เห็นได้เฉพาะ Super Admin (ตำแหน่ง admin) · เก็บผู้ใช้ · การกระทำ · เวลา · session · อีเมล · IP ·
         ประเทศ/เมือง · เครื่อง/OS/เบราว์เซอร์ · หน้า · CF-Ray · User-Agent
       </p>
-      <p className="muted" style={{ fontSize: 11, marginTop: -6, marginBottom: 12 }}>
+      <p className="muted" style={{ fontSize: 'var(--fs-xs)', marginTop: -6, marginBottom: 12 }}>
         หมายเหตุ: IP และ User-Agent เป็นค่าที่แอปรายงานมา ผู้ใช้ที่ล็อกอินแล้วปลอมได้ในทางทฤษฎี —
         ช่อง session กับอีเมลมาจาก JWT ปลอมไม่ได้ ใช้ยึดเวลาสอบสวน
       </p>
@@ -99,19 +99,19 @@ export default async function AuditPage({ searchParams }) {
 
       {sqlHint && (
         <div className="card" style={{ marginBottom: 12 }}>
-          <div className="card-body" style={{ color: 'var(--taupe-dark)', fontSize: 13 }}>{sqlHint}</div>
+          <div className="card-body" style={{ color: 'var(--taupe-dark)', fontSize: 'var(--fs-base)' }}>{sqlHint}</div>
         </div>
       )}
       {error && (
         <div className="card" style={{ borderColor: 'var(--danger)', marginBottom: 12 }}>
-          <div className="card-body" style={{ color: 'var(--danger)', fontSize: 13 }}>
+          <div className="card-body" style={{ color: 'var(--danger)', fontSize: 'var(--fs-base)' }}>
             {error.message}
           </div>
         </div>
       )}
 
       {!error && (!rows || !rows.length) && (
-        <p className="muted" style={{ fontSize: 13 }}>ไม่พบรายการตามเงื่อนไขที่เลือก</p>
+        <p className="muted" style={{ fontSize: 'var(--fs-base)' }}>ไม่พบรายการตามเงื่อนไขที่เลือก</p>
       )}
 
       <div style={{ display: 'grid', gap: 8 }}>
@@ -121,7 +121,7 @@ export default async function AuditPage({ searchParams }) {
       </div>
 
       {rows?.length === limit && (
-        <p className="muted" style={{ fontSize: 11, marginTop: 10 }}>
+        <p className="muted" style={{ fontSize: 'var(--fs-xs)', marginTop: 10 }}>
           แสดง {limit} รายการล่าสุด — เลือกจำนวนด้านบนหรือใช้ตัวกรองเพื่อดูเพิ่ม
         </p>
       )}

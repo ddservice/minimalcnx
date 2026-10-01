@@ -18,14 +18,14 @@ export default function ExpenseList({ rows, date, canEdit = false, canDelete = f
 
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'var(--surface)', marginTop: 8 }}>
-      <h2 style={{ marginTop: 0, fontSize: 15 }}>รายการที่บันทึกแล้ว ({date}) — ทุกหมวด</h2>
+      <h2 style={{ marginTop: 0, fontSize: 'var(--fs-lg)' }}>รายการที่บันทึกแล้ว ({date}) — ทุกหมวด</h2>
 
       {msg && (
-        <div style={{ margin: '8px 0', fontSize: 13, color: msg.type === 'ok' ? '#1e7e34' : '#c0392b' }}>{msg.text}</div>
+        <div style={{ margin: '8px 0', fontSize: 'var(--fs-base)', color: msg.type === 'ok' ? '#1e7e34' : '#c0392b' }}>{msg.text}</div>
       )}
 
       {!rows.length ? (
-        <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0 }}>ยังไม่มีรายการในวันนี้</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--fs-base)', margin: 0 }}>ยังไม่มีรายการในวันนี้</p>
       ) : (
         <>
           <div style={{ display: 'grid', gap: 8 }}>
@@ -37,7 +37,7 @@ export default function ExpenseList({ rows, date, canEdit = false, canDelete = f
               )
             )}
           </div>
-          <div style={{ textAlign: 'right', marginTop: 12, fontSize: 14 }}>
+          <div style={{ textAlign: 'right', marginTop: 12, fontSize: 'var(--fs-md)' }}>
             รวมทั้งหมด (ทุกหมวด): <strong style={{ color: 'var(--coffee)' }}>{fmtMoney(sum)} ฿</strong>
           </div>
         </>
@@ -61,10 +61,10 @@ function ViewRow({ row, onEdit, onMsg, canDelete }) {
     <div style={rowBox}>
       <div style={{ flex: '1 1 auto', minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <span style={{ fontWeight: 600, fontSize: 14 }}>{row.item_name}</span>
+          <span style={{ fontWeight: 600, fontSize: 'var(--fs-md)' }}>{row.item_name}</span>
           <span style={catBadge}>{CATEGORY_LABEL[row.category] || row.category}</span>
         </div>
-        <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+        <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>
           {row.subcategory ? `${row.subcategory} · ` : ''}
           {fmtMoney(row.quantity)} {row.unit || ''} × {fmtMoney(row.unit_price)} · {row.payment_method}
         </div>
@@ -118,10 +118,10 @@ function EditRow({ row, onDone, onMsg }) {
         </select>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-base)', cursor: 'pointer' }}>
           <input type="checkbox" checked={f.vat} onChange={(e) => setF({ ...f, vat: e.target.checked })} /> VAT 7%
         </label>
-        <div style={{ fontSize: 13 }}>รวม: <strong style={{ color: 'var(--coffee)' }}>{fmtMoney(total)} ฿</strong></div>
+        <div style={{ fontSize: 'var(--fs-base)' }}>รวม: <strong style={{ color: 'var(--coffee)' }}>{fmtMoney(total)} ฿</strong></div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button type="button" style={btnPrimary} onClick={onSave} disabled={isPending}>บันทึก</button>
           <button type="button" style={btnGhost} onClick={onDone}>ยกเลิก</button>
@@ -133,9 +133,9 @@ function EditRow({ row, onDone, onMsg }) {
 
 const rowBox = { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px' };
 const editGrid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 };
-const inp = { width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 13 };
-const btnBase = { border: 0, borderRadius: 'var(--radius-md)', padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontWeight: 600 };
+const inp = { width: '100%', padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 'var(--fs-base)' };
+const btnBase = { border: 0, borderRadius: 'var(--radius-md)', padding: '6px 12px', fontSize: 'var(--fs-sm)', cursor: 'pointer', fontWeight: 600 };
 const btnGhost = { ...btnBase, background: '#f5ede3', color: 'var(--coffee)' };
 const btnDanger = { ...btnBase, background: '#fff0f0', color: 'var(--danger)' };
 const btnPrimary = { ...btnBase, background: 'var(--coffee)', color: '#fff' };
-const catBadge = { fontSize: 11, color: 'var(--coffee)', background: '#f5ede3', borderRadius: 'var(--radius-full)', padding: '2px 8px', fontWeight: 600 };
+const catBadge = { fontSize: 'var(--fs-xs)', color: 'var(--coffee)', background: '#f5ede3', borderRadius: 'var(--radius-full)', padding: '2px 8px', fontWeight: 600 };

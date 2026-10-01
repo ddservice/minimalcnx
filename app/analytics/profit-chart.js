@@ -108,11 +108,11 @@ export default function ProfitChart({ data }) {
                   xmlns="http://www.w3.org/1999/xhtml"
                   style={{
                     background: 'var(--coffee)', color: '#fff', borderRadius: 8, padding: '6px 10px',
-                    fontSize: 11, lineHeight: 1.4, boxShadow: 'var(--shadow-md)', textAlign: 'center',
+                    fontSize: 'var(--fs-xs)', lineHeight: 1.4, boxShadow: 'var(--shadow-md)', textAlign: 'center',
                   }}
                 >
                   <div style={{ opacity: 0.8 }}>{hoverRow.label}</div>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--fs-base)' }}>
                     {hoverRow.hasData ? `${hoverRow.profit >= 0 ? 'กำไร' : 'ขาดทุน'} ${fmtMoney(hoverRow.profit)} ฿` : 'ยังไม่มีข้อมูล'}
                   </div>
                 </div>
@@ -120,7 +120,7 @@ export default function ProfitChart({ data }) {
             )}
           </svg>
         </div>
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>เดือน (MM) · เลื่อนชี้ที่แท่งเพื่อดูยอด</div>
+        <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--muted)', marginTop: 4 }}>เดือน (MM) · เลื่อนชี้ที่แท่งเพื่อดูยอด</div>
       </div>
     </div>
   );

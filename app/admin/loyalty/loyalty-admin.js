@@ -21,7 +21,7 @@ function cleanStaffCode(v) {
 const fieldLbl = {
   display: 'grid',
   gap: 6,
-  fontSize: 13,
+  fontSize: 'var(--fs-base)',
   fontWeight: 600,
   color: 'var(--color-text)',
 };
@@ -32,7 +32,7 @@ const hintBox = {
   borderRadius: 'var(--radius-md)',
   background: 'var(--color-surface-2)',
   border: '1px solid var(--color-border)',
-  fontSize: 13,
+  fontSize: 'var(--fs-base)',
   lineHeight: 1.55,
   color: 'var(--color-text-muted)',
 };
@@ -46,7 +46,7 @@ const stepBadge = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: 13,
+  fontSize: 'var(--fs-base)',
   fontWeight: 700,
   flexShrink: 0,
 };
@@ -122,7 +122,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
           style={{
             padding: '12px 14px',
             borderRadius: 'var(--radius-md)',
-            fontSize: 14,
+            fontSize: 'var(--fs-md)',
             fontWeight: 600,
             background: msg.type === 'ok' ? '#f0fdf4' : '#fef2f2',
             color: msg.type === 'ok' ? '#15803d' : '#b91c1c',
@@ -139,7 +139,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
           <span style={stepBadge}>1</span>
           <div>
             <h2 style={{ margin: 0 }}>สาขา</h2>
-            <div className="muted" style={{ fontSize: 12, fontWeight: 400, marginTop: 2 }}>
+            <div className="muted" style={{ fontSize: 'var(--fs-sm)', fontWeight: 400, marginTop: 2 }}>
               รายชื่อสาขาที่ใช้ตอนแจก/แลกแต้ม · มี {branches.length} สาขา
             </div>
           </div>
@@ -175,7 +175,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                     borderRadius: 'var(--radius-sm)',
                     background: 'var(--color-surface-2)',
                     fontFamily: 'ui-monospace, monospace',
-                    fontSize: 13,
+                    fontSize: 'var(--fs-base)',
                     fontWeight: 700,
                     textAlign: 'center',
                     color: 'var(--color-primary)',
@@ -184,8 +184,8 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                   {b.code}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15 }}>{b.name}</div>
-                  <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>{b.name}</div>
+                  <div className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 2 }}>
                     <Icon name="ti-map-pin" style={{ marginRight: 4 }} />
                     {b.location || 'ไม่ได้ระบุที่ตั้ง'}
                   </div>
@@ -193,7 +193,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                   <span
                     style={{
-                      fontSize: 12,
+                      fontSize: 'var(--fs-sm)',
                       fontWeight: 700,
                       padding: '4px 10px',
                       borderRadius: 'var(--radius-full)',
@@ -206,7 +206,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                   <button
                     type="button"
                     className="btn btn-secondary"
-                    style={{ fontSize: 12, padding: '6px 12px' }}
+                    style={{ fontSize: 'var(--fs-sm)', padding: '6px 12px' }}
                     disabled={isPending}
                     onClick={async () => flash(await toggleBranchAction({ id: b.id, is_active: !b.is_active }))}
                   >
@@ -226,7 +226,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
               border: '1px dashed var(--color-border)',
             }}
           >
-            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 'var(--fs-base)', marginBottom: 12 }}>
               <Icon name="ti-plus" style={{ marginRight: 6, color: 'var(--color-primary)' }} />
               เพิ่มสาขาใหม่
             </div>
@@ -285,7 +285,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
           <span style={stepBadge}>2</span>
           <div>
             <h2 style={{ margin: 0 }}>ผูกพนักงานกับสาขา</h2>
-            <div className="muted" style={{ fontSize: 12, fontWeight: 400, marginTop: 2 }}>
+            <div className="muted" style={{ fontSize: 'var(--fs-sm)', fontWeight: 400, marginTop: 2 }}>
               ต้องผูกก่อนจึงจะแจก/แลกแต้มได้ · ผูกแล้ว {staffProfiles.length} คน
               {unlinkedUsers.length > 0 ? ` · ยังไม่ผูก ${unlinkedUsers.length} คน` : ''}
             </div>
@@ -308,7 +308,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
               border: '1px dashed var(--color-border)',
             }}
           >
-            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 'var(--fs-base)', marginBottom: 12 }}>
               <Icon name="ti-link" style={{ marginRight: 6, color: 'var(--color-primary)' }} />
               ผูกพนักงานใหม่
             </div>
@@ -387,7 +387,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                   <Icon name="ti-link" /> บันทึกการผูก
                 </button>
                 {!activeBranches.length && (
-                  <span className="muted" style={{ marginLeft: 12, fontSize: 12 }}>
+                  <span className="muted" style={{ marginLeft: 12, fontSize: 'var(--fs-sm)' }}>
                     ต้องมีสาขาที่เปิดใช้อย่างน้อย 1 สาขาก่อน
                   </span>
                 )}
@@ -397,7 +397,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
 
           {/* รายชื่อที่ผูกแล้ว */}
           <div>
-            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>
+            <div style={{ fontWeight: 700, fontSize: 'var(--fs-base)', marginBottom: 10 }}>
               พนักงานที่ผูกแล้ว
             </div>
             {staffProfiles.length === 0 ? (
@@ -431,7 +431,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                         borderRadius: 'var(--radius-sm)',
                         background: 'var(--color-surface-2)',
                         fontFamily: 'ui-monospace, monospace',
-                        fontSize: 13,
+                        fontSize: 'var(--fs-base)',
                         fontWeight: 700,
                         textAlign: 'center',
                       }}
@@ -439,10 +439,10 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                       {sp.staff_code}
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 15 }}>
+                      <div style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>
                         {sp.profiles?.full_name || sp.profiles?.username || '—'}
                       </div>
-                      <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
+                      <div className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 2 }}>
                         <Icon name="ti-building-store" style={{ marginRight: 4 }} />
                         {sp.branches?.name || '—'}
                         <span style={{ margin: '0 6px' }}>·</span>
@@ -452,7 +452,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                     <button
                       type="button"
                       className="btn btn-secondary"
-                      style={{ fontSize: 12, padding: '6px 12px', color: '#b91c1c' }}
+                      style={{ fontSize: 'var(--fs-sm)', padding: '6px 12px', color: '#b91c1c' }}
                       disabled={isPending}
                       onClick={async () => {
                         if (!confirm(`เลิกผูก "${sp.staff_code}" ออกจากสาขา?`)) return;
@@ -475,7 +475,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
           <span style={stepBadge}>3</span>
           <div>
             <h2 style={{ margin: 0 }}>ของรางวัล</h2>
-            <div className="muted" style={{ fontSize: 12, fontWeight: 400, marginTop: 2 }}>
+            <div className="muted" style={{ fontSize: 'var(--fs-sm)', fontWeight: 400, marginTop: 2 }}>
               แคตตาล็อกที่ใช้ตอนแลกแต้ม · ต้องรัน sql/add_loyalty_rewards.sql ก่อน
             </div>
           </div>
@@ -549,7 +549,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
           </form>
 
           {rewards.length === 0 ? (
-            <p className="muted" style={{ margin: 0, fontSize: 13 }}>
+            <p className="muted" style={{ margin: 0, fontSize: 'var(--fs-base)' }}>
               ยังไม่มีรางวัลในฐานข้อมูล — เพิ่มด้านบน หรือรัน seed ใน sql/add_loyalty_rewards.sql
             </p>
           ) : (
@@ -585,14 +585,14 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                   </div>
                   <div style={{ flex: 1, minWidth: 140 }}>
                     <div style={{ fontWeight: 700 }}>{rw.name}</div>
-                    <div className="muted" style={{ fontSize: 12 }}>
+                    <div className="muted" style={{ fontSize: 'var(--fs-sm)' }}>
                       <code>{rw.id}</code> · {rw.points} แต้ม · ลำดับ {rw.sort_order}
                     </div>
                   </div>
                   <button
                     type="button"
                     className="btn btn-secondary"
-                    style={{ fontSize: 12 }}
+                    style={{ fontSize: 'var(--fs-sm)' }}
                     disabled={isPending}
                     onClick={async () => {
                       flash(await toggleRewardAction({ id: rw.id, is_active: !rw.is_active }));
@@ -603,7 +603,7 @@ export default function LoyaltyAdmin({ branches = [], staffProfiles = [], users 
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    style={{ fontSize: 12 }}
+                    style={{ fontSize: 'var(--fs-sm)' }}
                     disabled={isPending}
                     onClick={() => {
                       setRewardForm({

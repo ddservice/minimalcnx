@@ -105,24 +105,24 @@ export default function AuditRow({ row, performer }) {
           {TABLE_LABEL[row.table_name] || row.table_name}
           {configKey ? ` — ${configKey}` : ''}
         </span>
-        <span className="muted" style={{ fontSize: 12 }}>{when}</span>
-        <span style={{ fontSize: 12, marginLeft: 'auto', textAlign: 'right' }}>
+        <span className="muted" style={{ fontSize: 'var(--fs-sm)' }}>{when}</span>
+        <span style={{ fontSize: 'var(--fs-sm)', marginLeft: 'auto', textAlign: 'right' }}>
           <strong>{who}</strong>
           {whoRole ? <span className="muted"> ({whoRole})</span> : null}
-          {row.actor_email ? <div className="muted" style={{ fontSize: 11 }}>{row.actor_email}</div> : null}
+          {row.actor_email ? <div className="muted" style={{ fontSize: 'var(--fs-xs)' }}>{row.actor_email}</div> : null}
           {row.ip_address ? (
-            <div className="muted" style={{ fontSize: 11 }}>
+            <div className="muted" style={{ fontSize: 'var(--fs-xs)' }}>
               IP {row.ip_address}
               {row.country ? ` · ${row.country}` : ''}
               {row.city ? ` · ${row.city}` : ''}
             </div>
           ) : null}
-          {row.device_summary ? <div className="muted" style={{ fontSize: 11 }}>{row.device_summary}</div> : null}
+          {row.device_summary ? <div className="muted" style={{ fontSize: 'var(--fs-xs)' }}>{row.device_summary}</div> : null}
           {/* session ย่อ 8 ตัวพอให้ไล่จับกลุ่มด้วยตาว่าแถวไหนอยู่ในการล็อกอินเดียวกัน */}
-          {row.session_id ? <div className="muted" style={{ fontSize: 11 }}>session {String(row.session_id).slice(0, 8)}</div> : null}
+          {row.session_id ? <div className="muted" style={{ fontSize: 'var(--fs-xs)' }}>session {String(row.session_id).slice(0, 8)}</div> : null}
         </span>
       </summary>
-      <div style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 10, fontSize: 12 }}>
+      <div style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 10, fontSize: 'var(--fs-sm)' }}>
         <div style={{ display: 'grid', gap: 4, marginBottom: 10, color: 'var(--muted)' }}>
           {row.request_path ? <div>หน้า: <code>{row.request_path}</code>{row.http_method ? ` (${row.http_method})` : ''}</div> : null}
           {row.session_id ? <div>session: <code>{row.session_id}</code> <span style={{ color: 'var(--success)' }}>· จาก JWT ปลอมไม่ได้</span></div> : null}
@@ -179,4 +179,4 @@ export default function AuditRow({ row, performer }) {
 
 const rowBox = { border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 12px', background: 'var(--surface)' };
 const summaryStyle = { display: 'flex', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', cursor: 'pointer', listStyle: 'none' };
-const badge = { color: '#fff', padding: '3px 11px', borderRadius: 'var(--radius-full)', fontSize: 11, fontWeight: 700, flexShrink: 0 };
+const badge = { color: '#fff', padding: '3px 11px', borderRadius: 'var(--radius-full)', fontSize: 'var(--fs-xs)', fontWeight: 700, flexShrink: 0 };

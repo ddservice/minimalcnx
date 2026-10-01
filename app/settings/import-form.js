@@ -26,9 +26,9 @@ export default function ImportForm() {
           <Icon name="ti-upload" /> {pending ? 'กำลังนำเข้า...' : 'นำเข้า'}
         </button>
         {state?.message && (
-          <div style={{ marginTop: 12, fontSize: 14, color: state.status === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{state.message}</div>
+          <div style={{ marginTop: 12, fontSize: 'var(--fs-md)', color: state.status === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{state.message}</div>
         )}
-        <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
+        <p className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 12 }}>
           รองรับคอลัมน์ภาษาไทยแบบเดียวกับไฟล์ที่ Export · ยอดขายจะทับตามวันที่ · รายจ่ายเพิ่มเป็นรายการใหม่ · วันที่รองรับทั้ง ค.ศ./พ.ศ.
         </p>
       </div>

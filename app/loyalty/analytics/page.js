@@ -90,7 +90,7 @@ export default async function LoyaltyAnalyticsPage() {
         </Link>
       </PageHeader>
 
-      <p className="muted" style={{ fontSize: 13, margin: '0 0 12px' }}>
+      <p className="muted" style={{ fontSize: 'var(--fs-base)', margin: '0 0 12px' }}>
         สถิติธุรกรรมแสดงย้อนหลัง 90 วัน (เพื่อความเร็ว) · สมาชิก/RFM เป็นข้อมูลปัจจุบันทั้งระบบ
         {!stats.live && ' · ยังไม่ได้รัน sql/harden_loyalty_integrity.sql — กำลังนับฝั่งแอปแทน'}
       </p>
@@ -141,7 +141,7 @@ export default async function LoyaltyAnalyticsPage() {
           <Icon name="ti-arrows-exchange" /> <h2>การแลกรางวัลที่อาจข้ามสาขา (ล่าสุด)</h2>
         </div>
         <div className="card-body">
-          <p className="muted" style={{ fontSize: 13, marginTop: 0 }}>
+          <p className="muted" style={{ fontSize: 'var(--fs-base)', marginTop: 0 }}>
             แสดงรายการแลกของลูกค้าที่เคยได้รับแต้มจากสาขาอื่นด้วย — ใช้ไล่ว่า “ให้ที่ไหน / ใช้ที่ไหน”
           </p>
           <DataTable
@@ -236,8 +236,8 @@ export default async function LoyaltyAnalyticsPage() {
 function RfmTile({ label, count, color }) {
   return (
     <div style={{ padding: 12, borderRadius: 'var(--radius-md)', background: 'var(--color-surface-2)', borderLeft: `4px solid ${color}` }}>
-      <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color, marginTop: 4 }}>{count || 0} <span style={{ fontSize: 12, fontWeight: 600 }}>คน</span></div>
+      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--color-text-muted)' }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color, marginTop: 4 }}>{count || 0} <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 600 }}>คน</span></div>
     </div>
   );
 }

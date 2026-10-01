@@ -34,7 +34,7 @@ export default function RangePicker({ from, to }) {
           onChange={(v) => go(v, localTo)}
         />
       </div>
-      <span className="muted" style={{ fontSize: 13 }}>ถึง</span>
+      <span className="muted" style={{ fontSize: 'var(--fs-base)' }}>ถึง</span>
       <div style={{ minWidth: 150 }}>
         <DateField
           type="month"
