@@ -276,6 +276,9 @@ input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; marg
 .kpi-val.red { color: var(--color-danger); }
 .kpi-val.blue { color: var(--color-info); }
 .kpi-sub { font-size: var(--fs-xs); color: var(--color-text-muted); margin-top: var(--space-1); letter-spacing: 0.02em; }
+.kpi-delta { font-size: var(--fs-sm); font-weight: 600; margin-top: var(--space-1); font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+.kpi-delta.good { color: var(--color-success); }
+.kpi-delta.bad { color: var(--color-danger); }
 
 /* Fields */
 .field { display: flex; flex-direction: column; gap: 6px; }
