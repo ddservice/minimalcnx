@@ -48,6 +48,17 @@ export default async function OpexPage({ searchParams }) {
   const empPayHistory = cfgs?.find((c) => c.key === 'emp_pay_history')?.value || {};
   const empDetails = cfgs?.find((c) => c.key === 'emp_details')?.value || {};
 
+  // ยอดค่าเช่า/พนักงานแทนของทุกเดือนในปีเดียวกัน — สำหรับพิมพ์ 50 ทวิ หลายเดือน/ทั้งปี
+  const { data: yearRows } = await supabase
+    .from('expenses')
+    .select('item_key, month_label, total_amount')
+    .in('item_key', ['rent', 'staff_sub'])
+    .like('month_label', `%/${yy}`);
+  const yearAmounts = { rent: {}, staff_sub: {} };
+  (yearRows || []).forEach((r) => {
+    if (yearAmounts[r.item_key]) yearAmounts[r.item_key][r.month_label] = Number(r.total_amount) || 0;
+  });
+
   const operating = {};
   const staff = {};
   const tax = {};
@@ -90,6 +101,7 @@ export default async function OpexPage({ searchParams }) {
       />
       <Form50
         amounts={{ rent: operating.rent || 0, staff_sub: staff.staff_sub || 0 }}
+        yearAmounts={yearAmounts}
         payees={form50Payees}
         bizInfo={bizInfo}
         monthLabel={monthLabel}

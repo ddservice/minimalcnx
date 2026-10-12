@@ -49,7 +49,7 @@ const COPIES = [
   { no: 3, note: 'สำหรับผู้มีหน้าที่หักภาษี ณ ที่จ่าย เก็บไว้เป็นหลักฐาน' },
 ];
 
-export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit = false, isAdmin = false }) {
+export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, monthLabel, canEdit = false, isAdmin = false }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [msg, setMsg] = useState(null);
@@ -71,7 +71,38 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
   const dirty = JSON.stringify(state) !== savedJson;
 
   const set = (id, k, v) => setState((s) => ({ ...s, [id]: { ...s[id], [k]: v } }));
-  const setPaid = (id, v) => setState((s) => ({ ...s, [id]: { ...s[id], paidDates: { ...s[id].paidDates, [monthLabel]: v } } }));
+  const setPaid = (id, v, month = monthLabel) => setState((s) => ({ ...s, [id]: { ...s[id], paidDates: { ...s[id].paidDates, [month]: v } } }));
+
+  // ── พิมพ์หลายเดือน / ทั้งปี ──
+  const year = String(monthLabel).split('/')[1];
+  const MONTHS = Array.from({ length: 12 }, (_, i) => `${String(i + 1).padStart(2, '0')}/${year}`);
+  // ยอดของเดือนที่กำลังเปิดอยู่ใช้ค่าจาก amounts (ตรงกับฟอร์มด้านบน) เดือนอื่นใช้ยอดที่บันทึกไว้ทั้งปี
+  const amtOf = (id, month) => Number(month === monthLabel ? amounts?.[id] : yearAmounts?.[id]?.[month]) || 0;
+  const [multi, setMulti] = useState({}); // { [id]: { open, sel: { 'MM/YYYY': true }, day } }
+  const multiOf = (id) => multi[id] || { open: false, sel: {}, day: '' };
+  const setMultiOf = (id, patch) => setMulti((m) => ({ ...m, [id]: { ...multiOf(id), ...m[id], ...patch } }));
+  function toggleMulti(id) {
+    const cur = multiOf(id);
+    // เปิดครั้งแรก → เลือกทุกเดือนที่มียอดให้เลย (กรณีใช้บ่อยสุดคือออกทั้งปี)
+    const sel = Object.keys(cur.sel).length ? cur.sel : Object.fromEntries(MONTHS.filter((m) => amtOf(id, m) > 0).map((m) => [m, true]));
+    setMultiOf(id, { open: !cur.open, sel });
+  }
+  // เติมวันที่จ่ายให้เดือนที่เลือกและยังว่าง ด้วยวันเดียวกันของทุกเดือน (ค่าเช่ามักจ่ายวันเดิม) — เกินสิ้นเดือนให้ใช้วันสุดท้าย
+  function fillDay(id) {
+    const cur = multiOf(id);
+    const day = Number(cur.day);
+    if (!day || day < 1 || day > 31) { setMsg({ text: 'ใส่วันที่จ่าย 1–31 ก่อน', type: 'err' }); return; }
+    setState((s) => {
+      const paidDates = { ...s[id].paidDates };
+      MONTHS.forEach((m) => {
+        if (!cur.sel[m] || paidDates[m]) return;
+        const [mm, yy] = m.split('/');
+        const last = new Date(Number(yy), Number(mm), 0).getDate();
+        paidDates[m] = `${yy}-${mm}-${String(Math.min(day, last)).padStart(2, '0')}`;
+      });
+      return { ...s, [id]: { ...s[id], paidDates } };
+    });
+  }
 
   async function onSave() {
     setMsg(null);
@@ -84,12 +115,12 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
     }
   }
 
-  function print(it) {
-    const amt = Number(amounts?.[it.id]) || 0;
-    if (amt <= 0) { setMsg({ text: `ยังไม่มียอด${it.label}ในเดือนนี้ (บันทึกค่าดำเนินการก่อน)`, type: 'err' }); return; }
+  // months = [{ month: 'MM/YYYY', amt }] — เดือนเดียวหรือหลายเดือนใช้ทางเดียวกัน
+  function printMonths(it, months) {
+    const list = months.filter((m) => m.amt > 0);
+    if (!list.length) { setMsg({ text: `ยังไม่มียอด${it.label}ในเดือนที่เลือก (บันทึกค่าดำเนินการของเดือนนั้นก่อน)`, type: 'err' }); return; }
     const pv = state[it.id];
     const biz = bizInfo || {};
-    const paidDate = pv.paidDates?.[monthLabel] || '';
 
     // เอกสารภาษี — ข้อมูลไม่ครบห้ามพิมพ์ ดีกว่าได้ใบที่มีขีด "—" ไปยื่น
     const missing = [];
@@ -99,18 +130,21 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
     if (!pv.name.trim()) missing.push('ชื่อผู้รับเงิน');
     if (pv.taxid.length !== 13) missing.push('เลขผู้เสียภาษี/บัตรประชาชน 13 หลักของผู้รับเงิน');
     if (!pv.addr.trim()) missing.push('ที่อยู่ผู้รับเงิน');
-    if (!paidDate) missing.push('วันที่จ่ายเงินจริงของเดือนนี้');
+    const noDate = list.filter((m) => !pv.paidDates?.[m.month]).map((m) => m.month);
+    if (noDate.length) missing.push(`วันที่จ่ายเงินจริงของเดือน ${noDate.join(', ')}`);
     if (missing.length) { setMsg({ text: `ยังพิมพ์ 50 ทวิ ${it.label} ไม่ได้ — ขาด: ${missing.join(' · ')}`, type: 'err' }); return; }
 
-    const { paid, tax } = computeWht(amt, it.rate, pv.cond);
     const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const box = (on) => (on ? '☑' : '☐');
-    const [mm, yy] = String(monthLabel).split('/');
-    const bookNo = String((Number(yy) || 0) + 543);                 // เล่มที่ = ปี พ.ศ.
-    const docNo = `${mm}/${String(it.no).padStart(2, '0')}`;          // เลขที่ = เดือน/ลำดับรายการ (ไม่ซ้ำกันในปีเดียวกัน)
     const issueDate = thaiDate(pv.date || todayISO());
     const blankRow = (label) => `<tr><td>${label}</td><td></td><td></td><td></td></tr>`;
 
+    const pagesFor = ({ month, amt }) => {
+    const paidDate = pv.paidDates[month];
+    const { paid, tax } = computeWht(amt, it.rate, pv.cond);
+    const [mm, yy] = String(month).split('/');
+    const bookNo = String((Number(yy) || 0) + 543);                 // เล่มที่ = ปี พ.ศ.
+    const docNo = `${mm}/${String(it.no).padStart(2, '0')}`;          // เลขที่ = เดือน/ลำดับรายการ (ไม่ซ้ำกันในปีเดียวกัน)
     const page = (copy) => `
   <section class="page">
     <div class="top"><span>ฉบับที่ ${copy.no} <span class="note">(${esc(copy.note)})</span></span><span>เล่มที่ ${esc(bookNo)} &nbsp; เลขที่ ${esc(docNo)}</span></div>
@@ -148,8 +182,10 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
       </div>
     </div>
   </section>`;
+    return COPIES.map(page).join('');
+    };
 
-    const html = `<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>50 ทวิ ${esc(it.label)} ${esc(monthLabel)}</title>
+    const html = `<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>50 ทวิ ${esc(it.label)} ${esc(list.length > 1 ? list[0].month + ' - ' + list[list.length - 1].month : list[0].month)}</title>
 <style>
   @page{size:A4;margin:12mm}
   *{margin:0;padding:0;box-sizing:border-box}
@@ -176,7 +212,7 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
   .cert{flex:1.3;border:1px solid #000;padding:8px 10px;text-align:center;position:relative;font-size:11px}
   .sig{margin:26px 0 4px}
   .seal{position:absolute;right:8px;bottom:8px;width:62px;height:62px;border:1px dashed #000;border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;line-height:1.2}
-</style></head><body>${COPIES.map(page).join('')}</body></html>`;
+</style></head><body>${list.map(pagesFor).join('')}</body></html>`;
     const w = window.open('', '_blank', 'width=820,height=960');
     if (!w) { setMsg({ text: 'เบราว์เซอร์บล็อกป๊อปอัป — โปรดอนุญาต', type: 'err' }); return; }
     w.document.write(html); w.document.close(); w.focus();
@@ -193,6 +229,8 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
       }).catch(() => setMsg({ text: 'พิมพ์แล้ว แต่บันทึกข้อมูลผู้รับเงินไม่สำเร็จ — กด "บันทึกข้อมูลผู้รับเงิน" อีกครั้ง', type: 'err' }));
     }
   }
+
+  const print = (it) => printMonths(it, [{ month: monthLabel, amt: amtOf(it.id, monthLabel) }]);
 
   return (
     <div className="card" style={{ marginTop: 12 }}>
@@ -240,9 +278,57 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
                   </div>
                 )}
               </div>
-              <div style={{ marginTop: 10, textAlign: 'right' }}>
-                <button type="button" className="btn btn-gold" onClick={() => print(it)}><Icon name="ti-printer" /> พิมพ์ 50 ทวิ</button>
+              <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>
+                <button type="button" className="btn btn-ghost" onClick={() => toggleMulti(it.id)}>
+                  <Icon name="ti-calendar-event" /> {multiOf(it.id).open ? 'ซ่อนหลายเดือน' : `พิมพ์หลายเดือน / ทั้งปี ${year}`}
+                </button>
+                <button type="button" className="btn btn-gold" onClick={() => print(it)}><Icon name="ti-printer" /> พิมพ์ 50 ทวิ เดือน {monthLabel}</button>
               </div>
+
+              {multiOf(it.id).open && (() => {
+                const mu = multiOf(it.id);
+                const picked = MONTHS.filter((m) => mu.sel[m] && amtOf(it.id, m) > 0);
+                const setSel = (sel) => setMultiOf(it.id, { sel });
+                return (
+                  <div style={{ marginTop: 10, border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)', padding: 12 }}>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10, fontSize: 'var(--fs-sm)' }}>
+                      <button type="button" className="link-btn" onClick={() => setSel(Object.fromEntries(MONTHS.filter((m) => amtOf(it.id, m) > 0).map((m) => [m, true])))}>เลือกทุกเดือนที่มียอด</button>
+                      <button type="button" className="link-btn" onClick={() => setSel({})}>ไม่เลือกเลย</button>
+                      <span className="muted" style={{ marginLeft: 'auto' }}>จ่ายทุกวันที่</span>
+                      <input className="input" inputMode="numeric" maxLength={2} placeholder="เช่น 5" value={mu.day} onChange={(e) => setMultiOf(it.id, { day: digitsOnly(e.target.value) })} style={{ width: 80 }} />
+                      <button type="button" className="link-btn" onClick={() => fillDay(it.id)}>เติมวันที่ให้เดือนที่ยังว่าง</button>
+                    </div>
+                    <div style={{ display: 'grid', gap: 6 }}>
+                      {MONTHS.map((m) => {
+                        const a = amtOf(it.id, m);
+                        const w = computeWht(a, it.rate, pv.cond);
+                        return (
+                          <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', opacity: a > 0 ? 1 : 0.5 }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 110, fontSize: 'var(--fs-base)', cursor: a > 0 ? 'pointer' : 'default' }}>
+                              <input type="checkbox" disabled={a <= 0} checked={!!mu.sel[m] && a > 0} onChange={(e) => setSel({ ...mu.sel, [m]: e.target.checked })} />
+                              {m}
+                            </label>
+                            <span style={{ flex: '1 1 160px', fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>
+                              {a > 0 ? `เงินได้ ${fmt(w.paid)} · ภาษี ${fmt(w.tax)} ฿` : 'ยังไม่มียอดที่บันทึก'}
+                            </span>
+                            {a > 0 && (
+                              <div style={{ width: 180 }}>
+                                <DateField value={pv.paidDates?.[m] || ''} onChange={(v) => setPaid(it.id, v, m)} placeholder="วันที่จ่ายจริง" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span className="muted" style={{ fontSize: 'var(--fs-sm)' }}>เลือก {picked.length} เดือน · พิมพ์ {picked.length * COPIES.length} หน้า (เดือนละ {COPIES.length} ฉบับ)</span>
+                      <button type="button" className="btn btn-gold" disabled={!picked.length} onClick={() => printMonths(it, picked.map((m) => ({ month: m, amt: amtOf(it.id, m) })))}>
+                        <Icon name="ti-printer" /> พิมพ์ {picked.length} เดือนที่เลือก
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
