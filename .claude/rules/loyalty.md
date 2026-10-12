@@ -1,3 +1,12 @@
+---
+paths:
+  - "app/loyalty/**"
+  - "app/admin/loyalty/**"
+  - "lib/loyalty*.js"
+  - "lib/rfm.js"
+  - "sql/*loyalty*.sql"
+---
+
 # Loyalty / สะสมแต้ม
 
 - Staff guide: `LOYALTY-USER-GUIDE.md`

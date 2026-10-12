@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../../lib/expense-categories';
 import { SUPPLIERS_ITEMS } from '../../lib/suppliers';
@@ -37,6 +37,8 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [msg, setMsg] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const isMaterial = category === MATERIAL_CATEGORY;
   const isBakery = category === BAKERY_CATEGORY;
   const [lastSupplier, setLastSupplier] = useState(''); // ค้างซัพพลายเออร์ล่าสุดให้แถวถัดไป
@@ -87,19 +89,30 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
 
   async function onSubmit(e) {
     e.preventDefault();
+    // กันกดซ้ำระหว่างรอเซิร์ฟเวอร์ — ref กันได้ทันที ไม่ต้องรอ re-render (state อย่างเดียวช้าไปสำหรับดับเบิลแท็ป)
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
     setMsg(null);
-    let res = await saveExpensesAction({ date, category, rows });
-    if (res.status === 'confirm') {
-      if (!window.confirm(res.message)) {
-        setMsg({ text: 'ยกเลิกการบันทึก (ตรวจพบรายการซ้ำ)', type: 'err' });
-        return;
+    try {
+      let res = await saveExpensesAction({ date, category, rows });
+      if (res.status === 'confirm') {
+        if (!window.confirm(res.message)) {
+          setMsg({ text: 'ยกเลิกการบันทึก (ตรวจพบรายการซ้ำ)', type: 'err' });
+          return;
+        }
+        res = await saveExpensesAction({ date, category, rows, force: true });
       }
-      res = await saveExpensesAction({ date, category, rows, force: true });
-    }
-    setMsg({ text: res.message, type: res.status === 'ok' ? 'ok' : 'err' });
-    if (res.status === 'ok') {
-      setRows([{ ...emptyRow(), supplier: isMaterial ? lastSupplier : '' }]);
-      startTransition(() => router.refresh());
+      setMsg({ text: res.message, type: res.status === 'ok' ? 'ok' : 'err' });
+      if (res.status === 'ok') {
+        setRows([{ ...emptyRow(), supplier: isMaterial ? lastSupplier : '' }]);
+        startTransition(() => router.refresh());
+      }
+    } catch {
+      setMsg({ text: 'บันทึกไม่สำเร็จ — เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจรายการด้านล่างก่อนกดบันทึกอีกครั้ง', type: 'err' });
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   }
 
@@ -217,8 +230,8 @@ export default function ExpenseForm({ date, category, catalog = [], onCategory }
           <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>ยอดรวมที่จะบันทึก</div>
           <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--coffee)' }}>{fmt(grand)} ฿</div>
         </div>
-        <button type="submit" style={btnSave} disabled={isPending}>
-          {isPending ? 'กำลังบันทึก...' : 'บันทึกรายจ่าย'}
+        <button type="submit" style={btnSave} disabled={saving || isPending}>
+          {saving || isPending ? 'กำลังบันทึก...' : 'บันทึกรายจ่าย'}
         </button>
       </div>
 

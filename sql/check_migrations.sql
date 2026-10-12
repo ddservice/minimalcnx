@@ -45,6 +45,15 @@ select
   (to_regclass('public.price_list') is null
      and to_regclass('public.employees') is null
      and to_regclass('public.payroll_monthly') is null)                                      as cleanup_legacy_tables,
+  -- ไฟล์รุ่นแรก (เพิ่มช่องเช็ค 2026-10-12 — เดิมไม่มีใครยืนยันได้ว่ารันแล้วหรือยัง)
+  exists (select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'expenses'
+              and column_name = 'unit')                                                      as add_unit_column,
+  exists (select 1 from information_schema.columns
+            where table_schema = 'public' and table_name = 'profiles'
+              and column_name = 'email')                                                     as add_email_to_profiles,
+  exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' and p.proname = 'admin_create_user')                  as admin_user_functions,
   -- แยกดูเฉพาะ index ใบเสร็จซ้ำ: ถ้า harden_loyalty_integrity = true แต่ช่องนี้ = false
   -- แปลว่าตอนรันมีใบเสร็จซ้ำค้างอยู่ ไฟล์เลยข้ามการสร้าง index ให้ (ดู NOTICE ตอนรัน)
   exists (select 1 from pg_indexes where schemaname = 'public'

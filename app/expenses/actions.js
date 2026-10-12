@@ -47,7 +47,22 @@ export async function saveExpensesAction(input) {
   const category = String(input.category || '');
   if (!EXPENSE_CATEGORY_VALUES.includes(category)) return { status: 'error', message: 'หมวดหมู่ไม่ถูกต้อง' };
 
-  const records = (Array.isArray(input.rows) ? input.rows : [])
+  const inputRows = Array.isArray(input.rows) ? input.rows : [];
+
+  // แถวที่กรอกครึ่งเดียว (มีชื่อไม่มีราคา หรือกลับกัน) ต้องแจ้ง ไม่ใช่ข้ามเงียบๆ —
+  // ไม่งั้นฟอร์มขึ้น "บันทึกแล้ว" แล้วล้างทุกแถว รายการนั้นหายโดยไม่มีใครรู้
+  const incomplete = inputRows
+    .map((r, i) => ({ i, name: !!String(r.item_name || '').trim(), price: num(r.unit_price) > 0 }))
+    .filter((r) => r.name !== r.price)
+    .map((r) => r.i + 1);
+  if (incomplete.length) {
+    return {
+      status: 'error',
+      message: `รายการที่ ${incomplete.join(', ')} กรอกไม่ครบ (ต้องมีทั้งชื่อและราคา) — ยังไม่ได้บันทึกรายการใดเลย กรอกให้ครบหรือกด "ลบ" แถวนั้นก่อน`,
+    };
+  }
+
+  const records = inputRows
     .filter((r) => String(r.item_name || '').trim() && num(r.unit_price) > 0)
     .map((r) => ({ ...toRecord(r), date, category, month_label: '', recorded_by: user.id }));
 
