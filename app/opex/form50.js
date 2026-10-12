@@ -64,6 +64,9 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
         bank: pv.bank || '', account: pv.account || '',
         // วันที่จ่ายเงินจริง แยกตามเดือน { '09/2026': '2026-09-05' } — ต่างกันทุกเดือน จึงไม่เก็บเป็นค่าเดียว
         paidDates: pv.paidDates || {},
+        // เงื่อนไขเฉพาะเดือน { '01/2026': '3' } — ทับค่าหลัก (cond) เฉพาะเดือนที่จ่ายต่างจากปกติ
+        // เช่น เดือนที่ลืมหักแล้วร้านออกภาษีให้ ขณะที่เดือนอื่นหัก ณ ที่จ่าย
+        conds: pv.conds || {},
       };
     });
     return s;
@@ -73,6 +76,13 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
   const dirty = JSON.stringify(state) !== savedJson;
 
   const set = (id, k, v) => setState((s) => ({ ...s, [id]: { ...s[id], [k]: v } }));
+  const condOf = (pv, month) => pv.conds?.[month] || pv.cond;
+  // '' = กลับไปใช้ค่าหลัก (ลบ key ทิ้ง ไม่เก็บค่าว่างค้างไว้)
+  const setCond = (id, month, v) => setState((s) => {
+    const conds = { ...s[id].conds };
+    if (v) conds[month] = v; else delete conds[month];
+    return { ...s, [id]: { ...s[id], conds } };
+  });
   const setPaid = (id, v, month = monthLabel) => setState((s) => ({ ...s, [id]: { ...s[id], paidDates: { ...s[id].paidDates, [month]: v } } }));
 
   // ── พิมพ์หลายเดือน / ทั้งปี ──
@@ -143,7 +153,8 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
 
     const pagesFor = ({ month, amt }) => {
     const paidDate = pv.paidDates[month];
-    const { paid, tax } = computeWht(amt, it.rate, pv.cond);
+    const cond = condOf(pv, month);
+    const { paid, tax } = computeWht(amt, it.rate, cond);
     const [mm, yy] = String(month).split('/');
     const bookNo = String((Number(yy) || 0) + 543);                 // เล่มที่ = ปี พ.ศ.
     const docNo = `${mm}/${String(it.no).padStart(2, '0')}`;          // เลขที่ = เดือน/ลำดับรายการ (ไม่ซ้ำกันในปีเดียวกัน)
@@ -172,7 +183,7 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
       <tr><td colspan="4">รวมเงินภาษีที่หักนำส่ง (ตัวอักษร) &nbsp; <b>${bahtText(tax)}</b></td></tr>
     </table>
     <div class="line">เงินที่จ่ายเข้า &nbsp; กบข./กสจ./กองทุนสงเคราะห์ครูโรงเรียนเอกชน ............ บาท &nbsp; กองทุนประกันสังคม ............ บาท &nbsp; กองทุนสำรองเลี้ยงชีพ ............ บาท</div>
-    <div class="line">ผู้จ่ายเงิน &nbsp; ${WHT_CONDITIONS.map((c) => `${box(c.value === pv.cond)} (${c.value}) ${c.label}`).join(' &nbsp; ')} &nbsp; ☐ (4) อื่น ๆ (ระบุ) ............</div>
+    <div class="line">ผู้จ่ายเงิน &nbsp; ${WHT_CONDITIONS.map((c) => `${box(c.value === cond)} (${c.value}) ${c.label}`).join(' &nbsp; ')} &nbsp; ☐ (4) อื่น ๆ (ระบุ) ............</div>
     <div class="foot">
       <div class="warn"><b>คำเตือน</b> ผู้มีหน้าที่ออกหนังสือรับรองการหักภาษี ณ ที่จ่าย ฝ่าฝืนไม่ปฏิบัติตามมาตรา 50 ทวิ แห่งประมวลรัษฎากร ต้องรับโทษทางอาญาตามมาตรา 35 แห่งประมวลรัษฎากร</div>
       <div class="cert">
@@ -244,7 +255,7 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
         {ITEMS.map((it) => {
           const amt = Number(amounts?.[it.id]) || 0;
           const pv = state[it.id];
-          const { paid, tax } = computeWht(amt, it.rate, pv.cond);
+          const { paid, tax } = computeWht(amt, it.rate, condOf(pv, monthLabel));
           return (
             <div key={it.id} style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14, marginBottom: 12, background: 'var(--beige)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
@@ -260,8 +271,12 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
                 <select className="input" disabled={!canEdit} value={pv.pnd} onChange={(e) => set(it.id, 'pnd', e.target.value)}>
                   {PND_CHOICES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
-                <select className="input" disabled={!canEdit} value={pv.cond} onChange={(e) => set(it.id, 'cond', e.target.value)}>
-                  {WHT_CONDITIONS.map((c) => <option key={c.value} value={c.value}>({c.value}) {c.label}</option>)}
+                <select className="input" disabled={!canEdit} value={pv.cond} onChange={(e) => set(it.id, 'cond', e.target.value)} title="เงื่อนไขปกติ ใช้กับทุกเดือนที่ไม่ได้ตั้งแยก">
+                  {WHT_CONDITIONS.map((c) => <option key={c.value} value={c.value}>ปกติ: ({c.value}) {c.label}</option>)}
+                </select>
+                <select className="input" disabled={!canEdit} value={pv.conds?.[monthLabel] || ''} onChange={(e) => setCond(it.id, monthLabel, e.target.value)} title="ตั้งเฉพาะเดือนนี้ เมื่อจ่ายต่างจากปกติ">
+                  <option value="">เดือน {monthLabel}: ตามปกติ</option>
+                  {WHT_CONDITIONS.map((c) => <option key={c.value} value={c.value}>เดือน {monthLabel}: ({c.value}) {c.label}</option>)}
                 </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8, marginTop: 8 }}>
@@ -305,7 +320,7 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
                     <div style={{ display: 'grid', gap: 6 }}>
                       {MONTHS.map((m) => {
                         const a = amtOf(it.id, m);
-                        const w = computeWht(a, it.rate, pv.cond);
+                        const w = computeWht(a, it.rate, condOf(pv, m));
                         return (
                           <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', opacity: a > 0 ? 1 : 0.5 }}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 110, fontSize: 'var(--fs-base)', cursor: a > 0 ? 'pointer' : 'default' }}>
@@ -315,6 +330,12 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
                             <span style={{ flex: '1 1 160px', fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>
                               {a > 0 ? `เงินได้ ${fmt(w.paid)} · ภาษี ${fmt(w.tax)} ฿` : 'ยังไม่มียอดที่บันทึก'}
                             </span>
+                            {a > 0 && (
+                              <select className="input" disabled={!canEdit} value={pv.conds?.[m] || ''} onChange={(e) => setCond(it.id, m, e.target.value)} style={{ width: 170 }}>
+                                <option value="">ตามปกติ</option>
+                                {WHT_CONDITIONS.map((c) => <option key={c.value} value={c.value}>({c.value}) {c.label}</option>)}
+                              </select>
+                            )}
                             {a > 0 && (
                               <div style={{ width: 180 }}>
                                 <DateField value={pv.paidDates?.[m] || ''} onChange={(v) => setPaid(it.id, v, m)} placeholder="วันที่จ่ายจริง" />
