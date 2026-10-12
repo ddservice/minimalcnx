@@ -142,6 +142,7 @@ export async function saveOpexAction(input) {
         position: Number(e.position) || 0,
         diligence: Number(e.diligence) || 0,
         commRate: Number(e.commRate) || 0,
+        noSso: e.noSso === true,
         ...ps,
         savedBy: by,
         savedAt,

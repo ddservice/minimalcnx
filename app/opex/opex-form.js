@@ -77,13 +77,14 @@ function printSlip(e, ps, monthLabel, bizInfo) {
   </table>
   <table>
     <tr><th>รายการหัก</th><th class="num">บาท</th></tr>
-    ${row('ประกันสังคม (พนักงาน 5%)', '− ' + f(ps.ssoEmp), 'ded')}
+    ${row(e.noSso ? 'ประกันสังคม (ยังไม่ขึ้นทะเบียน — ไม่หัก)' : 'ประกันสังคม (พนักงาน 5%)', '− ' + f(ps.ssoEmp), 'ded')}
     ${row('หัก ณ ที่จ่าย Commission 3%', '− ' + f(ps.commTax), 'ded')}
+    ${ps.refund > 0 ? row('คืนเงินประกัน (ไม่ใช่ค่าจ้าง)', '+ ' + f(ps.refund)) : ''}
     ${row('โอนสุทธิให้พนักงาน', f(ps.netTransfer), 'net')}
   </table>
   <table>
     <tr><th>ส่วนของบริษัท</th><th class="num">บาท</th></tr>
-    ${row('ประกันสังคม (บริษัทสมทบ 5%)', f(ps.ssoCo))}
+    ${row(e.noSso ? 'ประกันสังคม (ยังไม่ขึ้นทะเบียน — ไม่สมทบ)' : 'ประกันสังคม (บริษัทสมทบ 5%)', f(ps.ssoCo))}
     ${row('รวมค่าใช้จ่ายบริษัท', f(ps.companyCost), 'sub')}
   </table>
   ${hasBank ? `<table>
@@ -162,6 +163,10 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
       const slip = slips[i] || {};
       const key = `${OPEX_STAFF.empPrefix}${i + 1}`;
       const dbDetail = empDetails[key] || {}; // จาก database — ค่าหลัก ใช้ร่วมทุกเครื่อง
+      // ถ้าเดือนนี้เคยบันทึกแล้ว ใช้ตัวเลขที่บันทึกไว้ของเดือนนั้น (emp_pay_history) ก่อน localStorage —
+      // ไม่งั้นเปิดเดือนเก่าบนเครื่องอื่นจะเห็นค่าของเดือนล่าสุด แล้วกดบันทึกทับเดือนเก่าโดยไม่รู้ตัว
+      const empHist = empPayHistory[key] || [];
+      const monthHist = empHist.find((r) => r.month === monthLabel);
       const detail = {};
       EMP_DETAIL_FIELDS.forEach((f) => {
         // DB มาก่อนเสมอ; localStorage เป็นแค่ fallback ช่วงเปลี่ยนผ่าน (เผื่อมีของเก่าค้างอยู่ในเครื่องนี้)
@@ -169,10 +174,14 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
       });
       return {
         // เติมเงินเดือน/ตำแหน่งตั้งต้นจากข้อมูลเดิม (localStorage ทับได้ — ไม่ใช่ข้อมูลอ่อนไหว)
-        salary: slip.salary ?? def.salary ?? '',
-        position: slip.position ?? def.position ?? '',
-        commRate: slip.commRate ?? '0',
-        diligence: slip.diligence ?? '',
+        salary: monthHist ? String(monthHist.salary ?? '') : slip.salary ?? def.salary ?? '',
+        position: monthHist ? String(monthHist.position ?? '') : slip.position ?? def.position ?? '',
+        commRate: monthHist ? String(monthHist.commRate ?? 0) : slip.commRate ?? '0',
+        diligence: monthHist ? String(monthHist.diligence ?? '') : slip.diligence ?? '',
+        // สถานะประกันสังคมเป็นของตัวพนักงาน → เดือนใหม่ยกมาจากเดือนล่าสุดที่บันทึกไว้
+        noSso: monthHist ? !!monthHist.noSso : !!(empHist[0]?.noSso ?? slip.noSso),
+        // คืนเงินประกันเป็นรายการครั้งเดียวของเดือนนั้น — ห้ามยกไปเดือนอื่น และไม่เก็บใน localStorage
+        refund: monthHist?.refund ? String(monthHist.refund) : '',
         // รายละเอียดสำหรับหนังสือรับรองเงินเดือน — เก็บที่ฐานข้อมูลเป็นหลัก (business_config.emp_details)
         ...detail,
         showSlip: false,
@@ -191,7 +200,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
   // จำค่าเงินเดือน/ตำแหน่ง/คอมฯ ไว้ในเครื่อง (ไม่ใช่ข้อมูลอ่อนไหว, ไม่ต้องรอกดบันทึก)
   // ข้อมูลส่วนตัว/ธนาคาร ไม่เก็บที่นี่แล้ว — ต้องกด "บันทึกข้อมูลพนักงาน" เพื่อเก็บลง DB โดยเฉพาะ
   useEffect(() => {
-    const slim = employees.map((e) => ({ label: e.label, salary: e.salary, position: e.position, commRate: e.commRate, diligence: e.diligence }));
+    const slim = employees.map((e) => ({ label: e.label, salary: e.salary, position: e.position, commRate: e.commRate, diligence: e.diligence, noSso: !!e.noSso }));
     try { localStorage.setItem('mm69_emp_slip', JSON.stringify(slim)); } catch {}
   }, [employees]);
 
@@ -349,6 +358,14 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
                   )}
                 </div>
 
+                {(e.noSso || ps.refund > 0) && (
+                  <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginTop: 4 }}>
+                    {e.noSso && <span>ไม่หักประกันสังคม</span>}
+                    {e.noSso && ps.refund > 0 && ' · '}
+                    {ps.refund > 0 && <span>โอนจริง {fmt(ps.netTransfer)} ฿ (รวมคืนเงินประกัน {fmt(ps.refund)} ฿ — ไม่นับเป็นรายจ่าย)</span>}
+                  </div>
+                )}
+
                 {e.showSlip && (
                   <div style={slipBox}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, marginBottom: 10 }}>
@@ -361,7 +378,12 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
                         </select>
                       </div>
                       <SlipField label="เบี้ยขยัน" value={e.diligence} onChange={(v) => setEmp(i, 'diligence', v)} />
+                      <SlipField label="คืนเงินประกัน (ไม่ใช่ค่าแรง)" value={e.refund} onChange={(v) => setEmp(i, 'refund', v)} />
                     </div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-base)', cursor: 'pointer', marginBottom: 10 }}>
+                      <input type="checkbox" checked={!!e.noSso} onChange={(ev) => setEmp(i, 'noSso', ev.target.checked)} />
+                      ไม่หักประกันสังคม (ยังไม่ได้ขึ้นทะเบียน)
+                    </label>
 
                     {/* รายละเอียดพนักงานสำหรับหนังสือรับรองเงินเดือน — เก็บลงฐานข้อมูลกลาง (ใช้ได้ทุกเครื่อง) */}
                     <div style={detailWrap}>
@@ -401,8 +423,9 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
 
                     <div style={slipCalc}>
                       <SlipRow label={`รวม Gross (คอมฯ ${fmt(ps.commAmt)})`} value={fmt(ps.gross)} />
-                      <SlipRow label="หัก ประกันสังคม (พนักงาน 5%)" value={`− ${fmt(ps.ssoEmp)}`} color="#c00000" />
+                      <SlipRow label={e.noSso ? 'หัก ประกันสังคม (ไม่หัก — ยังไม่ขึ้นทะเบียน)' : 'หัก ประกันสังคม (พนักงาน 5%)'} value={`− ${fmt(ps.ssoEmp)}`} color="#c00000" />
                       <SlipRow label="หัก Commission tax 3%" value={`− ${fmt(ps.commTax)}`} color="#c00000" />
+                      {ps.refund > 0 && <SlipRow label="+ คืนเงินประกัน (ไม่นับเป็นรายจ่าย)" value={`+ ${fmt(ps.refund)}`} color="var(--muted)" />}
                       <SlipRow label="💸 โอนให้พนักงาน" value={fmt(ps.netTransfer)} strong />
                       <SlipRow label="+ ประกันสังคม (บริษัท 5%)" value={`+ ${fmt(ps.ssoCo)}`} color="var(--muted)" />
                       <SlipRow label="รวมค่าใช้จ่ายบริษัท" value={fmt(ps.companyCost)} strong />
@@ -586,7 +609,7 @@ function PayHistory({ hist, employee, bizInfo, isAdmin, onMsg }) {
     }
     // ใช้รายละเอียดตัวบุคคลปัจจุบัน (ชื่อ/ธนาคาร) + ตัวเลขเงินเดือน/สรุปจากประวัติเดือนนั้น
     printSlip(
-      { ...employee, label: r.label, salary: r.salary, position: r.position, diligence: r.diligence },
+      { ...employee, label: r.label, salary: r.salary, position: r.position, diligence: r.diligence, noSso: !!r.noSso },
       r,
       r.month,
       bizInfo

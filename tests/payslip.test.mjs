@@ -47,3 +47,27 @@ test('เบี้ยขยันไม่ถูกนำไปคิดปร�
   assert.equal(withBonus.gross - withoutBonus.gross, 1000);
   assert.equal(withBonus.netTransfer - withoutBonus.netTransfer, 1000);
 });
+
+test('ไม่ขึ้นทะเบียนประกันสังคม (noSso) — ไม่หักและบริษัทไม่สมทบ ต้นทุน = ค่าแรงพอดี', () => {
+  const p = computePayslip({ salary: 2800, noSso: true }, 0); // รายวัน 400 x 7 วัน
+  assert.equal(p.ssoEmp, 0);
+  assert.equal(p.ssoCo, 0);
+  assert.equal(p.netTransfer, 2800);
+  assert.equal(p.companyCost, 2800);
+});
+
+test('คืนเงินประกัน (refund) รวมในยอดโอน แต่ไม่เข้า gross / ประกันสังคม / ค่าใช้จ่ายบริษัท', () => {
+  const p = computePayslip({ salary: 5600, refund: 3000 }, 0); // รายวัน 400 x 14 วัน + คืนประกัน
+  assert.equal(p.ssoEmp, 280);        // 5% ของ 5,600 ไม่ใช่ของ 8,600
+  assert.equal(p.ssoCo, 280);
+  assert.equal(p.gross, 5600);
+  assert.equal(p.companyCost, 5880);  // ไม่มี 3,000 ปนอยู่
+  assert.equal(p.netTransfer, 8320);  // 5,600 - 280 + 3,000
+  assert.equal(p.refund, 3000);
+});
+
+test('refund ติดลบ/ไม่ใช่ตัวเลข ถือเป็น 0 และค่าตั้งต้นยังหักประกันสังคมตามเดิม', () => {
+  assert.equal(computePayslip({ salary: 10000, refund: -500 }, 0).netTransfer, 9500);
+  assert.equal(computePayslip({ salary: 10000, refund: 'abc' }, 0).refund, 0);
+  assert.equal(computePayslip({ salary: 10000, noSso: 'false' }, 0).ssoEmp, 500);
+});
