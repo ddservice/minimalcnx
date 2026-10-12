@@ -5,50 +5,59 @@
 
 ตัวอย่างในไฟล์นี้ใช้ร้านชื่อ `mamasaidno` — เปลี่ยนชื่อ/พอร์ต/โดเมนตามจริง
 
-> ⚠️ ขั้นตอนนี้เขียนจากโครงสร้างระบบ **ยังไม่เคยรันจริงครบทั้งชุด** — รอบแรกให้ทำตามทีละข้อและดูผลทุกข้อ
+> ⚠️ ข้อ 3 (โครงสร้างฐานข้อมูล) ทดสอบแล้วบน Postgres ว่างจำลอง (2026-10-13: รันครบทุกไฟล์ตามลำดับ, `check_migrations.sql` ผ่านทุกช่อง)
+> แต่ **ทั้งชุดยังไม่เคยรันจริงบน Supabase + VPS** — รอบแรกให้ทำตามทีละข้อและดูผลทุกข้อ
 > ถ้าข้อไหนไม่ตรงกับที่เขียน ให้หยุดแล้วแก้เอกสารนี้ก่อนไปต่อ
 
 ## สิ่งที่แยกตามร้าน / สิ่งที่ใช้ร่วม
 
 | แยกตามร้าน | ใช้ร่วมกัน |
 |---|---|
-| โปรเจกต์ Supabase (ฐานข้อมูล + Auth + Storage) | โค้ดใน repo นี้ (branch `main`) |
+| บัญชี/โปรเจกต์ Supabase (ฐานข้อมูล + Auth + Storage) | โค้ดใน repo นี้ (branch `main`) |
 | โฟลเดอร์บน VPS `~/apps/<slug>` + `.deploy.env` + `.backup.env` | VPS, Docker, nginx, Cloudflare |
 | container / image / พอร์ต / โดเมน | bucket R2 (แยกด้วย prefix) และกุญแจ `age` |
 | ผู้ใช้, สิทธิ์, ข้อมูลร้าน, เลขผู้เสียภาษี | |
 
-## 1. สร้างโปรเจกต์ Supabase (เจ้าของทำเอง)
+ร้านใหม่ **ไม่ต่อไปที่ฐานข้อมูลของร้านอื่นในขั้นตอนใดเลย** — โครงสร้างสร้างจากไฟล์ `sql/` ใน repo
+จึงใช้บัญชี Supabase คนละบัญชีกับร้านเดิมได้ (mamasaidno ทำแบบนี้ — คนละนิติบุคคล)
 
-1. Supabase Dashboard → New project → ชื่อ `mamasaidno` → region **Southeast Asia (Singapore)**
-2. Authentication → Providers → Email: **Confirm email = ปิด**, Minimum password length = **8**
+## 1. สร้างบัญชี + โปรเจกต์ Supabase (เจ้าของทำเอง)
+
+1. สมัครบัญชี Supabase ใหม่ด้วยอีเมลของร้านใหม่ (หรือสร้าง Organization ใหม่) → New project → ชื่อ `mamasaidno`
+   → region **Southeast Asia (Singapore)** → ตั้งรหัสฐานข้อมูลแล้วเก็บไว้ในที่ปลอดภัย
+2. Authentication → Sign In / Providers:
+   - **Allow new users to sign up = ปิด** ← ห้ามข้าม: policy หลายตารางอนุญาต "ผู้ใช้ที่ login แล้วทุกคน"
+     ถ้าเปิดไว้ ใครก็ตามที่มี publishable key (อยู่ใน JS ของหน้าเว็บ) สมัครเองแล้วอ่านยอดขาย/รายจ่ายได้
+     ปิดแล้วผู้ใช้ยังสร้างได้ตามปกติจาก Dashboard และหน้า `/admin` ของแอป
+   - Email: **Confirm email = ปิด**, Minimum password length = **8**
 3. เก็บค่าเหล่านี้ไว้: Project URL, publishable (anon) key, service_role key, connection string แบบ **Session pooler (:5432)**
 
-## 2. สร้างโครงสร้างฐานข้อมูล
-
-ทางที่แนะนำ: คัดลอก **เฉพาะโครงสร้าง** (ไม่มีข้อมูล) จากร้านเดิม ซึ่งเป็นโครงสร้างที่ใช้งานจริงอยู่
-ดีกว่าไล่รันไฟล์ `sql/*.sql` ยี่สิบกว่าไฟล์ตามลำดับ (ลำดับผิดไฟล์เดียวฟังก์ชันจะถูกทับด้วยรุ่นเก่า)
-
-รันบน VPS — `OLD` = ร้านเดิม, `NEW` = ร้านใหม่ (ทั้งคู่ต้องเป็น Session pooler `:5432` ไม่ใช่ `:6543`):
+## 2. เตรียมโฟลเดอร์บน VPS
 
 ```bash
-OLD='postgresql://postgres.<ref-เดิม>:<รหัส>@<host>:5432/postgres'
-NEW='postgresql://postgres.<ref-ใหม่>:<รหัส>@<host>:5432/postgres'
+ss -tlnp | grep 127.0.0.1        # ดูพอร์ตที่ถูกใช้อยู่ก่อน — เลือกพอร์ตที่ว่างจริง (ตัวอย่างใช้ 3013 — 3012 มี next-server ตัวอื่นใช้อยู่แล้ว ตรวจเมื่อ 2026-10-13)
 
-# ไม่ใส่ --no-privileges โดยตั้งใจ: grant execute ... to authenticated คือสิ่งที่ทุก RPC ต้องใช้
-docker run --rm postgres:17-alpine pg_dump "$OLD" --schema-only --no-owner --schema=public > /tmp/schema.sql
-docker run --rm -i postgres:17-alpine psql "$NEW" -v ON_ERROR_STOP=1 < /tmp/schema.sql
-shred -u /tmp/schema.sql
+cd ~/apps && git clone git@github.com:ddservice/minimalcnx.git mamasaidno && cd mamasaidno
 ```
 
-จากนั้นใน **SQL Editor ของโปรเจกต์ใหม่** รันไฟล์ที่สร้างของนอก schema `public` (ทุกไฟล์รันซ้ำได้):
+## 3. สร้างโครงสร้างฐานข้อมูล
 
-1. `sql/add_free_cup_actual_cost.sql` — bucket `evidence`
-2. `sql/add_documents.sql` — bucket `documents` (private)
-3. `sql/add_loyalty_system.sql` — seed สาขา (ชื่อสาขาเป็นของร้านเดิม → แก้ที่หน้า `/admin/loyalty` ภายหลัง)
-4. `sql/add_loyalty_rewards.sql` — seed ของรางวัลตั้งต้น
-5. `sql/check_migrations.sql` — **ทุกช่องต้องเป็น `true`** ถ้ามีช่องไหน `false` ให้รันไฟล์ชื่อเดียวกับช่องนั้น
+```bash
+cd ~/apps/mamasaidno && bash scripts/install-schema.sh
+```
 
-## 3. สร้างผู้ใช้ admin คนแรก
+สคริปต์จะถาม connection string (พิมพ์แบบไม่แสดงบนจอ ไม่ค้างใน history) แล้วรันไฟล์ `sql/` ทั้งชุด **ตามลำดับที่ทดสอบแล้ว**
+หยุดทันทีที่ไฟล์ไหนผิดพลาด และจบด้วย `sql/check_migrations.sql` — **ทุกช่องต้องเป็น `t`**
+
+- สคริปต์ **ไม่ยอมรันถ้าปลายทางมีตารางของแอปอยู่แล้ว** (กันใส่ URL ของร้านที่ใช้งานอยู่ผิดมา)
+- อย่าสลับลำดับหรือรันไฟล์เดี่ยวซ้ำเอง: หลายไฟล์ `create or replace` ฟังก์ชันชื่อเดียวกัน
+  รันไฟล์เก่าทับทีหลัง = ได้ฟังก์ชัน/policy รุ่นเก่ากลับมาโดยไม่มี error และ `check_migrations` จับไม่ได้ทุกกรณี
+- ไฟล์สุดท้าย `sql/new_instance_finalize.sql` ลบ trigger สมัครสมาชิกรุ่นแรก (เชื่อ role ที่ผู้สมัครส่งมาเอง)
+  และเปลี่ยนสาขาตั้งต้นของร้านเดิมเป็น "สาขาหลัก" สาขาเดียว
+- ค่าที่ seed มา: `free_cup_unit_cost` = 55 บาท (ต้นทุนแก้วฟรีของร้านเดิม — แก้ที่หน้า `/settings`), ของรางวัลตั้งต้น 3 รายการ
+- ไม่มี VPS / อยากใช้ SQL Editor: วางไฟล์ทีละไฟล์ตามลำดับใน `FILES=( ... )` ของ `scripts/install-schema.sh`
+
+## 4. สร้างผู้ใช้ admin คนแรก
 
 1. Supabase Dashboard → Authentication → Users → **Add user** → email `admin@marim69.internal`
    (ระบบ login ต่อท้าย `@marim69.internal` ให้ชื่อผู้ใช้เสมอ — เป็น realm ภายใน ไม่ใช่อีเมลจริง) ตั้งรหัสผ่าน ≥ 8 ตัว ติ๊ก Auto Confirm
@@ -63,12 +72,10 @@ on conflict (id) do update set role = 'admin', is_active = true;
 
 ผู้ใช้คนอื่นสร้างจากหน้า `/admin` ในแอปหลัง login ได้เลย
 
-## 4. ติดตั้งบน VPS
+## 5. Deploy บน VPS
 
 ```bash
-ss -tlnp | grep 127.0.0.1        # ดูพอร์ตที่ถูกใช้อยู่ก่อน — เลือกพอร์ตที่ว่างจริง (ตัวอย่างใช้ 3013 — 3012 มี next-server ตัวอื่นใช้อยู่แล้ว ตรวจเมื่อ 2026-10-13)
-
-cd ~/apps && git clone git@github.com:ddservice/minimalcnx.git mamasaidno && cd mamasaidno
+cd ~/apps/mamasaidno
 
 cat > .deploy.env <<'ENV'
 SUPABASE_URL='https://<ref-ใหม่>.supabase.co'
@@ -86,22 +93,30 @@ bash deploy.sh
 ถ้า URL เป็นของร้านเดิม แปลว่า `.deploy.env` ผิด ให้หยุดทันที (ร้านใหม่จะเขียนลงฐานของร้านเดิม)
 สคริปต์ไม่ยอมให้ instance อื่นใช้พอร์ต 3011 และไม่ยอมรันถ้าไม่ได้ตั้ง `HOST_PORT`
 
-## 5. โดเมน
+## 6. โดเมน
 
-1. คัดลอก `deploy/nginx-minimalcnx.conf` เป็นไฟล์ใหม่ใน `/etc/nginx/sites-available/` แก้ `server_name` เป็นโดเมนของร้านใหม่
-   และ `proxy_pass` เป็น `http://127.0.0.1:3013`
-2. `sudo nginx -t && sudo systemctl reload nginx` — **ห้าม** `systemctl restart docker`
-3. เพิ่ม DNS record ใน Cloudflare ชี้มาที่ VPS
-4. Supabase → Authentication → URL Configuration → Site URL = โดเมนใหม่
+```bash
+cd /etc/nginx/sites-available
+sudo cp minimalcnx.conf mamasaidno.conf      # คัดลอกไฟล์ที่ใช้งานจริงบน VPS ไม่ใช่ตัวอย่างใน repo — จะได้การตั้งค่า TLS/Cloudflare ชุดเดียวกัน
+sudo nano mamasaidno.conf                    # server_name → mamasaidno.ddserviceth.com · proxy_pass → http://127.0.0.1:3013
+sudo ln -s /etc/nginx/sites-available/mamasaidno.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx # ห้าม systemctl restart docker
+```
 
-## 6. Backup
+- ถ้า `nginx -t` ฟ้องว่า `map` / `connection_upgrade` ซ้ำ ให้ลบบล็อก `map $http_upgrade ...` ออกจากไฟล์ใหม่ (ใช้ของไฟล์เดิมร่วมกันได้)
+- เพิ่ม DNS record ใน Cloudflare ชี้มาที่ VPS (ตั้ง proxy/SSL mode ให้เหมือน record ของ `minimalcnx`)
+- Supabase → Authentication → URL Configuration → Site URL = `https://mamasaidno.ddserviceth.com`
+- ตรวจ: `curl -s -o /dev/null -w "%{http_code}
+" http://127.0.0.1:3013/login` และเปิดโดเมนจริง → ต้องได้ 200
+
+## 7. Backup
 
 ```bash
 cd ~/apps/mamasaidno && cp ~/apps/minimalcnx/.backup.env .backup.env && chmod 600 .backup.env
 nano .backup.env
 ```
 
-แก้ 4 ค่าให้เป็นของร้านใหม่ ที่เหลือ (R2, กุญแจ age, Telegram) ใช้ของเดิมได้:
+แก้ 4 ค่าให้เป็นของร้านใหม่ ที่เหลือ (R2, กุญแจ age, Telegram) ใช้ของเดิมได้ — ถ้าต้องการแยกขาดจากร้านเดิมทั้งหมด ให้สร้าง bucket R2 และกุญแจ `age` ชุดใหม่ตาม `deploy/BACKUP.md`:
 
 ```
 SUPABASE_DB_URL=<Session pooler ของโปรเจกต์ใหม่>
@@ -121,12 +136,12 @@ R2_PREFIX=mamasaidno
 
 เพิ่ม Lifecycle rule 90 วันบน R2 สำหรับ `mamasaidno/daily/` ด้วย
 
-## 7. ตั้งค่าในแอป (login ด้วย admin)
+## 8. ตั้งค่าในแอป (login ด้วย admin)
 
 1. `/settings` → ข้อมูลร้าน: ชื่อ, เลขผู้เสียภาษี 13 หลัก, ที่อยู่ (ใช้บนสลิป รายงาน และ 50 ทวิ)
 2. `/settings` → ค่าตั้งต้นค่าดำเนินการ: ร้านใหม่เริ่มจากว่างทั้งหมด (ตัวเลขตั้งต้นในโค้ดเป็นของร้านเดิมและถูกปิดไว้)
 3. `/admin` → สร้างผู้ใช้ · `/settings` → สิทธิ์ตามตำแหน่ง
-4. `/admin/loyalty` → แก้ชื่อสาขาและของรางวัลให้เป็นของร้านใหม่
+4. `/admin/loyalty` → ตั้งชื่อสาขา ("สาขาหลัก") และของรางวัลให้เป็นของร้านใหม่
 
 ## สิ่งที่ยังเป็นของร้านเดิมในโค้ด (ยังไม่ได้ทำให้ตั้งค่าได้)
 
@@ -147,4 +162,4 @@ cd ~/apps/minimalcnx && bash deploy.sh
 cd ~/apps/mamasaidno && bash deploy.sh
 ```
 
-SQL ไฟล์ใหม่ต้องรันในโปรเจกต์ Supabase **ของทั้งสองร้าน**
+SQL ไฟล์ใหม่ต้องรันในโปรเจกต์ Supabase **ของทั้งสองร้าน** และต้องเพิ่มชื่อไฟล์ใน `FILES=( ... )` ของ `scripts/install-schema.sh` (ก่อน `new_instance_finalize.sql`) เพื่อให้ร้านถัดไปได้ครบ

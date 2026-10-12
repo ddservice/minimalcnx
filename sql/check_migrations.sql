@@ -57,6 +57,11 @@ select
   -- คลังเอกสาร: ตาราง + bucket ต้องเป็น private (public = false) ถึงจะนับว่าผ่าน
   (to_regclass('public.documents') is not null
      and exists (select 1 from storage.buckets where id = 'documents' and public = false))  as add_documents,
+  -- trigger รุ่นแรกที่เชื่อ role จากข้อมูลที่ผู้สมัครส่งมาเอง — ต้อง "ไม่มี" ถึงจะผ่าน
+  -- ถ้า false: รันบรรทัด drop trigger ใน sql/new_instance_finalize.sql (ส่วนที่ 1) และปิด signup ใน Supabase Auth
+  not exists (select 1 from pg_trigger
+               where tgrelid = 'auth.users'::regclass
+                 and tgname = 'on_auth_user_created')                                        as signup_trigger_removed,
   -- แยกดูเฉพาะ index ใบเสร็จซ้ำ: ถ้า harden_loyalty_integrity = true แต่ช่องนี้ = false
   -- แปลว่าตอนรันมีใบเสร็จซ้ำค้างอยู่ ไฟล์เลยข้ามการสร้าง index ให้ (ดู NOTICE ตอนรัน)
   exists (select 1 from pg_indexes where schemaname = 'public'
