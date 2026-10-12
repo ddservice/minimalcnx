@@ -37,6 +37,7 @@ const TABLE_LABEL = {
   sales_daily: 'ยอดขาย',
   expenses: 'รายจ่าย',
   business_config: 'ตั้งค่าระบบ',
+  documents: 'เอกสารของร้าน',
   profiles: 'บัญชีผู้ใช้',
   auth: 'การเข้าสู่ระบบ',
   access: 'สิทธิ์',

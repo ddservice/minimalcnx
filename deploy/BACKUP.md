@@ -127,6 +127,8 @@ cron จึงใช้เวลาไทยตรงๆ**: `0 20` = สอง�
 ```cron
 0 20 * * * cd $HOME/apps/minimalcnx && bash scripts/backup-to-r2.sh >> $HOME/backup.log 2>&1
 20 20 * * * cd $HOME/apps/minimalcnx && bash scripts/sync-storage-to-r2.sh >> $HOME/backup.log 2>&1
+# คลังเอกสาร (/admin/documents) — bucket private ต้องมี SUPABASE_SERVICE_ROLE_KEY ใน .backup.env
+30 20 * * * cd $HOME/apps/minimalcnx && STORAGE_BUCKET=documents bash scripts/sync-storage-to-r2.sh >> $HOME/backup.log 2>&1
 ```
 
 บรรทัดที่สองสำรอง **ไฟล์รูปหลักฐานแก้วฟรี** ใน Storage — `pg_dump` ได้แค่แถวใน `storage.objects`

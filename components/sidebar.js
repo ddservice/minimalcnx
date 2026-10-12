@@ -34,13 +34,16 @@ export default function Sidebar({ name, role, isAdmin, allowed, mobileOpen, setM
 
   const allowSet = new Set(allowed || NAV_TABS.map((t) => t.href));
   const visible = NAV_TABS.filter((t) => allowSet.has(t.href));
+  // เอกสารของร้าน (สำเนาบัตร/สัญญา) — admin + co-admin เท่านั้น ไม่อยู่ในตารางสิทธิ์ที่ปรับได้
+  const docTab = isAdmin || role === 'co-admin' ? [{ href: '/admin/documents', label: 'เอกสาร', icon: 'ti-file-invoice' }] : [];
   const tabs = isAdmin
     ? [
         ...visible,
+        ...docTab,
         { href: '/admin', label: 'ผู้ใช้งาน', icon: 'ti-users' },
         { href: '/admin/audit', label: 'ประวัติการใช้งาน', icon: 'ti-history' },
       ]
-    : visible;
+    : [...visible, ...docTab];
 
   return (
     <>

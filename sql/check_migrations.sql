@@ -54,6 +54,9 @@ select
               and column_name = 'email')                                                     as add_email_to_profiles,
   exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
             where n.nspname = 'public' and p.proname = 'admin_create_user')                  as admin_user_functions,
+  -- คลังเอกสาร: ตาราง + bucket ต้องเป็น private (public = false) ถึงจะนับว่าผ่าน
+  (to_regclass('public.documents') is not null
+     and exists (select 1 from storage.buckets where id = 'documents' and public = false))  as add_documents,
   -- แยกดูเฉพาะ index ใบเสร็จซ้ำ: ถ้า harden_loyalty_integrity = true แต่ช่องนี้ = false
   -- แปลว่าตอนรันมีใบเสร็จซ้ำค้างอยู่ ไฟล์เลยข้ามการสร้าง index ให้ (ดู NOTICE ตอนรัน)
   exists (select 1 from pg_indexes where schemaname = 'public'

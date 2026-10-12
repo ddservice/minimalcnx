@@ -37,6 +37,7 @@ Topic rules in `.claude/rules/` and staff guide `LOYALTY-USER-GUIDE.md` still ap
 - **Forms seeded from a date/month-scoped prop need `key={date}`**, or they keep the old date's values.
 - **Loyalty:** earn needs linked `staff_profiles` + branch + receipt (one receipt = one earn per branch); redeem via `loyalty_redeem_reward` RPC; void via `loyalty_void_transaction` RPC, never delete. RFM segments are computed live (`lib/rfm.js` ↔ SQL `fn_rfm_segment` — change both).
 - **Audit:** `/admin/audit` is Super Admin (`role = admin`) only. Never log passwords. IP/User-Agent are client-reported and spoofable; `session_id` / `actor_email` are the trustworthy fields.
+- **Storage buckets:** `evidence` is public (free-cup proof). **`documents` is private and must stay private** — it holds ID-card copies and contracts; read via short-lived signed URLs from a Server Action, admin + co-admin only at both table and object level. Never put personal documents in `evidence`.
 - **Backups stay `age`-encrypted** (dump holds phone numbers, national IDs, bank accounts). `pg_dump` uses the session pooler `:5432`, never `:6543`.
 - **Schema changes:** add the SQL file to `docs/claude/migrations.md` and a column to `sql/check_migrations.sql`. Never edit `sql/supabase_migration.sql`, only annotate.
 - Never commit `.env.local`, `.deploy.env`, `.backup.env`, `*.key`, `push_to_github.bat` or real passwords.
@@ -50,7 +51,7 @@ Topic rules in `.claude/rules/` and staff guide `LOYALTY-USER-GUIDE.md` still ap
 
 ## App map
 
-- `app/` — `login`, `dashboard`, `sales`, `expenses`, `opex`, `reports`, `analytics`, `loyalty` (+ `history`, `analytics`), `admin` (+ `loyalty`, `audit`), `settings`, `export`
+- `app/` — `login`, `dashboard`, `sales`, `expenses`, `opex`, `reports`, `analytics`, `loyalty` (+ `history`, `analytics`), `admin` (+ `loyalty`, `audit`, `documents`), `settings`, `export`
 - `components/` — `app-shell`, `sidebar`, `page-header`, `kpi`, `data-table`, `date-field`, `number-input`, `icon`
-- `lib/` — `supabase/*`, `session`, `access`, `perms`, `audit`, `config-store`, `config-cache`, `format`, `gp`, `opex`, `payslip`, `wht`, `dashboard`, `rfm`, `loyalty-rewards`
+- `lib/` — `supabase/*`, `session`, `access`, `perms`, `audit`, `config-store`, `config-cache`, `format`, `gp`, `opex`, `payslip`, `wht`, `documents`, `dashboard`, `rfm`, `loyalty-rewards`
 - `sql/` migrations · `scripts/` backup/restore/migrate · `deploy/` nginx + runbooks · `tests/` · `templates/` import xlsx

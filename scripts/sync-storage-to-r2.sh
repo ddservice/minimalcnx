@@ -89,8 +89,18 @@ while IFS= read -r name; do
     UPLOADED=$((UPLOADED + 1)); continue
   fi
 
-  # bucket เป็น public จึงโหลดผ่าน /object/public ได้โดยไม่ต้องใช้ key
-  if ! curl -fsSL --max-time 120 -o "$WORK/blob" "$SUPABASE_URL/storage/v1/object/public/$BUCKET/$name"; then
+  # bucket public (evidence) โหลดผ่าน /object/public ได้โดยไม่ต้องใช้ key
+  # bucket private (documents — สำเนาบัตร/สัญญา) ต้องใช้ service_role key ซึ่งอยู่ใน .backup.env บน VPS เท่านั้น
+  if [ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+    DL_OK=0
+    curl -fsSL --max-time 120 -o "$WORK/blob" \
+      -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+      "$SUPABASE_URL/storage/v1/object/$BUCKET/$name" && DL_OK=1
+  else
+    DL_OK=0
+    curl -fsSL --max-time 120 -o "$WORK/blob" "$SUPABASE_URL/storage/v1/object/public/$BUCKET/$name" && DL_OK=1
+  fi
+  if [ "$DL_OK" != "1" ]; then
     warn "ดาวน์โหลดไม่สำเร็จ: $name"; FAILED=$((FAILED + 1)); continue
   fi
   [ -s "$WORK/blob" ] || { warn "ไฟล์ว่าง: $name"; FAILED=$((FAILED + 1)); continue; }

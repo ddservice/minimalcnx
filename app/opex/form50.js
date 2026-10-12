@@ -60,6 +60,8 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
       s[it.id] = {
         name: pv.name || '', taxid: pv.taxid || '', addr: pv.addr || '', date: pv.date || '',
         cond: pv.cond || '1', pnd: pv.pnd || '4', seq: pv.seq || '1',
+        // บัญชีรับโอน — เก็บไว้ใช้ตอนจ่าย ไม่ได้พิมพ์ลงใบ 50 ทวิ
+        bank: pv.bank || '', account: pv.account || '',
         // วันที่จ่ายเงินจริง แยกตามเดือน { '09/2026': '2026-09-05' } — ต่างกันทุกเดือน จึงไม่เก็บเป็นค่าเดียว
         paidDates: pv.paidDates || {},
       };
@@ -253,6 +255,8 @@ export default function Form50({ amounts, yearAmounts = {}, payees, bizInfo, mon
                 <input className="input" disabled={!canEdit} placeholder="ชื่อผู้รับเงิน" value={pv.name} onChange={(e) => set(it.id, 'name', stripDigits(e.target.value))} />
                 <input className="input" disabled={!canEdit} inputMode="numeric" maxLength={13} placeholder="เลขผู้เสียภาษี/บัตรปชช. 13 หลัก" value={pv.taxid} onChange={(e) => set(it.id, 'taxid', digitsOnly(e.target.value).slice(0, 13))} />
                 <input className="input" disabled={!canEdit} style={{ gridColumn: '1 / -1' }} placeholder="ที่อยู่ผู้รับเงิน" value={pv.addr} onChange={(e) => set(it.id, 'addr', e.target.value)} />
+                <input className="input" disabled={!canEdit} placeholder="ธนาคาร (สำหรับโอน)" value={pv.bank} onChange={(e) => set(it.id, 'bank', e.target.value)} />
+                <input className="input" disabled={!canEdit} inputMode="numeric" placeholder="เลขที่บัญชี" value={pv.account} onChange={(e) => set(it.id, 'account', digitsOnly(e.target.value))} />
                 <select className="input" disabled={!canEdit} value={pv.pnd} onChange={(e) => set(it.id, 'pnd', e.target.value)}>
                   {PND_CHOICES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>

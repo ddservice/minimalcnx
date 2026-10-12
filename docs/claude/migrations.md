@@ -47,4 +47,4 @@ Legacy feature parity is complete. Loyalty staff-portal path is code-complete fo
 4. Hand staff [`LOYALTY-USER-GUIDE.md`](./LOYALTY-USER-GUIDE.md) — include Add to Home Screen.
 5. After deploy: log out/in once as admin and confirm `/admin/audit` shows IP under username (proves `add_audit_context.sql` + nginx CF headers).
 
-
+- **`sql/add_documents.sql` — required for `/admin/documents`** (idempotent; run after `harden_security.sql` and `add_audit_forensics.sql`). Creates table `documents` (metadata), the **private** Storage bucket `documents` (10 MB, images + PDF only), RLS on both `public.documents` and `storage.objects` limited to `admin` / `co-admin`, and audit trigger `tr_audit_documents`. `check_migrations.sql` column `add_documents` is true only when the table exists **and** the bucket is non-public. Until it is run, the page shows a hint naming this file.

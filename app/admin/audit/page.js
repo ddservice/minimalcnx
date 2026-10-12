@@ -10,7 +10,7 @@ import AuditPurge from './audit-purge';
 const VALID_TABLES = new Set([
   'sales_daily', 'expenses', 'business_config', 'profiles',
   'auth', 'access', 'admin', 'reports',
-  'customers', 'point_transactions', 'redemption_history',
+  'customers', 'point_transactions', 'redemption_history', 'documents',
 ]);
 const VALID_ACTIONS = new Set([
   'INSERT', 'UPDATE', 'DELETE',
