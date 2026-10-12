@@ -66,7 +66,7 @@ on conflict (id) do update set role = 'admin', is_active = true;
 ## 4. ติดตั้งบน VPS
 
 ```bash
-ss -tlnp | grep 127.0.0.1        # ดูพอร์ตที่ถูกใช้อยู่ก่อน — เลือกพอร์ตที่ว่างจริง (ตัวอย่างใช้ 3012)
+ss -tlnp | grep 127.0.0.1        # ดูพอร์ตที่ถูกใช้อยู่ก่อน — เลือกพอร์ตที่ว่างจริง (ตัวอย่างใช้ 3013 — 3012 มี next-server ตัวอื่นใช้อยู่แล้ว ตรวจเมื่อ 2026-10-13)
 
 cd ~/apps && git clone git@github.com:ddservice/minimalcnx.git mamasaidno && cd mamasaidno
 
@@ -75,7 +75,7 @@ SUPABASE_URL='https://<ref-ใหม่>.supabase.co'
 SUPABASE_ANON_KEY='<publishable key ของโปรเจกต์ใหม่>'
 APP_SLUG='mamasaidno'
 APP_NAME='Mama Said No'
-HOST_PORT='3012'
+HOST_PORT='3013'
 ENV
 chmod 600 .deploy.env
 
@@ -89,7 +89,7 @@ bash deploy.sh
 ## 5. โดเมน
 
 1. คัดลอก `deploy/nginx-minimalcnx.conf` เป็นไฟล์ใหม่ใน `/etc/nginx/sites-available/` แก้ `server_name` เป็นโดเมนของร้านใหม่
-   และ `proxy_pass` เป็น `http://127.0.0.1:3012`
+   และ `proxy_pass` เป็น `http://127.0.0.1:3013`
 2. `sudo nginx -t && sudo systemctl reload nginx` — **ห้าม** `systemctl restart docker`
 3. เพิ่ม DNS record ใน Cloudflare ชี้มาที่ VPS
 4. Supabase → Authentication → URL Configuration → Site URL = โดเมนใหม่

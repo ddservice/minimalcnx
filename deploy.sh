@@ -64,6 +64,7 @@ NAME="$APP_SLUG"
 #   3003 = next-server อีกตัวบนโฮสต์ (ยังไม่ระบุว่าโปรเจกต์ไหน — ดูด้วย ss -tlnp)
 #   3005 = invest3 / apexlink-forensics
 #   3011 = minimal.conf + minimalcnx.conf  ← ร้านกาแฟ
+#   3012 = next-server อีกตัวบนโฮสต์ (เห็นจาก ss -tlnp เมื่อ 2026-10-13 — ห้ามใช้กับ instance ใหม่)
 #   4000 = tmhccp5 + pems
 #   5000 = sop5
 HOST_IP="127.0.0.1"
