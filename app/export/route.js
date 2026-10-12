@@ -3,6 +3,7 @@ import { createClient } from '../../lib/supabase/server';
 import { monthInputToLabel, currentMonthInput, OPEX_ALL_CATEGORIES, computeEffectiveOpex } from '../../lib/opex';
 import { readBusinessConfig } from '../../lib/config-store';
 import { logAuditEvent } from '../../lib/audit';
+import { APP_NAME, APP_SLUG } from '../../lib/brand';
 
 export const runtime = 'nodejs';
 
@@ -41,7 +42,7 @@ export async function GET(request) {
   const freeCups = sales.reduce((a, s) => a + Number(s.free_cups || 0), 0);
 
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Minimal Maerim';
+  wb.creator = APP_NAME;
   wb.created = new Date();
 
   // ── Sheet 1: สรุป ──
@@ -136,7 +137,7 @@ export async function GET(request) {
     });
 
   const buf = await wb.xlsx.writeBuffer();
-  const filename = `minimalcnx-${monthLabel.replace('/', '-')}.xlsx`;
+  const filename = `${APP_SLUG}-${monthLabel.replace('/', '-')}.xlsx`;
   await logAuditEvent(supabase, {
     action: 'EXPORT',
     table: 'reports',

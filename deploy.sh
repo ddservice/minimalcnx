@@ -39,8 +39,25 @@ case "$SUPABASE_ANON_KEY" in
   *) echo "SUPABASE_ANON_KEY หน้าตาไม่เหมือน publishable/anon key — ยกเลิก"; exit 1 ;;
 esac
 
-IMAGE="minimalcnx:latest"
-NAME="minimalcnx"
+# ── instance: โค้ดชุดเดียวติดตั้งได้หลายร้าน แต่ละร้าน clone แยกโฟลเดอร์ + .deploy.env ของตัวเอง ──
+#   APP_SLUG   ชื่อ container/image (ตัวพิมพ์เล็ก a-z 0-9 -)   ค่าตั้งต้น minimalcnx
+#   APP_NAME   ชื่อร้านที่แสดงบนหน้าจอ                         ค่าตั้งต้น Minimal Maerim
+#   HOST_PORT  พอร์ตบน 127.0.0.1 ที่ nginx ชี้มา               ค่าตั้งต้น 3011
+# ไม่ตั้งอะไรเลย = ร้านเดิม ทำงานเหมือนก่อนมีตัวเลือกนี้ทุกประการ
+APP_SLUG="${APP_SLUG:-minimalcnx}"
+case "$APP_SLUG" in
+  *[!a-z0-9-]*|'') echo "APP_SLUG ต้องเป็น a-z 0-9 - เท่านั้น (ได้ '$APP_SLUG') — ยกเลิก"; exit 1 ;;
+esac
+# กันสองร้านแย่งพอร์ต/ชื่อเดียวกัน: instance ที่ไม่ใช่ร้านเดิมต้องระบุพอร์ตเองเสมอ
+if [ "$APP_SLUG" != "minimalcnx" ] && [ -z "${HOST_PORT:-}" ]; then
+  echo "instance '$APP_SLUG' ต้องตั้ง HOST_PORT ใน .deploy.env (ห้ามใช้ 3011 ของ minimalcnx) — ยกเลิก"; exit 1
+fi
+if [ "$APP_SLUG" != "minimalcnx" ] && [ "${HOST_PORT:-}" = "3011" ]; then
+  echo "พอร์ต 3011 เป็นของ minimalcnx — instance '$APP_SLUG' ต้องใช้พอร์ตอื่น — ยกเลิก"; exit 1
+fi
+echo "==> Instance: $APP_SLUG (${APP_NAME:-Minimal Maerim})"
+IMAGE="${APP_SLUG}:latest"
+NAME="$APP_SLUG"
 # พอร์ตจริงบน VPS นี้ (อย่าสลับ — จะทับเว็บอื่น):
 #   3001 = mikrotik.conf
 #   3002 = cnxhaircutz (next-server บนโฮสต์)
@@ -50,7 +67,7 @@ NAME="minimalcnx"
 #   4000 = tmhccp5 + pems
 #   5000 = sop5
 HOST_IP="127.0.0.1"
-HOST_PORT="3011"
+HOST_PORT="${HOST_PORT:-3011}"
 PORT="${HOST_IP}:${HOST_PORT}:3000"
 
 wait_port_free() {
@@ -75,6 +92,8 @@ echo "==> docker build"
 docker build \
   --build-arg NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
   --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+  --build-arg NEXT_PUBLIC_APP_NAME="${APP_NAME:-}" \
+  --build-arg NEXT_PUBLIC_APP_SLUG="$APP_SLUG" \
   -t "$IMAGE" .
 
 echo "==> restart container (ชื่อ ${NAME} / พอร์ต ${HOST_PORT})"
@@ -83,7 +102,9 @@ docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' || true
 ss -tlnp | grep -E "127\\.0\\.0\\.1:30|127\\.0\\.0\\.1:4000|127\\.0\\.0\\.1:5000" || true
 
 # ห้าม docker rm ชื่ออื่น (เช่น apexlink-forensics ใช้ 3005)
-docker rm -f "$NAME" marim69-beta 2>/dev/null || true
+docker rm -f "$NAME" 2>/dev/null || true
+# ชื่อเก่าของร้านเดิมก่อนเปลี่ยนชื่อ — ลบเฉพาะตอน deploy ร้านเดิม
+[ "$APP_SLUG" = "minimalcnx" ] && { docker rm -f marim69-beta 2>/dev/null || true; }
 wait_port_free
 docker run -d --name "$NAME" --restart unless-stopped -p "$PORT" "$IMAGE"
 

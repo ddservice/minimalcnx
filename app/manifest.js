@@ -1,8 +1,10 @@
+import { APP_NAME } from '../lib/brand';
+
 export default function manifest() {
   return {
-    name: 'Minimal Maerim — สะสมแต้ม',
+    name: `${APP_NAME} — สะสมแต้ม`,
     short_name: 'สะสมแต้ม',
-    description: 'ระบบสะสมแต้ม Minimal Maerim สำหรับพนักงานหน้าร้าน',
+    description: `ระบบสะสมแต้ม ${APP_NAME} สำหรับพนักงานหน้าร้าน`,
     start_url: '/loyalty',
     scope: '/',
     display: 'standalone',

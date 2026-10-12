@@ -3,6 +3,7 @@ import Icon from '../../components/icon';
 
 import { useActionState } from 'react';
 import { login } from './actions';
+import { APP_NAME } from '../../lib/brand';
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, { error: '' });
@@ -13,7 +14,7 @@ export default function LoginPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
           <div className="brand-icon"><Icon name="ti-coffee" /></div>
           <div>
-            <h1 style={{ fontSize: 'var(--fs-2xl)', fontWeight: 700 }}>Minimal Maerim</h1>
+            <h1 style={{ fontSize: 'var(--fs-2xl)', fontWeight: 700 }}>{APP_NAME}</h1>
             <p className="muted" style={{ fontSize: 'var(--fs-sm)', marginTop: 1 }}>เข้าสู่ระบบเพื่อจัดการร้าน</p>
           </div>
         </div>

@@ -69,4 +69,13 @@ Matches the standard Claude Code project structure:
 | `.claude/agents/` | Specialized reviewers (`code-reviewer`, `security-auditor`) |
 | `.claude/hooks/validate-bash.sh` | Optional PreToolUse script (force-push / hard-reset / pipe-to-shell). Wire via `settings.local.json` — see `.claude/settings.local.json.example` (not enabled in shared `settings.json` so Cursor shell is unaffected) |
 
+## Multiple shops from one repo (2026-10-12)
 
+**One codebase, one install per shop, one Supabase project per shop.** Chosen over multi-tenancy because the second shop (`mamasaidno`) is a different legal entity: separate tax ID, payroll, certificates and documents are required anyway, and separate databases mean no RLS rule has to keep two companies' rows apart. Runbook: **`deploy/NEW-INSTANCE.md`** (written from the code, not yet executed end to end).
+
+- **`lib/brand.js`** — `APP_NAME` / `APP_SLUG` from `NEXT_PUBLIC_APP_NAME` / `NEXT_PUBLIC_APP_SLUG`, baked in at `docker build` exactly like the Supabase URL. Unset = the original shop, byte-for-byte the old behaviour. Never hardcode the shop name in a component again — import `APP_NAME`.
+- **`IS_ORIGINAL_SHOP`** gates every number that belongs to Minimal Maerim only: the `def` values in `OPEX_OPERATING` / `OPEX_STAFF`, `DEFAULT_EMPLOYEES`, and the fallbacks inside `computeEffectiveOpex()` (third argument `builtin`). **Without this gate a new shop's reports would show ~70,000 baht/month of expenses that never happened** (director salary, rent, two default employees) for every month with no saved OPEX rows. A new shop starts empty and sets its own values in `/settings` -> `opex_defaults`. Pinned by `tests/opex.test.mjs`.
+- **`deploy.sh`** reads `APP_SLUG` (container + image name), `APP_NAME`, `HOST_PORT` from `.deploy.env`. A non-original instance must set `HOST_PORT` and may not use 3011; the script prints `==> Instance: <slug>` next to `==> Supabase: <url>`. Each shop is its own clone under `~/apps/<slug>` with its own `.deploy.env` / `.backup.env`.
+- **Backups:** `R2_PREFIX` separates shops inside the same R2 bucket and is now also the label on failure alerts and the default local backup folder. Forgetting to change it for a new shop mixes two companies' dumps under one prefix.
+- **Still Minimal-specific in code** (a different kind of business needs these made configurable first): `lib/suppliers.js`, `lib/bakery.js`, `lib/gp.js` + the sales channels, `lib/expense-categories.js`, the OPEX item list, icons and colours. The auth realm `@marim69.internal` is shared by design — it is only an internal suffix and each shop has its own Auth database.
+- A new SQL file must be run in **every** shop's Supabase project; `deploy.sh` must be run once per shop.

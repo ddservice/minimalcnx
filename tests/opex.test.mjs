@@ -74,3 +74,9 @@ test('รายการตั้งต้นที่เอกสารระ�
   assert.equal(OPEX_OPERATING.items.find((i) => i.key === 'internet').def, 319.93);
   assert.equal(OPEX_STAFF.fixed.find((i) => i.key === 'salary_dir').def, 36000);
 });
+
+test('ร้านอื่น (builtin = false): ไม่เติมค่าตั้งต้นของร้านเดิมให้ นับเฉพาะที่บันทึกจริงและที่ตั้งใน opex_defaults', () => {
+  near(computeEffectiveOpex([], {}, false), 0);
+  near(computeEffectiveOpex([], { rent: 8000 }, false), 8000);
+  near(computeEffectiveOpex([{ item_key: 'rent', category: OPERATING, total_amount: 9000 }, { item_key: 'emp1', category: STAFF, total_amount: 10500 }], { rent: 8000 }, false), 19500);
+});

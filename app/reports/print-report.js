@@ -1,6 +1,7 @@
 import { fmtMoney } from '../../lib/format';
 import { computeEffectiveOpex } from '../../lib/opex';
 import { EXPENSE_CATEGORIES } from '../../lib/expense-categories';
+import { APP_NAME } from '../../lib/brand';
 
 const esc = (s) =>
   String(s || '')
@@ -69,7 +70,7 @@ export function printMonthlyReport({
   const now = new Date(Date.now() + 7 * 60 * 60 * 1000);
   const printDateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} น.`;
 
-  const bizName = bizInfo.name || 'Minimal Maerim (มินิมอล แม่ริม)';
+  const bizName = bizInfo.name || APP_NAME;
   const bizTaxId = bizInfo.tax_id ? `เลขประจำตัวผู้เสียภาษีอากร: ${bizInfo.tax_id}` : '';
   const bizAddr = bizInfo.address || '';
   const bizPhone = bizInfo.phone ? `โทร. ${bizInfo.phone}` : '';

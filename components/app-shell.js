@@ -4,6 +4,7 @@ import Icon from './icon';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from './sidebar';
+import { APP_NAME } from '../lib/brand';
 
 const ROLE_LABEL = { admin: 'Admin', 'co-admin': 'Co-Admin', manager: 'Manager', staff: 'Staff', loyalty_staff: 'Loyalty' };
 
@@ -26,12 +27,12 @@ export default function AppShell({ name, role, isAdmin, allowed, children }) {
             <Icon name="ti-menu-2" />
           </button>
           <div className="brand-icon sidebar-brand-icon" style={{ width: 30, height: 30, fontSize: 'var(--fs-lg)' }}><Icon name="ti-coffee" /></div>
-          <strong style={{ fontSize: 'var(--fs-md)' }}>Minimal Maerim</strong>
+          <strong style={{ fontSize: 'var(--fs-md)' }}>{APP_NAME}</strong>
         </div>
 
         {/* บริบทผู้ใช้งานที่มองเห็นได้แม้ sidebar จะถูกยุบเป็นแบบไอคอนอย่างเดียว (ตอนนั้นชื่อใน sidebar จะถูกซ่อน) */}
         <div className="desktop-topbar">
-          <span className="desktop-topbar-brand">Minimal Maerim</span>
+          <span className="desktop-topbar-brand">{APP_NAME}</span>
           <div className="desktop-topbar-user">
             <span className="desktop-topbar-avatar">{(name || '?').charAt(0).toUpperCase()}</span>
             <span className="desktop-topbar-name">

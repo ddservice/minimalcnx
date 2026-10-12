@@ -1,5 +1,6 @@
 import { Prompt } from 'next/font/google';
 import './globals.css';
+import { APP_NAME } from '../lib/brand';
 // Icons: tree-shaken via components/icon.js (@tabler/icons-react) — ไม่โหลด webfont ทั้งชุด
 
 // Prompt รองรับทั้งไทย+อังกฤษในฟอนต์เดียว — โหลดผ่าน next/font (self-host อัตโนมัติ ไม่ยิง
@@ -13,9 +14,9 @@ const prompt = Prompt({
 });
 
 export const metadata = {
-  title: 'Minimal Maerim',
+  title: APP_NAME,
   description: 'ระบบจัดการร้านและสะสมแต้ม',
-  applicationName: 'Minimal Maerim',
+  applicationName: APP_NAME,
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

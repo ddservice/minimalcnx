@@ -8,6 +8,7 @@ Maintained by Claude. This file is the **short core** loaded every session. Deta
 - **Stack:** Next.js 15 + React 19 + `@supabase/ssr`, plain JS, repo root is the app. Working copy: `Z:\independentz\Web\minimalcnx`, branch `main`. No second clone.
 - **Backend:** Supabase project `vrmaquzhehbfqlfvrsxj` (Singapore). The old Sydney project was deleted 2026-10-01 — no rollback target; recovery is the R2 backup.
 - Single shop for sales/expenses/OPEX/reports; multi-branch applies to loyalty only.
+- **One repo, several shops:** each shop is a separate install with its own Supabase project (`deploy/NEW-INSTANCE.md`). Shop name comes from `lib/brand.js` (`APP_NAME`) — never hardcode it. Numbers that belong to the original shop only are gated by `IS_ORIGINAL_SHOP`. Second shop: `mamasaidno` (different legal entity).
 
 ## Where the detail lives
 

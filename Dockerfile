@@ -12,8 +12,13 @@ COPY . .
 # ค่า NEXT_PUBLIC_* ถูกฝังตอน build → ต้องส่งเข้ามาเป็น build arg
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+# ชื่อร้าน + ชื่อ instance (ว่าง = ร้านเดิม) — ดู lib/brand.js
+ARG NEXT_PUBLIC_APP_NAME
+ARG NEXT_PUBLIC_APP_SLUG
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
+ENV NEXT_PUBLIC_APP_SLUG=$NEXT_PUBLIC_APP_SLUG
 RUN npm run build
 
 # ── Stage 3: runtime (เล็กที่สุด) ──────────────────────────────

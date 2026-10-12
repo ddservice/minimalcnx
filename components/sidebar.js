@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_TABS } from '../lib/perms';
+import { APP_NAME } from '../lib/brand';
 import SignOutButton from './sign-out-button';
 
 const ROLE_LABEL = {
@@ -53,7 +54,7 @@ export default function Sidebar({ name, role, isAdmin, allowed, mobileOpen, setM
         <div className="sidebar-brand">
           <div className="brand-icon sidebar-brand-icon"><Icon name="ti-coffee" /></div>
           <div className="sidebar-brand-text">
-            <h1>Minimal Maerim</h1>
+            <h1>{APP_NAME}</h1>
             <p>{name}{role ? ` · ${ROLE_LABEL[role] || role}` : ''}</p>
           </div>
           <button

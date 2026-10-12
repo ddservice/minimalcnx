@@ -44,14 +44,14 @@ send_alert() {
   local msg="$1"
   if [ -n "${BACKUP_ALERT_WEBHOOK:-}" ]; then
     curl -s -m 5 -X POST -H "Content-Type: application/json" \
-      -d "{\"content\":\"[MinimalCNX Backup] $msg\"}" \
+      -d "{\"content\":\"[$PREFIX backup] $msg\"}" \
       "$BACKUP_ALERT_WEBHOOK" >/dev/null 2>&1 || true
   fi
   # Telegram ใช้ webhook ข้างบนไม่ได้ — Bot API ต้องการ chat_id + text ไม่ใช่ {"content": ...} แบบ Discord
   if [ -n "${BACKUP_TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${BACKUP_TELEGRAM_CHAT_ID:-}" ]; then
     curl -s -m 5 "https://api.telegram.org/bot${BACKUP_TELEGRAM_BOT_TOKEN}/sendMessage" \
       --data-urlencode "chat_id=${BACKUP_TELEGRAM_CHAT_ID}" \
-      --data-urlencode "text=[MinimalCNX Backup] $msg" >/dev/null 2>&1 || true
+      --data-urlencode "text=[$PREFIX backup] $msg" >/dev/null 2>&1 || true
   fi
 }
 send_heartbeat() {
@@ -171,7 +171,7 @@ if [ -f "$LOG_FILE" ] && [ "$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)" -gt 25
 fi
 
 # ── 7) ลบไฟล์ backup ท้องถิ่นที่เก่ากว่า 90 วัน (ถ้ามีการเก็บสำเนาไว้บน VPS) ──
-LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-$HOME/backups/minimalcnx}"
+LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-$HOME/backups/$PREFIX}"
 if [ -d "$LOCAL_BACKUP_DIR" ]; then
   log "ลบไฟล์ backup ท้องถิ่นที่เก่ากว่า 90 วันใน $LOCAL_BACKUP_DIR ..."
   find "$LOCAL_BACKUP_DIR" -type f \( -name "*.dump" -o -name "*.dump.age" \) -mtime +90 -delete 2>/dev/null || true

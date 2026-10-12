@@ -5,6 +5,7 @@ import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { OPEX_OPERATING, OPEX_STAFF, OPEX_TAX, DEFAULT_EMPLOYEES } from '../../lib/opex';
 import { computePayslip } from '../../lib/payslip';
+import { APP_NAME } from '../../lib/brand';
 import { summarizeEmployeeYear } from '../../lib/wht';
 import { form50Html } from '../../lib/form50-template';
 import { stripDigits, digitsOnly } from '../../lib/format';
@@ -58,7 +59,7 @@ function printSlip(e, ps, monthLabel, bizInfo) {
   @media print{body{padding:0}}
 </style></head><body>
   <div class="head">
-    <div><div class="bname">${esc(biz.name || 'Minimal Maerim')}</div><div class="bsub">${esc(biz.tax_id ? 'เลขผู้เสียภาษี ' + biz.tax_id : '')}${biz.address ? '<br>' + esc(biz.address) : ''}</div></div>
+    <div><div class="bname">${esc(biz.name || APP_NAME)}</div><div class="bsub">${esc(biz.tax_id ? 'เลขผู้เสียภาษี ' + biz.tax_id : '')}${biz.address ? '<br>' + esc(biz.address) : ''}</div></div>
     <div class="meta"><b>หนังสือรับรองเงินเดือน</b>งวด ${esc(mm || '--')}/${esc(yy || '----')}<br>วันที่ ${esc(today)}</div>
   </div>
   <div class="title">หนังสือรับรองเงินเดือน</div>
