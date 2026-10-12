@@ -5,6 +5,8 @@ import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { OPEX_OPERATING, OPEX_STAFF, OPEX_TAX, DEFAULT_EMPLOYEES } from '../../lib/opex';
 import { computePayslip } from '../../lib/payslip';
+import { summarizeEmployeeYear } from '../../lib/wht';
+import { form50Html } from '../../lib/form50-template';
 import { stripDigits, digitsOnly } from '../../lib/format';
 import NumberInput from '../../components/number-input';
 import DateField from '../../components/date-field';
@@ -12,7 +14,7 @@ import AccessBanner from '../../components/access-banner';
 import { ACCESS_HINT } from '../../lib/perms';
 import { saveOpexAction, saveEmpDetails } from './actions';
 
-const EMP_DETAIL_FIELDS = ['fullname', 'lastname', 'title', 'id_card', 'bank_name', 'account_no', 'account_holder'];
+const EMP_DETAIL_FIELDS = ['fullname', 'lastname', 'title', 'id_card', 'address', 'bank_name', 'account_no', 'account_holder'];
 
 const fmt = (n) => Number(n || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
 const sumObj = (o) => Object.values(o).reduce((a, v) => a + (Number(v) || 0), 0);
@@ -394,6 +396,9 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
                         <SlipField text disabled={!canEditEmpDetails} label="ตำแหน่ง" value={e.title} onChange={(v) => setEmp(i, 'title', v)} />
                         <SlipField text onlyDigits disabled={!canEditEmpDetails} label="เลขบัตรประชาชน" value={e.id_card} onChange={(v) => setEmp(i, 'id_card', v)} />
                       </div>
+                      <div style={{ marginTop: 10 }}>
+                        <SlipField text disabled={!canEditEmpDetails} label="ที่อยู่ (ใช้บนหนังสือรับรอง 50 ทวิ)" value={e.address} onChange={(v) => setEmp(i, 'address', v)} />
+                      </div>
 
                       <div style={{ ...detailHead, marginTop: 12 }}><Icon name="ti-building-bank" /> บัญชีธนาคาร (สำหรับโอนเงินเดือน)</div>
                       <div style={detailGrid}>
@@ -451,6 +456,7 @@ export default function OpexForm({ monthInput, monthLabel, existing, income = 0,
                 {e.showHistory && (
                   <PayHistory
                     hist={empPayHistory[`emp${i + 1}`] || []}
+                    empNo={i + 1}
                     employee={e}
                     bizInfo={bizInfo}
                     isAdmin={isAdmin}
@@ -590,7 +596,7 @@ function SlipRow({ label, value, color, strong }) {
 }
 
 // ประวัติการจ่ายเงินพนักงาน — บันทึกอัตโนมัติทุกครั้งที่กดบันทึกค่าดำเนินการ (upsert ตามเดือน)
-function PayHistory({ hist, employee, bizInfo, isAdmin, onMsg }) {
+function PayHistory({ hist, employee, bizInfo, isAdmin, onMsg, empNo = 1 }) {
   if (!hist.length) {
     return (
       <div style={{ ...slipBox, textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--fs-sm)' }}>
@@ -616,8 +622,53 @@ function PayHistory({ hist, employee, bizInfo, isAdmin, onMsg }) {
     );
   }
 
+  // 50 ทวิ ประจำปีของพนักงาน — เงินได้ 40(1) รวมทั้งปี ลงข้อ 1 ของแบบ (ฟอร์มเดียวกับค่าเช่า)
+  const years = [...new Set(hist.map((r) => String(r.month || '').split('/')[1]).filter(Boolean))].sort().reverse();
+  function onPrintYear(year) {
+    const biz = bizInfo || {};
+    const name = [employee.fullname, employee.lastname].filter(Boolean).join(' ').trim();
+    const missing = [];
+    if (!String(biz.name || '').trim()) missing.push('ชื่อผู้จ่ายเงิน (ตั้งค่าร้าน)');
+    if (String(biz.tax_id || '').replace(/\D/g, '').length !== 13) missing.push('เลขผู้เสียภาษี 13 หลักของร้าน (ตั้งค่าร้าน)');
+    if (!String(biz.address || '').trim()) missing.push('ที่อยู่ร้าน (ตั้งค่าร้าน)');
+    if (!name) missing.push('ชื่อ-นามสกุลพนักงาน');
+    if (String(employee.id_card || '').length !== 13) missing.push('เลขบัตรประชาชน 13 หลักของพนักงาน');
+    if (!String(employee.address || '').trim()) missing.push('ที่อยู่พนักงาน');
+    if (missing.length) { onMsg({ text: `ยังพิมพ์ 50 ทวิ ของ ${employee.label} ไม่ได้ — ขาด: ${missing.join(' · ')} (กรอกใน "คำนวณเงินเดือน" แล้วกดบันทึกข้อมูลพนักงาน)`, type: 'err' }); return; }
+    const sum = summarizeEmployeeYear(hist, year);
+    const be = String(Number(year) + 543);
+    const today = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const html = form50Html({
+      title: `50 ทวิ ${name} ปี ${be}`,
+      docs: [{
+        bookNo: be,
+        docNo: `1ก/${String(empNo).padStart(2, '0')}`,
+        payer: { name: biz.name, taxId: biz.tax_id, address: biz.address },
+        payee: { name, taxId: employee.id_card, address: employee.address },
+        pnd: '1', seq: String(empNo),
+        row: 1, dateText: be, paid: sum.income, tax: sum.tax, sso: sum.sso, cond: '1',
+        issueDateText: new Date(`${today}T00:00:00`).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+      }],
+    });
+    const w = window.open('', '_blank', 'width=820,height=960');
+    if (!w) { onMsg({ text: 'เบราว์เซอร์บล็อกป๊อปอัป — โปรดอนุญาต', type: 'err' }); return; }
+    w.document.write(html); w.document.close(); w.focus();
+    setTimeout(() => w.print(), 400);
+  }
+
   return (
     <div style={slipBox}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10, fontSize: 'var(--fs-sm)' }}>
+        {years.map((y) => {
+          const sum = summarizeEmployeeYear(hist, y);
+          return (
+            <button key={y} type="button" onClick={() => onPrintYear(y)} style={btnMini} title={`เงินได้ ${fmt(sum.income)} · ภาษีที่หัก ${fmt(sum.tax)} · ประกันสังคม ${fmt(sum.sso)}`}>
+              <Icon name="ti-file-invoice" /> พิมพ์ 50 ทวิ ปี {Number(y) + 543} ({sum.months.length} เดือน)
+            </button>
+          );
+        })}
+        <span style={{ color: 'var(--muted)' }}>รวมจากเดือนที่บันทึกในระบบเท่านั้น — เทียบกับ ภ.ง.ด.1ก ก่อนส่งให้พนักงาน</span>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8, marginBottom: 10, fontSize: 'var(--fs-sm)' }}>
         <div><div className="muted" style={{ color: 'var(--muted)' }}>จำนวนเดือน</div><strong>{hist.length} เดือน</strong></div>
         <div><div className="muted" style={{ color: 'var(--muted)' }}>รวมโอนพนักงาน</div><strong>{fmt(totalNet)} ฿</strong></div>

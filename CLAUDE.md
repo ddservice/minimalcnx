@@ -53,5 +53,5 @@ Topic rules in `.claude/rules/` and staff guide `LOYALTY-USER-GUIDE.md` still ap
 
 - `app/` — `login`, `dashboard`, `sales`, `expenses`, `opex`, `reports`, `analytics`, `loyalty` (+ `history`, `analytics`), `admin` (+ `loyalty`, `audit`, `documents`), `settings`, `export`
 - `components/` — `app-shell`, `sidebar`, `page-header`, `kpi`, `data-table`, `date-field`, `number-input`, `icon`
-- `lib/` — `supabase/*`, `session`, `access`, `perms`, `audit`, `config-store`, `config-cache`, `format`, `gp`, `opex`, `payslip`, `wht`, `documents`, `dashboard`, `rfm`, `loyalty-rewards`
+- `lib/` — `supabase/*`, `session`, `access`, `perms`, `audit`, `config-store`, `config-cache`, `format`, `gp`, `opex`, `payslip`, `wht`, `form50-template`, `documents`, `dashboard`, `rfm`, `loyalty-rewards`
 - `sql/` migrations · `scripts/` backup/restore/migrate · `deploy/` nginx + runbooks · `tests/` · `templates/` import xlsx
