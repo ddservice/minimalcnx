@@ -5,7 +5,7 @@ Maintained by Claude. This file is the **short core** loaded every session. Deta
 ## Project
 
 - **One name everywhere:** `minimalcnx` (folder, npm package, Docker image/container, VPS path `~/apps/minimalcnx`, GitHub `ddservice/minimalcnx`, domain `minimalcnx.ddserviceth.com`; staging `minimal.ddserviceth.com` hits the same container). Only legacy string kept on purpose: auth email realm `@marim69.internal` — changing it breaks logins.
-- **Stack:** Next.js 15 + React 19 + `@supabase/ssr`, plain JS, repo root is the app. Working copy: `Z:\independentz\Web\minimalcnx`, branch `main`. No second clone.
+- **Stack:** Next.js 15 + React 19 + `@supabase/ssr`, plain JS, repo root is the app. Working copies (same GitHub repo, branch `main`): `Z:\independentz\Web\minimalcnx` for the original shop and `Z:\independentz\Web\mamasaidno` for the second shop — kept apart only so each shop's chats and local notes stay separate. **`git pull --ff-only` before starting, commit + push when done**, in whichever folder. No other clones, no fork.
 - **Backend:** Supabase project `vrmaquzhehbfqlfvrsxj` (Singapore). The old Sydney project was deleted 2026-10-01 — no rollback target; recovery is the R2 backup.
 - Single shop for sales/expenses/OPEX/reports; multi-branch applies to loyalty only.
 - **One repo, several shops:** each shop is a separate install with its own Supabase project (`deploy/NEW-INSTANCE.md`). Shop name comes from `lib/brand.js` (`APP_NAME`) — never hardcode it. Numbers that belong to the original shop only are gated by `IS_ORIGINAL_SHOP`. Second shop: `mamasaidno` (different legal entity).

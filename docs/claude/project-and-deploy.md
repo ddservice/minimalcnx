@@ -20,6 +20,7 @@
 
 - Open Cursor / Claude from **that path** on every machine that has the `Z:` drive (or the same independentz sync). Do not use the old generic folder name `files`.
 - Do **not** keep a second divergent clone (e.g. under `Downloads\files`) — either work only on `Z:\…\minimalcnx`, or make any shortcut path a **junction** to `Z:\independentz\Web\minimalcnx`.
+  - **Exception since 2026-10-13: `Z:\independentz\Web\mamasaidno`** is a deliberate second working copy of this same repo (same `origin`, same `main`) used for the second shop's work, so its chats and `CLAUDE.local.md` do not mix with Minimal's. The rule above exists to stop two copies of the code drifting apart; that still holds — it is one codebase, pulled before every session and pushed after, never a fork or a renamed repo. A change made from either folder ships to **both** shops on their next deploy.
 - Before coding on a new machine: `git pull --ff-only origin main` then `npm install` if `package-lock.json` changed.
 - After every change: update **`CLAUDE.md`**, then **commit → push → deploy** (VPS). Prefer small, stable diffs; no drive-by refactors.
 
