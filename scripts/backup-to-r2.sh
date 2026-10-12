@@ -47,6 +47,12 @@ send_alert() {
       -d "{\"content\":\"[MinimalCNX Backup] $msg\"}" \
       "$BACKUP_ALERT_WEBHOOK" >/dev/null 2>&1 || true
   fi
+  # Telegram ใช้ webhook ข้างบนไม่ได้ — Bot API ต้องการ chat_id + text ไม่ใช่ {"content": ...} แบบ Discord
+  if [ -n "${BACKUP_TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${BACKUP_TELEGRAM_CHAT_ID:-}" ]; then
+    curl -s -m 5 "https://api.telegram.org/bot${BACKUP_TELEGRAM_BOT_TOKEN}/sendMessage" \
+      --data-urlencode "chat_id=${BACKUP_TELEGRAM_CHAT_ID}" \
+      --data-urlencode "text=[MinimalCNX Backup] $msg" >/dev/null 2>&1 || true
+  fi
 }
 send_heartbeat() {
   local stage="${1:-}"
@@ -65,6 +71,13 @@ fail() {
   send_heartbeat "fail"
   exit 1
 }
+# ทดสอบช่องทางแจ้งเตือนโดยไม่ต้องรอให้ backup ล้มจริง: bash scripts/backup-to-r2.sh --test-alert
+if [ "${1:-}" = "--test-alert" ]; then
+  rm -rf "$WORK"
+  send_alert "ทดสอบการแจ้งเตือน — ถ้าเห็นข้อความนี้แปลว่าตั้งค่าถูกต้อง"
+  log "ส่งข้อความทดสอบแล้ว — ถ้าไม่มีข้อความเข้า ให้ตรวจ token / chat id ใน .backup.env"
+  exit 0
+fi
 trap 'rm -rf "$WORK"' EXIT
 trap 'fail "ล้มเหลวที่บรรทัด $LINENO"' ERR
 

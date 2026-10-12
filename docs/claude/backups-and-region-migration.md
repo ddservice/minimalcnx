@@ -24,3 +24,5 @@
 - What does **not** come across and must be re-set by hand on the new project: Auth settings (**Confirm email must stay OFF** — users live on the unroutable `@marim69.internal` realm and would never be able to confirm; minimum password length 8 to match `MIN_PASSWORD_LENGTH`), Site URL, the anon/service_role keys, and `.backup.env`'s `SUPABASE_DB_URL` (forget that one and cron keeps backing up the abandoned project every night, silently). The JWT secret changes too, so everyone is logged out once — passwords still work.
 
 
+
+- **Telegram failure alerts (2026-10-12):** `backup-to-r2.sh` `send_alert()` now also posts to Telegram when `BACKUP_TELEGRAM_BOT_TOKEN` + `BACKUP_TELEGRAM_CHAT_ID` are set in `.backup.env`. The older claim above that `BACKUP_ALERT_WEBHOOK` covers "Discord/Slack/Telegram" was wrong: it posts a Discord-shaped `{"content": …}` body, which Telegram's Bot API rejects (it needs `chat_id` + `text`) and Slack ignores (it needs `text`). `bash scripts/backup-to-r2.sh --test-alert` sends a test message and exits without dumping. Setup steps: `deploy/BACKUP.md`. `sync-storage-to-r2.sh` still has no alerting of its own.
