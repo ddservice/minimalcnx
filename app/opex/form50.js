@@ -66,15 +66,22 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
     });
     return s;
   });
+  // ค่าที่อยู่ในฐานข้อมูลล่าสุด — ใช้บอกว่ามีอะไรยังไม่ได้บันทึก
+  const [savedJson, setSavedJson] = useState(() => JSON.stringify(state));
+  const dirty = JSON.stringify(state) !== savedJson;
 
   const set = (id, k, v) => setState((s) => ({ ...s, [id]: { ...s[id], [k]: v } }));
   const setPaid = (id, v) => setState((s) => ({ ...s, [id]: { ...s[id], paidDates: { ...s[id].paidDates, [monthLabel]: v } } }));
 
   async function onSave() {
     setMsg(null);
+    const snapshot = JSON.stringify(state);
     const res = await saveForm50Payees(state);
     setMsg({ text: res.message, type: res.status === 'ok' ? 'ok' : 'err' });
-    if (res.status === 'ok') startTransition(() => router.refresh());
+    if (res.status === 'ok') {
+      setSavedJson(snapshot);
+      startTransition(() => router.refresh());
+    }
   }
 
   function print(it) {
@@ -174,6 +181,17 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
     if (!w) { setMsg({ text: 'เบราว์เซอร์บล็อกป๊อปอัป — โปรดอนุญาต', type: 'err' }); return; }
     w.document.write(html); w.document.close(); w.focus();
     setTimeout(() => w.print(), 400);
+
+    // พิมพ์แล้วเก็บข้อมูลผู้รับเงินให้เลย — เดิมต้องกดปุ่ม "บันทึกข้อมูลผู้รับเงิน" แยกต่างหาก
+    // พอพิมพ์เสร็จแล้วปิดหน้า ข้อมูลหายทุกครั้ง ต้องพิมพ์ชื่อ/เลขบัตร/ที่อยู่ใหม่ทุกเดือน
+    // (เปิดหน้าต่างพิมพ์ก่อนแล้วค่อยบันทึก — ถ้า await ก่อน เบราว์เซอร์จะบล็อกป๊อปอัป)
+    if (canEdit && dirty) {
+      const snapshot = JSON.stringify(state);
+      saveForm50Payees(state).then((res) => {
+        if (res.status === 'ok') setSavedJson(snapshot);
+        else setMsg({ text: `พิมพ์แล้ว แต่บันทึกข้อมูลผู้รับเงินไม่สำเร็จ: ${res.message}`, type: 'err' });
+      }).catch(() => setMsg({ text: 'พิมพ์แล้ว แต่บันทึกข้อมูลผู้รับเงินไม่สำเร็จ — กด "บันทึกข้อมูลผู้รับเงิน" อีกครั้ง', type: 'err' }));
+    }
   }
 
   return (
@@ -229,9 +247,12 @@ export default function Form50({ amounts, payees, bizInfo, monthLabel, canEdit =
           );
         })}
         {canEdit ? (
+          <>
           <button type="button" className="btn btn-coffee" onClick={onSave} disabled={isPending}>
             <Icon name="ti-device-floppy" /> {isPending ? 'กำลังบันทึก...' : 'บันทึกข้อมูลผู้รับเงิน'}
           </button>
+          {dirty && <span style={{ marginLeft: 10, fontSize: 'var(--fs-sm)', color: 'var(--danger)' }}>มีข้อมูลที่ยังไม่ได้บันทึก</span>}
+          </>
         ) : (
           <p className="muted" style={{ fontSize: 'var(--fs-sm)' }}><Icon name="ti-lock" /> เฉพาะ Admin หรือ Co-Admin แก้ไขข้อมูลผู้รับเงินได้ (พิมพ์เอกสารได้ตามปกติ)</p>
         )}
