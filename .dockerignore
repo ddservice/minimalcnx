@@ -1,10 +1,21 @@
 node_modules
 .next
 .git
-.env
+.env*
 .env*.local
 npm-debug.log*
 README.md
 DEPLOY.md
 Dockerfile
 .dockerignore
+
+# Server-only credentials and local notes must never enter image layers.
+.deploy.env*
+.backup.env*
+.migrate.env*
+*.key
+**/*.key
+minimalcnx-migrate
+push_to_github.bat
+CLAUDE.local.md
+.claude/settings.local.json
