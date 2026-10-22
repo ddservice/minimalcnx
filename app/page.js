@@ -3,6 +3,6 @@ import { requireSession } from '../lib/session';
 import { homePathForRole } from '../lib/perms';
 
 export default async function Home() {
-  const { role } = await requireSession();
-  redirect(homePathForRole(role));
+  const { role, perms } = await requireSession();
+  redirect(homePathForRole(role, perms));
 }

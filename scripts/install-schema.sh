@@ -40,6 +40,8 @@ FILES=(
   add_documents.sql
   maintenance_audit_log.sql
   cleanup_legacy_tables.sql
+  add_expense_documents.sql
+  harden_sales_staff.sql
   new_instance_finalize.sql
 )
 

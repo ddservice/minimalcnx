@@ -5,6 +5,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '../../lib/supabase/server';
 import { homePathForRole } from '../../lib/perms';
 import { logAuditEvent } from '../../lib/audit';
+import { readBusinessConfig } from '../../lib/config-store';
 
 const ROLE_COOKIE = 'mm69_role';
 
@@ -83,7 +84,8 @@ export async function login(prevState, formData) {
   });
 
   await setRoleCookie(profile?.role);
-  redirect(homePathForRole(profile?.role));
+  const perms = await readBusinessConfig(supabase, 'role_perms', {});
+  redirect(homePathForRole(profile?.role, perms));
 }
 
 export async function signOutAction() {

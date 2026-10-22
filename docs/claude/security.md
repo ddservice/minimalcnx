@@ -22,3 +22,13 @@
 - Password minimum length is `MIN_PASSWORD_LENGTH` in `lib/auth-policy.js` (currently 8), enforced in `createUserAction`/`resetPasswordAction`. **Also set the same (or higher) minimum in Supabase Dashboard → Authentication → Providers → Email → Minimum password length** — the app-side check alone doesn't constrain Supabase Auth itself.
 
 
+
+## Sales staff boundary (2026-10-22)
+
+Requires **sql/harden_sales_staff.sql**, after all migrations that replace sales/OPEX/report RPCs. Staff can INSERT only the current Thai business date (statement_timestamp at Asia/Bangkok), cannot UPDATE/DELETE even through the SECURITY DEFINER sales RPC, and can SELECT only today's sales when permitted. The trigger recomputes coffee net revenue using existing GP rates, so direct API calls cannot supply a forged total. Disabled/missing profiles and anonymous sales RPC access are rejected. Admin/co-admin/manager retain their configured correction rights.
+
+fn_page_cap mirrors page levels for core sales/expenses/OPEX/report/config boundaries. Restrictive policies augment existing role ceilings; expense and sales triggers also run inside definer RPCs. Explicit entry guards protect get_monthly_summary, get_months_kpis and upsert_opex_item. The export route requires reports view access. Loyalty rules were left unchanged.
+
+Only role_perms and biz_info remain process-cached; personal config is user-scoped. Home/login/denied-page redirects use the first permitted page, or /no-access when none remain. In Settings, **Staff เฉพาะยอดขายวันนี้** stages a sales=create / all other tabs=none preset; Save applies it to every Staff account. This migration does not silently overwrite each shop's saved role matrix.
+
+Verification: npm test; scripts/verify-sales-access.cjs runs 24 real PostgreSQL/PGlite checks against an isolated fixture and the repository's sales RPC, including reapplying the migration, direct writes, protected RPCs, inactive users and manager corrections. PGlite is an optional external verification tool, not an app/test-suite dependency: set PGLITE_MODULE_PATH to its installed module directory, then node scripts/verify-sales-access.cjs. Live migration and account provisioning must be verified separately.

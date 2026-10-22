@@ -4,6 +4,7 @@ import { monthInputToLabel, currentMonthInput, OPEX_ALL_CATEGORIES, computeEffec
 import { readBusinessConfig } from '../../lib/config-store';
 import { logAuditEvent } from '../../lib/audit';
 import { APP_NAME, APP_SLUG } from '../../lib/brand';
+import { requireCap } from '../../lib/access';
 
 export const runtime = 'nodejs';
 
@@ -11,6 +12,8 @@ const money = { numFmt: '#,##0.00' };
 
 // GET /export?month=YYYY-MM  → ดาวน์โหลด .xlsx สรุปรายเดือน
 export async function GET(request) {
+  const access = await requireCap('/reports', 'view');
+  if (!access.allowed) return new Response(access.message, { status: 403 });
   const supabase = await createClient();
   const {
     data: { user },

@@ -7,7 +7,7 @@ import ExpenseList from './expense-list';
 import AccessBanner from '../../components/access-banner';
 import DateField from '../../components/date-field';
 
-export default function ExpensesClient({ date, initialCategory, allExisting, catalog, access = {}, canDelete = false }) {
+export default function ExpensesClient({ date, initialCategory, allExisting, catalog, access = {}, canDelete = false, attachments = [], canManageDocuments = false, attachmentsAvailable = false }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [category, setCategory] = useState(initialCategory);
@@ -37,7 +37,7 @@ export default function ExpensesClient({ date, initialCategory, allExisting, cat
           </div>
         </>
       )}
-      <ExpenseList rows={allExisting} date={date} canEdit={!!access.edit} canDelete={canDelete} />
+      <ExpenseList rows={allExisting} date={date} canEdit={!!access.edit} canDelete={canDelete} attachments={attachments} canManageDocuments={canManageDocuments} attachmentsAvailable={attachmentsAvailable} />
     </>
   );
 }

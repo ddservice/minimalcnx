@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { computeNetRevenue } from '../../lib/gp';
 import { requireCap } from '../../lib/access';
 import { canAccess, canDeleteOnPage } from '../../lib/perms';
+import { salesDateError } from '../../lib/sales-policy';
 
 const num = (v) => {
   const n = Number(v);
@@ -18,12 +19,12 @@ export async function saveSalesAction(input) {
   const { supabase } = acc;
 
   const date = String(input.date || '').trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return { status: 'error', message: 'วันที่ไม่ถูกต้อง' };
-  }
+  const dateError = salesDateError(acc.role, date);
+  if (dateError) return { status: 'error', message: dateError };
 
-  const { data: existing } = await supabase.from('sales_daily').select('id').eq('date', date).maybeSingle();
-  if (existing && !canAccess(acc.role, '/sales', 'edit', acc.perms)) {
+  const { data: existing, error: readError } = await supabase.from('sales_daily').select('id').eq('date', date).maybeSingle();
+  if (readError) return { status: 'error', message: 'ตรวจสอบยอดขายเดิมไม่สำเร็จ กรุณาลองใหม่' };
+  if (existing && (acc.role === 'staff' || !canAccess(acc.role, '/sales', 'edit', acc.perms))) {
     return { status: 'error', message: 'มีข้อมูลวันนี้แล้ว — สิทธิ์ของคุณกรอกวันใหม่ได้เท่านั้น ไม่สามารถแก้ไขของเดิม' };
   }
 

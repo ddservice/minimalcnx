@@ -7,7 +7,7 @@ import { DOC_BUCKET, DOC_CATEGORY_VALUES, MAX_DOC_MB, isValidDocPath } from '../
 
 const PATH = '/admin/documents';
 const DENY = { status: 'error', message: 'เฉพาะ Admin หรือ Co-Admin เท่านั้น' };
-const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ''));
+import { validBusinessDate as isDate } from '../../../lib/sales-policy';
 const clean = (v, max) => String(v || '').trim().slice(0, max);
 
 // defense-in-depth — ด่านจริงคือ RLS ของตาราง documents และ storage.objects (sql/add_documents.sql)
@@ -29,14 +29,23 @@ export async function createDocumentAction(input) {
   if (!DOC_CATEGORY_VALUES.includes(category)) return { status: 'error', message: 'หมวดเอกสารไม่ถูกต้อง' };
   const title = clean(input?.title, 200);
   if (!title) return { status: 'error', message: 'กรุณาระบุชื่อเอกสาร' };
+  for (const key of ['doc_date', 'expires_at']) {
+    if (input?.[key] && !isDate(input[key])) return { status: 'error', message: 'วันที่เอกสารไม่ถูกต้อง' };
+  }
   const storage_path = String(input?.storage_path || '');
   if (!isValidDocPath(storage_path, category)) return { status: 'error', message: 'ตำแหน่งไฟล์ไม่ถูกต้อง' };
   const size = Number(input?.size_bytes) || 0;
   if (size <= 0 || size > MAX_DOC_MB * 1024 * 1024) return { status: 'error', message: `ไฟล์ต้องไม่เกิน ${MAX_DOC_MB}MB` };
 
+  const expenseId = input?.expense_id || null;
+  if (expenseId) {
+    const { data: expense, error } = await supabase.from('expenses').select('id').eq('id', String(expenseId)).is('item_key', null).maybeSingle();
+    if (error || !expense) return { status: 'error', message: 'ไม่พบรายการรายจ่ายที่จะผูกเอกสาร' };
+  }
   const { data, error } = await supabase
     .from('documents')
     .insert({
+      ...(expenseId ? { expense_id: expenseId } : {}),
       category,
       title,
       owner_label: clean(input?.owner_label, 200) || null,
@@ -54,6 +63,7 @@ export async function createDocumentAction(input) {
   if (!data?.length) return { status: 'error', message: 'บันทึกไม่สำเร็จ — คุณไม่มีสิทธิ์เพิ่มเอกสาร' };
 
   revalidatePath(PATH);
+  revalidatePath('/expenses');
   return { status: 'ok', message: `เก็บเอกสาร "${title}" เรียบร้อย` };
 }
 
@@ -82,6 +92,26 @@ export async function getDocumentUrlAction(id) {
   return { status: 'ok', url: data.signedUrl };
 }
 
+export async function updateDocumentAction(id, input) {
+  const acc = await guard();
+  if (!acc) return DENY;
+  const title = clean(input?.title, 200);
+  if (!title) return { status: 'error', message: 'กรุณาระบุชื่อเอกสาร' };
+  for (const key of ['doc_date', 'expires_at']) {
+    if (input?.[key] && !isDate(input[key])) return { status: 'error', message: 'วันที่เอกสารไม่ถูกต้อง' };
+  }
+  const { data, error } = await acc.supabase.from('documents').update({
+    title, owner_label: clean(input?.owner_label, 200) || null,
+    doc_date: input?.doc_date || null, expires_at: input?.expires_at || null,
+    note: clean(input?.note, 1000) || null,
+  }).eq('id', String(id || '')).select('id');
+  if (error) return { status: 'error', message: error.message };
+  if (!data?.length) return { status: 'error', message: 'ไม่พบเอกสารหรือไม่มีสิทธิ์แก้ไข' };
+  revalidatePath(PATH);
+  revalidatePath('/expenses');
+  return { status: 'ok', message: 'แก้ไขข้อมูลเอกสารเรียบร้อย' };
+}
+
 export async function deleteDocumentAction(id) {
   const acc = await guard();
   if (!acc) return DENY;
@@ -103,5 +133,6 @@ export async function deleteDocumentAction(id) {
   if (!data?.length) return { status: 'error', message: 'ลบไม่สำเร็จ — คุณไม่มีสิทธิ์ลบเอกสาร' };
 
   revalidatePath(PATH);
+  revalidatePath('/expenses');
   return { status: 'ok', message: `ลบเอกสาร "${doc.title}" เรียบร้อย` };
 }

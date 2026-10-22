@@ -26,3 +26,7 @@
 
 
 - **Telegram failure alerts (2026-10-12):** `backup-to-r2.sh` `send_alert()` now also posts to Telegram when `BACKUP_TELEGRAM_BOT_TOKEN` + `BACKUP_TELEGRAM_CHAT_ID` are set in `.backup.env`. The older claim above that `BACKUP_ALERT_WEBHOOK` covers "Discord/Slack/Telegram" was wrong: it posts a Discord-shaped `{"content": …}` body, which Telegram's Bot API rejects (it needs `chat_id` + `text`) and Slack ignores (it needs `text`). `bash scripts/backup-to-r2.sh --test-alert` sends a test message and exits without dumping. Setup steps: `deploy/BACKUP.md`. `sync-storage-to-r2.sh` still has no alerting of its own.
+
+## Status clarification (2026-10-22)
+
+CLAUDE.local.md records a successful restore drill against Singapore on 2026-09-09 (sales 250 / expenses 474 / profiles 3 / config 11); next quarterly drill is December 2026. The earlier optional-later note saying the latest drill was undocumented is stale. New expense receipts reuse the private documents bucket and its existing encrypted sync; metadata is included in the DB dump. Retention durations still require the owner's policy decision. Deleting a document still leaves its encrypted R2 copy: erasure requests must identify that object and be handled separately, without deleting unrelated backups. No automatic erasure policy is enabled.

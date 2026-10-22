@@ -30,7 +30,7 @@ Topic rules in `.claude/rules/` and staff guide `LOYALTY-USER-GUIDE.md` still ap
 - **The security boundary is Supabase RLS + `SECURITY DEFINER` RPCs.** Server Action checks (`requireCap()`, `requireAdmin()`) and `lib/perms.js` are defense-in-depth. Never put `service_role` in client code or `NEXT_PUBLIC_*`.
 - **Recompute money, payslips and points server-side.** Never trust client totals. One payroll formula: `lib/payslip.js` `computePayslip()`.
 - **RLS `UPDATE` failures are silent (0 rows, no error).** Mutations must `.select()` and treat an empty result as a permission error. Every `business_config` write goes through `lib/config-store.js` `upsertBusinessConfig()`; reads through `readBusinessConfig()`.
-- **Caching:** React `cache()` (per request) is fine for user-scoped data. The process-wide cache (`lib/config-cache.js`) may hold `business_config` only — never `sales_daily` / `expenses` / `customers` / `audit_log`.
+- **Caching:** React `cache()` (per request) is fine for user-scoped data. The process-wide cache (`lib/config-cache.js`) may hold only `business_config.role_perms` and `biz_info`; other config keys now have user-scoped RLS — never `sales_daily` / `expenses` / `customers` / `audit_log`.
 - **`requireSession()` uses `getSession()`, not `getUser()`** — middleware already verified. Changing it back is a regression.
 - **Inputs:** money/quantity/points → `components/number-input.js` (`NumberInput`), never `type="number"`. Dates/months → `components/date-field.js`. Person names → `stripDigits()`. ID/bank/tax numbers → `digitsOnly()`.
 - **Styling:** tokens from `app/globals.css` only — no numeric `fontSize` or `borderRadius` in components. Icons via `<Icon name="ti-xxx" />`, no webfont/CDN.

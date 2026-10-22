@@ -129,7 +129,7 @@ export async function deleteExpenseAction(id) {
 
   // .select() เพื่อเช็คว่าลบได้จริง — RLS ที่บล็อกจะคืน 0 แถว (ไม่ error)
   const { data, error } = await supabase.from('expenses').delete().eq('id', String(id)).select('id');
-  if (error) return { status: 'error', message: error.message };
+  if (error) return { status: 'error', message: error.code === '23503' ? 'รายการนี้มีใบเสร็จแนบอยู่ ให้ผู้ดูแลตรวจและลบเอกสารที่ผูกไว้ก่อนลบรายจ่าย' : error.message };
   if (!data?.length) return { status: 'error', message: 'ลบไม่สำเร็จ — ต้องมีสิทธิ์ admin หรือ manager' };
 
   refresh();

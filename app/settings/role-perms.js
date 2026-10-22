@@ -12,6 +12,7 @@ import {
   parseStoredLevel,
   recommendedPerms,
   isLoyaltyOnlyRole,
+  salesOnlyStaffPerms,
 } from '../../lib/perms';
 import { saveRolePerms } from './actions';
 
@@ -63,6 +64,10 @@ export default function RolePerms({ perms }) {
           ))}
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+          <button type="button" className="btn btn-coffee" disabled={isPending} onClick={() => {
+            setState(salesOnlyStaffPerms(state));
+            setMsg({ text: 'ตั้ง Staff ให้เห็นเฉพาะยอดขายแล้ว กดบันทึกสิทธิ์เพื่อใช้งาน · มีผลกับทุกบัญชี Staff', type: 'ok' });
+          }}>Staff เฉพาะยอดขายวันนี้</button>
           <button type="button" className="btn btn-ghost" onClick={applyRecommended} disabled={isPending} style={{ padding: '8px 12px', fontSize: 'var(--fs-base)' }}>
             ใช้ค่าแนะนำ (Staff กรอก / Manager แก้ไข)
           </button>

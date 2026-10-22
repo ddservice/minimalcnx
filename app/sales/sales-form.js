@@ -1,7 +1,7 @@
 'use client';
 import Icon from '../../components/icon';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { gpNet, computeNetRevenue } from '../../lib/gp';
 import { createClient } from '../../lib/supabase/client';
@@ -17,7 +17,7 @@ const MAX_EVIDENCE_MB = 5;
 const fmt = (n) =>
   Number(n || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
 
-export default function SalesForm({ date, existing, defaultCoffeePrice = 55, access = {}, canDelete = false }) {
+export default function SalesForm({ date, existing, defaultCoffeePrice = 55, access = {}, canDelete = false, todayOnly = false }) {
   const canCreate = !!access.create;
   const canEdit = !!access.edit;
   const hasExisting = !!existing;
@@ -26,6 +26,9 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [msg, setMsg] = useState(null); // { text, type }
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const savingRef = useRef(false);
 
   // coffee_price ไม่ได้เก็บใน DB — back-compute จาก free_cup_cost/free_cups ถ้ามี, ไม่งั้นใช้ค่าตั้งต้นจากตั้งค่า
   const initPrice =
@@ -59,6 +62,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
       setEvidenceStatus({ text: `ไฟล์ใหญ่เกิน ${MAX_EVIDENCE_MB}MB`, type: 'err' });
       return;
     }
+    setUploading(true);
     setEvidenceStatus({ text: 'กำลังอัปโหลด...', type: '' });
     try {
       const supabase = createClient();
@@ -76,7 +80,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
       const m = err?.message || String(err);
       const hint = /bucket/i.test(m) ? ' (ยังไม่ได้รัน sql/add_free_cup_actual_cost.sql ใน Supabase)' : '';
       setEvidenceStatus({ text: `อัปโหลดไม่สำเร็จ: ${m}${hint}`, type: 'err' });
-    }
+    } finally { setUploading(false); }
   }
 
   // ── live preview ──
@@ -98,23 +102,30 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
 
   async function onSubmit(e) {
     e.preventDefault();
+    if (savingRef.current || uploading || !canSave) return;
+    savingRef.current = true;
+    setSaving(true);
     setMsg(null);
-    const res = await saveSalesAction({
-      date,
-      total_cups: f.total_cups,
-      kshop_amount: f.kshop_amount,
-      cash_amount: f.cash_amount,
-      shopee_before_gp: f.shopee_before_gp,
-      grab_before_gp: f.grab_before_gp,
-      lineman_before_gp: f.lineman_before_gp,
-      pastry_pieces: f.pastry_pieces,
-      pastry_revenue: f.pastry_revenue,
-      free_cups: f.free_cups,
-      free_cup_cost: freeCupCost,
-      free_cup_evidence_url: evidenceUrl,
-    });
-    setMsg({ text: res.message, type: res.status === 'ok' ? 'ok' : 'err' });
-    if (res.status === 'ok') startTransition(() => router.refresh());
+    try {
+      const res = await saveSalesAction({
+        date,
+        total_cups: f.total_cups,
+        kshop_amount: f.kshop_amount,
+        cash_amount: f.cash_amount,
+        shopee_before_gp: f.shopee_before_gp,
+        grab_before_gp: f.grab_before_gp,
+        lineman_before_gp: f.lineman_before_gp,
+        pastry_pieces: f.pastry_pieces,
+        pastry_revenue: f.pastry_revenue,
+        free_cups: f.free_cups,
+        free_cup_cost: freeCupCost,
+        free_cup_evidence_url: evidenceUrl,
+      });
+      setMsg({ text: res.message, type: res.status === 'ok' ? 'ok' : 'err' });
+      if (res.status === 'ok') startTransition(() => router.refresh());
+    } catch {
+      setMsg({ text: 'บันทึกไม่สำเร็จ กรุณาตรวจยอดที่บันทึกแล้วก่อนลองใหม่ ข้อมูลที่กรอกยังอยู่', type: 'err' });
+    } finally { savingRef.current = false; setSaving(false); }
   }
 
   async function onDelete() {
@@ -135,7 +146,10 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
       {/* วันที่ */}
       <div style={card}>
         <label style={lbl}>วันที่</label>
-        <DateField value={date} loading={isPending} onChange={onDateChange} />
+        <DateField value={date} loading={isPending} onChange={onDateChange} disabled={todayOnly} min={todayOnly ? date : undefined} max={todayOnly ? date : undefined} />
+        {todayOnly && <p className="muted" style={{ fontSize: 'var(--fs-sm)' }}>
+          กรอกได้เฉพาะวันนี้ตามเวลาไทย · {existing ? 'บันทึกแล้ว หากต้องการแก้ไขให้แจ้งผู้จัดการ' : 'ตรวจยอดให้ครบก่อนบันทึก เมื่อบันทึกแล้วให้ผู้จัดการเป็นผู้แก้ไข'}
+        </p>}
         {existing && canEdit && (
           <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginLeft: 8 }}>
             (มีข้อมูลแล้ว — บันทึกจะทับของเดิม)
@@ -143,7 +157,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
         )}
       </div>
 
-      <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minInlineSize: 0 }}>
+      <fieldset disabled={readOnly || saving || isPending || uploading} style={{ border: 0, padding: 0, margin: 0, minInlineSize: 0 }}>
 
       {/* ยอดขายหน้าร้าน */}
       <div style={card}>
@@ -212,7 +226,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
             )}
             {canSave && (
               <button type="submit" style={btn} disabled={isPending}>
-                {isPending ? 'กำลังบันทึก...' : existing ? 'อัปเดตยอดขาย' : 'บันทึกยอดขาย'}
+                {saving || isPending ? 'กำลังบันทึก...' : existing ? 'อัปเดตยอดขาย' : 'บันทึกยอดขาย'}
               </button>
             )}
           </div>

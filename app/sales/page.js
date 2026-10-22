@@ -5,16 +5,16 @@ import SalesForm from './sales-form';
 import { canDeleteOnPage } from '../../lib/perms';
 import { readBusinessConfig } from '../../lib/config-store';
 
-function todayISO() {
-  const now = new Date(Date.now() + 7 * 60 * 60 * 1000);
-  return now.toISOString().slice(0, 10);
-}
+import { redirect } from 'next/navigation';
+import { bangkokToday } from '../../lib/sales-policy';
 
 export default async function SalesPage({ searchParams }) {
   const { supabase, role, name, isAdmin, allowed, caps, perms } = await requirePage('/sales');
 
   const sp = await searchParams;
-  const date = sp?.date && /^\d{4}-\d{2}-\d{2}$/.test(sp.date) ? sp.date : todayISO();
+  const today = bangkokToday();
+  if (role === 'staff' && sp?.date && sp.date !== today) redirect('/sales');
+  const date = sp?.date && /^\d{4}-\d{2}-\d{2}$/.test(sp.date) ? sp.date : today;
 
   const [{ data: existing }, bizInfo] = await Promise.all([
     supabase.from('sales_daily').select('*').eq('date', date).maybeSingle(),
@@ -32,7 +32,8 @@ export default async function SalesPage({ searchParams }) {
         date={date}
         existing={existing || null}
         defaultCoffeePrice={defaultCoffeePrice}
-        access={caps['/sales']}
+        access={{ ...caps['/sales'], edit: role !== 'staff' && caps['/sales'].edit }}
+        todayOnly={role === 'staff'}
         canDelete={canDeleteOnPage(role, '/sales', perms)}
       />
     </AppShell>

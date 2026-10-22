@@ -6,7 +6,7 @@ import Icon from '../../../components/icon';
 import DateField from '../../../components/date-field';
 import { createClient } from '../../../lib/supabase/client';
 import { DOC_BUCKET, DOC_CATEGORIES, DOC_ACCEPT, MAX_DOC_MB, docExt, expiryStatus } from '../../../lib/documents';
-import { createDocumentAction, getDocumentUrlAction, deleteDocumentAction } from './actions';
+import { createDocumentAction, getDocumentUrlAction, deleteDocumentAction, updateDocumentAction } from './actions';
 
 const CAT_LABEL = Object.fromEntries(DOC_CATEGORIES.map((c) => [c.value, c.label]));
 const thaiDate = (iso) => (iso ? new Date(`${iso}T00:00:00`).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '');
@@ -18,6 +18,7 @@ export default function DocumentsClient({ docs, today }) {
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState(emptyForm());
   const [file, setFile] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const fileRef = useRef(null);
@@ -36,6 +37,21 @@ export default function DocumentsClient({ docs, today }) {
     if (savingRef.current) return;
     setMsg(null);
     if (!form.title.trim()) { setMsg({ text: 'กรุณาระบุชื่อเอกสาร', type: 'err' }); return; }
+    if (editingId) {
+      savingRef.current = true;
+      setSaving(true);
+      try {
+        const res = await updateDocumentAction(editingId, form);
+        setMsg({ text: res.message, type: res.status === 'ok' ? 'ok' : 'err' });
+        if (res.status === 'ok') {
+          setEditingId(null);
+          setForm(emptyForm(form.category));
+          startTransition(() => router.refresh());
+        }
+      } catch { setMsg({ text: 'บันทึกไม่สำเร็จ กรุณาลองใหม่ ข้อมูลที่กรอกยังอยู่', type: 'err' }); }
+      finally { savingRef.current = false; setSaving(false); }
+      return;
+    }
     if (!file) { setMsg({ text: 'กรุณาเลือกไฟล์', type: 'err' }); return; }
     const ext = docExt(file.name);
     if (!ext) { setMsg({ text: 'รับเฉพาะไฟล์รูป (JPG / PNG / WEBP / HEIC) หรือ PDF', type: 'err' }); return; }
@@ -130,12 +146,12 @@ export default function DocumentsClient({ docs, today }) {
       )}
 
       <form onSubmit={onSubmit} className="card">
-        <div className="card-head"><Icon name="ti-upload" /><h2>เก็บเอกสารใหม่</h2></div>
+        <div className="card-head"><Icon name="ti-upload" /><h2>{editingId ? 'แก้ไขข้อมูลเอกสาร' : 'เก็บเอกสารใหม่'}</h2></div>
         <div className="card-body">
           <div style={grid}>
             <div>
               <label style={lbl}>หมวด</label>
-              <select className="input" value={form.category} onChange={(e) => set('category', e.target.value)}>
+              <select className="input" disabled={!!editingId || saving} value={form.category} onChange={(e) => set('category', e.target.value)}>
                 {DOC_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
@@ -160,14 +176,17 @@ export default function DocumentsClient({ docs, today }) {
               <input className="input" value={form.note} onChange={(e) => set('note', e.target.value)} maxLength={1000} />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={lbl}>ไฟล์ * (รูปหรือ PDF ไม่เกิน {MAX_DOC_MB}MB)</label>
-              <input ref={fileRef} className="input" type="file" accept={DOC_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] || null)} />
+              {editingId ? <p className="muted">แก้ไขรายละเอียดได้โดยคงไฟล์เดิม หากต้องการไฟล์ฉบับใหม่ให้เก็บเป็นเอกสารใหม่</p> : <>
+                <label style={lbl}>ไฟล์ * (รูปหรือ PDF ไม่เกิน {MAX_DOC_MB}MB)</label>
+                <input ref={fileRef} className="input" type="file" accept={DOC_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] || null)} />
+              </>}
             </div>
           </div>
           <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <button type="submit" className="btn btn-coffee" disabled={saving || isPending}>
-              <Icon name="ti-upload" /> {saving ? 'กำลังอัปโหลด...' : 'เก็บเอกสาร'}
+              <Icon name="ti-upload" /> {saving ? 'กำลังบันทึก...' : editingId ? 'บันทึกการแก้ไข' : 'เก็บเอกสาร'}
             </button>
+            {editingId && <button type="button" className="btn btn-ghost" disabled={saving} onClick={() => { setEditingId(null); setForm(emptyForm()); setFile(null); setMsg(null); }}>ยกเลิกการแก้ไข</button>}
             {msg && <span style={{ fontSize: 'var(--fs-md)', color: msg.type === 'ok' ? 'var(--success)' : 'var(--danger)' }}>{msg.text}</span>}
           </div>
         </div>
@@ -207,6 +226,12 @@ export default function DocumentsClient({ docs, today }) {
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
+                      <button type="button" className="btn btn-ghost" style={pill} disabled={busyId === d.id || saving} onClick={() => {
+                        setEditingId(d.id);
+                        setForm({ category: d.category, title: d.title, owner_label: d.owner_label || '', doc_date: d.doc_date || '', expires_at: d.expires_at || '', note: d.note || '' });
+                        setFile(null); setMsg(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}>แก้ไข</button>
                       <button type="button" className="btn btn-ghost" style={pill} disabled={busyId === d.id} onClick={() => onOpen(d)}>เปิดดู</button>
                       <button type="button" className="btn btn-ghost" style={{ ...pill, color: 'var(--danger)' }} disabled={busyId === d.id} onClick={() => onDelete(d)}>
                         <Icon name="ti-trash" /> ลบ

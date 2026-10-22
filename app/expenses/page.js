@@ -26,6 +26,16 @@ export default async function ExpensesPage({ searchParams }) {
     .eq('date', date)
     .order('logged_at', { ascending: true });
 
+  const canManageDocuments = role === 'admin' || role === 'co-admin';
+  let attachments = [];
+  let attachmentsAvailable = false;
+  if (canManageDocuments) {
+    const { data, error } = await supabase.from('documents')
+      .select('id, expense_id, title, file_name').in('expense_id', (existing || []).map(r => r.id).concat('00000000-0000-0000-0000-000000000000'));
+    attachments = data || [];
+    attachmentsAvailable = !error;
+  }
+
   // catalog: รายการล่าสุดต่อ (หมวด+ชื่อ) พร้อมหน่วย/ราคา — จำหน่วยของสินค้าเดิม
   const { data: recent } = await supabase
     .from('expenses')
@@ -67,6 +77,9 @@ export default async function ExpensesPage({ searchParams }) {
         allExisting={existing || []}
         catalog={catalog}
         access={caps['/expenses']}
+        attachments={attachments}
+        canManageDocuments={canManageDocuments}
+        attachmentsAvailable={attachmentsAvailable}
         canDelete={canDeleteOnPage(role, '/expenses', perms)}
       />
     </AppShell>

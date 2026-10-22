@@ -4,6 +4,11 @@
 -- true = รันแล้ว / false = ยังไม่ได้รัน
 -- ================================================================
 select
+  exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'documents' and column_name = 'expense_id') as add_expense_documents,
+  (exists (select 1 from pg_trigger where tgname = 'tr_sales_day_guard')
+    and (select count(*) = 3 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.proname in ('get_monthly_summary','get_months_kpis','upsert_opex_item')
+        and p.prosrc like '%-- page_cap_boundary%')) as harden_sales_staff,
   exists (select 1 from pg_trigger where tgname = 'tr_profiles_guard_self_update')          as harden_security,
   (select column_name is not null from information_schema.columns
      where table_schema = 'public' and table_name = 'audit_log'

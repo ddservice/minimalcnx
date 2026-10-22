@@ -6,11 +6,12 @@ import { fmtMoney } from '../../lib/format';
 import NumberInput from '../../components/number-input';
 import { PAYMENT_METHODS, EXPENSE_CATEGORIES } from '../../lib/expense-categories';
 import { updateExpenseAction, deleteExpenseAction } from './actions';
+import ExpenseDocuments from './expense-documents';
 
 const CATEGORY_LABEL = {};
 EXPENSE_CATEGORIES.forEach((c) => { CATEGORY_LABEL[c.value] = c.label; });
 
-export default function ExpenseList({ rows, date, canEdit = false, canDelete = false }) {
+export default function ExpenseList({ rows, date, canEdit = false, canDelete = false, attachments = [], canManageDocuments = false, attachmentsAvailable = false }) {
   const [msg, setMsg] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
@@ -33,7 +34,7 @@ export default function ExpenseList({ rows, date, canEdit = false, canDelete = f
               editingId === r.id ? (
                 <EditRow key={r.id} row={r} onDone={() => setEditingId(null)} onMsg={setMsg} />
               ) : (
-                <ViewRow key={r.id} row={r} onEdit={canEdit ? () => setEditingId(r.id) : null} onMsg={setMsg} canDelete={canDelete} />
+                <ViewRow key={r.id} row={r} onEdit={canEdit ? () => setEditingId(r.id) : null} onMsg={setMsg} canDelete={canDelete} docs={attachments.filter(d => d.expense_id === r.id)} canManageDocuments={canManageDocuments} attachmentsAvailable={attachmentsAvailable} />
               )
             )}
           </div>
@@ -46,7 +47,7 @@ export default function ExpenseList({ rows, date, canEdit = false, canDelete = f
   );
 }
 
-function ViewRow({ row, onEdit, onMsg, canDelete }) {
+function ViewRow({ row, onEdit, onMsg, canDelete, docs, canManageDocuments, attachmentsAvailable }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -74,6 +75,7 @@ function ViewRow({ row, onEdit, onMsg, canDelete }) {
         {onEdit && <button type="button" style={btnGhost} onClick={onEdit}>แก้ไข</button>}
         {canDelete && <button type="button" style={btnDanger} onClick={onDelete} disabled={isPending}>ลบ</button>}
       </div>
+      {canManageDocuments && <ExpenseDocuments expense={row} docs={docs} available={attachmentsAvailable} />}
     </div>
   );
 }
