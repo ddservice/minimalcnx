@@ -148,7 +148,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
         <label style={lbl}>วันที่</label>
         <DateField value={date} loading={isPending} onChange={onDateChange} disabled={todayOnly} min={todayOnly ? date : undefined} max={todayOnly ? date : undefined} />
         {todayOnly && <p className="muted" style={{ fontSize: 'var(--fs-sm)' }}>
-          กรอกได้เฉพาะวันนี้ตามเวลาไทย · {existing ? 'บันทึกแล้ว หากต้องการแก้ไขให้แจ้งผู้จัดการ' : 'ตรวจยอดให้ครบก่อนบันทึก เมื่อบันทึกแล้วให้ผู้จัดการเป็นผู้แก้ไข'}
+          กรอกได้เฉพาะวันนี้ตามเวลาไทย · {canEdit ? 'แก้ยอดของวันนี้ได้จนถึงเที่ยงคืน เมื่อข้ามวันให้ผู้จัดการเป็นผู้แก้ไข' : existing ? 'บันทึกแล้ว หากต้องการแก้ไขให้แจ้งผู้จัดการ' : 'ตรวจยอดให้ครบก่อนบันทึก เมื่อบันทึกแล้วให้ผู้จัดการเป็นผู้แก้ไข'}
         </p>}
         {existing && canEdit && (
           <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)', marginLeft: 8 }}>

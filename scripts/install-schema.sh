@@ -42,6 +42,7 @@ FILES=(
   cleanup_legacy_tables.sql
   add_expense_documents.sql
   harden_sales_staff.sql
+  add_sales_day_edit_grants.sql
   new_instance_finalize.sql
 )
 

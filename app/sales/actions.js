@@ -3,8 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { computeNetRevenue } from '../../lib/gp';
 import { requireCap } from '../../lib/access';
-import { canAccess, canDeleteOnPage } from '../../lib/perms';
-import { salesDateError } from '../../lib/sales-policy';
+import { canDeleteOnPage, capsFor } from '../../lib/perms';
+import { salesDateError, canEditExistingSales } from '../../lib/sales-policy';
 
 const num = (v) => {
   const n = Number(v);
@@ -24,7 +24,9 @@ export async function saveSalesAction(input) {
 
   const { data: existing, error: readError } = await supabase.from('sales_daily').select('id').eq('date', date).maybeSingle();
   if (readError) return { status: 'error', message: 'ตรวจสอบยอดขายเดิมไม่สำเร็จ กรุณาลองใหม่' };
-  if (existing && (acc.role === 'staff' || !canAccess(acc.role, '/sales', 'edit', acc.perms))) {
+  const { data: todayEditGranted } = acc.role === 'staff' && existing
+    ? await supabase.rpc('fn_can_edit_sales_today') : { data: false };
+  if (existing && !canEditExistingSales(acc.role, capsFor('/sales', acc.role, acc.perms), todayEditGranted)) {
     return { status: 'error', message: 'มีข้อมูลวันนี้แล้ว — สิทธิ์ของคุณกรอกวันใหม่ได้เท่านั้น ไม่สามารถแก้ไขของเดิม' };
   }
 

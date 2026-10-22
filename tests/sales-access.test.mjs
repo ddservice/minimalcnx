@@ -27,3 +27,14 @@ test('sales-only preset reaches sales; all denied reaches no-access without loop
   assert.equal(homePathForRole('admin',perms),'/dashboard');
   assert.equal(homePathForRole('loyalty_staff',perms),'/loyalty');
 });
+
+
+test('same-day edit requires the individual grant AND sales create access', async () => {
+  const { canEditExistingSales } = await import('../lib/sales-policy.js');
+  assert.equal(canEditExistingSales('staff', { create: true, edit: true }, false), false);
+  assert.equal(canEditExistingSales('staff', { create: true, edit: false }, true), true);
+  assert.equal(canEditExistingSales('staff', { create: false, edit: true }, true), false);
+  assert.equal(canEditExistingSales('staff', { create: true }, null), false);
+  assert.equal(canEditExistingSales('manager', { create: true, edit: true }, false), true);
+  assert.equal(canEditExistingSales('manager', { create: true, edit: false }, true), false);
+});

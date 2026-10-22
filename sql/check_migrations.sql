@@ -4,6 +4,9 @@
 -- true = รันแล้ว / false = ยังไม่ได้รัน
 -- ================================================================
 select
+  (to_regclass('public.sales_day_edit_grants') is not null and exists
+    (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public'
+      and p.proname = 'fn_guard_sales_day' and p.prosrc like '%fn_can_edit_sales_today%')) as add_sales_day_edit_grants,
   exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'documents' and column_name = 'expense_id') as add_expense_documents,
   (exists (select 1 from pg_trigger where tgname = 'tr_sales_day_guard')
     and (select count(*) = 3 from pg_proc p join pg_namespace n on n.oid = p.pronamespace

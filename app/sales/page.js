@@ -6,7 +6,7 @@ import { canDeleteOnPage } from '../../lib/perms';
 import { readBusinessConfig } from '../../lib/config-store';
 
 import { redirect } from 'next/navigation';
-import { bangkokToday } from '../../lib/sales-policy';
+import { bangkokToday, canEditExistingSales } from '../../lib/sales-policy';
 
 export default async function SalesPage({ searchParams }) {
   const { supabase, role, name, isAdmin, allowed, caps, perms } = await requirePage('/sales');
@@ -16,9 +16,10 @@ export default async function SalesPage({ searchParams }) {
   if (role === 'staff' && sp?.date && sp.date !== today) redirect('/sales');
   const date = sp?.date && /^\d{4}-\d{2}-\d{2}$/.test(sp.date) ? sp.date : today;
 
-  const [{ data: existing }, bizInfo] = await Promise.all([
+  const [{ data: existing }, bizInfo, { data: todayEditGranted }] = await Promise.all([
     supabase.from('sales_daily').select('*').eq('date', date).maybeSingle(),
     readBusinessConfig(supabase, 'biz_info', {}),
+    role === 'staff' ? supabase.rpc('fn_can_edit_sales_today') : Promise.resolve({ data: false }),
   ]);
   const defaultCoffeePrice = Number(bizInfo?.free_cup_cost) || 55;
 
@@ -32,7 +33,7 @@ export default async function SalesPage({ searchParams }) {
         date={date}
         existing={existing || null}
         defaultCoffeePrice={defaultCoffeePrice}
-        access={{ ...caps['/sales'], edit: role !== 'staff' && caps['/sales'].edit }}
+        access={{ ...caps['/sales'], edit: canEditExistingSales(role, caps['/sales'], todayEditGranted) }}
         todayOnly={role === 'staff'}
         canDelete={canDeleteOnPage(role, '/sales', perms)}
       />
