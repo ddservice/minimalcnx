@@ -73,4 +73,8 @@ select
   -- แยกดูเฉพาะ index ใบเสร็จซ้ำ: ถ้า harden_loyalty_integrity = true แต่ช่องนี้ = false
   -- แปลว่าตอนรันมีใบเสร็จซ้ำค้างอยู่ ไฟล์เลยข้ามการสร้าง index ให้ (ดู NOTICE ตอนรัน)
   exists (select 1 from pg_indexes where schemaname = 'public'
-            and indexname = 'uidx_point_tx_earn_receipt')                                    as receipt_unique_index;
+            and indexname = 'uidx_point_tx_earn_receipt')                                    as receipt_unique_index,
+  (to_regclass('public.bakery_invoices') is not null
+    and to_regclass('public.bakery_pos_imports') is not null
+    and to_regclass('public.bakery_item_mappings') is not null
+    and exists(select 1 from information_schema.columns where table_schema='public' and table_name='expenses' and column_name='bakery_invoice_id')) as add_bakery_cost_review;

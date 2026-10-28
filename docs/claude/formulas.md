@@ -1,5 +1,11 @@
 # Domain formulas (moved verbatim from CLAUDE.md 2026-10-12)
 
+## Bakery cost review (2026-10-28)
+
+- Gross line = round(quantity × printed unit price, 2). Net invoice = round(sum(gross lines) × (1 − invoice discount percent/100), 2). Discount is explicit (0 is valid); no fixed Queen rate and no automatic VAT. Allocate satang rounding residue to the last line so line costs equal the invoice net. PostgreSQL independently validates and recomputes official total; JS previews the same formula.
+- Weighted unit cost = sum(net line costs) / sum(purchased units), by supplier+item within the selected month. Estimated COGS = round(POS quantity × **confirmed** purchase-units-per-sale factor × weighted cost, 2). Estimated profit = after-discount POS item revenue − estimated COGS, before channel fees, OPEX, waste and inventory adjustments. Missing mapping/cost is unavailable, not 0. Zero-revenue sales stay unresolved. Purchases are not COGS; sales-minus-monthly-purchases is labeled separately.
+- Existing net revenue, coffee/cups, GP, VAT and payroll formulas are unchanged. Photos show January 25% and February 27%; use the actual document rate, not its folder/payment month.
+
 ## Domain formulas (keep identical to legacy)
 
 - Delivery GP rates: shopee 0.3424, grab/lineman 0.321. `net = raw × (1 − rate)`. (`lib/gp.js`)

@@ -1,0 +1,21 @@
+.bakery-review { display: grid; gap: 16px; }
+.bakery-review h2 { font-size: var(--fs-xl); margin: 0 0 12px; }
+.bakery-review h3 { font-size: var(--fs-lg); margin: 0 0 8px; }
+.bakery-heading, .bakery-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.bakery-heading p { flex: 1 1 280px; }
+.bakery-review label { display: grid; gap: 6px; font-size: var(--fs-base); margin: 8px 0; }
+.bakery-review input:not([type=checkbox]), .bakery-review select { width: 100%; min-width: 0; padding: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--color-text); border-radius: var(--radius-sm); font: inherit; font-size: var(--fs-lg); }
+.bakery-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+.bakery-line { display: grid; grid-template-columns: minmax(150px, 2fr) repeat(3, minmax(90px, 1fr)) auto; gap: 12px; align-items: end; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.bakery-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 16px; }
+.bakery-saved { border-top: 1px solid var(--border); padding: 16px 0; }
+.bakery-review .bakery-check { display: flex; align-items: flex-start; gap: 8px; }
+.bakery-check input { margin-top: 4px; }
+.bakery-scroll { overflow: auto; max-height: 520px; }
+.bakery-scroll table { width: 100%; border-collapse: collapse; font-size: var(--fs-base); }
+.bakery-scroll th, .bakery-scroll td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.bakery-scroll th { position: sticky; top: 0; background: var(--surface); }
+.bakery-error { color: var(--danger); }
+.bakery-success { color: var(--color-primary); }
+.bakery-review button { min-height: 44px; }
+@media (max-width: 720px) { .bakery-line { grid-template-columns: 1fr 1fr; } .bakery-line label:first-child { grid-column: 1 / -1; } }

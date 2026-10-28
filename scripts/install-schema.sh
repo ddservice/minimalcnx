@@ -43,6 +43,7 @@ FILES=(
   add_expense_documents.sql
   harden_sales_staff.sql
   add_sales_day_edit_grants.sql
+  add_bakery_cost_review.sql
   new_instance_finalize.sql
 )
 

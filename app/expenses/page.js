@@ -4,6 +4,7 @@ import PageHeader from '../../components/page-header';
 import { EXPENSE_CATEGORY_VALUES } from '../../lib/expense-categories';
 import { canDeleteOnPage } from '../../lib/perms';
 import ExpensesClient from './expenses-client';
+import Link from 'next/link';
 
 function todayISO() {
   const now = new Date(Date.now() + 7 * 60 * 60 * 1000);
@@ -22,7 +23,7 @@ export default async function ExpensesPage({ searchParams }) {
   // รายการที่บันทึกแล้วของวันนี้ (ทุกหมวด) — กรองตามหมวดฝั่ง client
   const { data: existing } = await supabase
     .from('expenses')
-    .select('id, category, item_name, subcategory, unit, unit_price, quantity, total_amount, payment_method')
+    .select('id, category, item_name, subcategory, unit, unit_price, quantity, total_amount, payment_method, bakery_invoice_id')
     .eq('date', date)
     .order('logged_at', { ascending: true });
 
@@ -71,6 +72,7 @@ export default async function ExpensesPage({ searchParams }) {
   return (
     <AppShell role={role} name={name} isAdmin={isAdmin} allowed={allowed}>
       <PageHeader icon="ti-receipt" title="บันทึกรายจ่าย" />
+      {['admin', 'co-admin'].includes(role) && allowed.includes('/reports') && <p><Link className="link-btn" href="/expenses/bakery">ต้นทุนขนมและ POS — ตรวจบิล ส่วนลด และกำไรประมาณการ</Link></p>}
       <ExpensesClient
         date={date}
         initialCategory={initialCategory}

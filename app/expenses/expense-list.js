@@ -34,7 +34,7 @@ export default function ExpenseList({ rows, date, canEdit = false, canDelete = f
               editingId === r.id ? (
                 <EditRow key={r.id} row={r} onDone={() => setEditingId(null)} onMsg={setMsg} />
               ) : (
-                <ViewRow key={r.id} row={r} onEdit={canEdit ? () => setEditingId(r.id) : null} onMsg={setMsg} canDelete={canDelete} docs={attachments.filter(d => d.expense_id === r.id)} canManageDocuments={canManageDocuments} attachmentsAvailable={attachmentsAvailable} />
+                <ViewRow key={r.id} row={r} onEdit={canEdit && !r.bakery_invoice_id ? () => setEditingId(r.id) : null} onMsg={setMsg} canDelete={canDelete && !r.bakery_invoice_id} docs={attachments.filter(d => d.expense_id === r.id)} canManageDocuments={canManageDocuments} attachmentsAvailable={attachmentsAvailable} />
               )
             )}
           </div>
@@ -68,6 +68,7 @@ function ViewRow({ row, onEdit, onMsg, canDelete, docs, canManageDocuments, atta
         <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--muted)' }}>
           {row.subcategory ? `${row.subcategory} · ` : ''}
           {fmtMoney(row.quantity)} {row.unit || ''} × {fmtMoney(row.unit_price)} · {row.payment_method}
+          {row.bakery_invoice_id && <span> · รายละเอียด/ยกเลิกที่หน้าต้นทุนขนมและ POS</span>}
         </div>
       </div>
       <div style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{fmtMoney(row.total_amount)} ฿</div>

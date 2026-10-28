@@ -1,5 +1,13 @@
 # SQL migrations and cutover checklists (moved verbatim from CLAUDE.md 2026-10-12)
 
+## Bakery pilot — 2026-10-28
+
+Included in `scripts/install-schema.sh` after sales-day grants and before new-instance finalization. January pilot data must remain drafts and separate POS review rows until the owner verifies units, supplier identity and existing expense entries.
+
+Run `sql/add_bakery_cost_review.sql` after `harden_sales_staff.sql`, `add_audit_forensics.sql`, and `add_expense_documents.sql`, in **each shop before deploying code selecting expenses.bakery_invoice_id**. Adds RLS-read-only invoice/POS/mapping tables; all writes use authorized RPCs (active admin/co-admin plus Expenses edit and Reports view). Adds immutable linked bakery expenses, atomic post/void with audit, optimistic versions and duplicate document/file protection. Migration seeds no business transactions. Check `add_bakery_cost_review` in `sql/check_migrations.sql`.
+
+Isolated verification: `python3 scripts/verify-bakery-access.py` on a Docker host with existing `postgres:17-alpine` image; creates a temporary PostgreSQL container with no network or host volumes, then removes it. Never point this script at a shop database.
+
 **Repo layout notes:** All SQL lives in `sql/` (`sql/supabase_migration.sql` = base schema; other files are one-shot add-ons). Import templates in `templates/`. The old `archive/` folder (legacy HTML dashboard, GAS scripts, unused deploy helpers) was **deleted from this repo on 2026-08-02** — the live VPS rollback HTML still lives at `/var/www/minimalcnx`, independent of git. **Never commit `push_to_github.bat`** (old token history).
 
 **Migrations to run once (if not already applied):**
