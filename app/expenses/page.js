@@ -72,7 +72,7 @@ export default async function ExpensesPage({ searchParams }) {
   return (
     <AppShell role={role} name={name} isAdmin={isAdmin} allowed={allowed}>
       <PageHeader icon="ti-receipt" title="บันทึกรายจ่าย" />
-      {['admin', 'co-admin'].includes(role) && allowed.includes('/reports') && <p><Link className="link-btn" href="/expenses/bakery">ต้นทุนขนมและ POS — ตรวจบิล ส่วนลด และกำไรประมาณการ</Link></p>}
+      {['admin', 'co-admin'].includes(role) && allowed.includes('/reports') && <p><Link className="link-btn" href="/expenses/bakery">ต้นทุนและกำไรขนม</Link></p>}
       <ExpensesClient
         date={date}
         initialCategory={initialCategory}

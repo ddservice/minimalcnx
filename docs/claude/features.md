@@ -2,6 +2,9 @@
 
 ## Bakery invoice / POS pilot (2026-10-28)
 
+Usability follow-up: `/expenses/bakery` opens the latest month with stored invoices/POS when no month is selected, then shows a monthly overview first: POS sales, total active purchase bills (drafts explicitly included), and available estimated profit. A single next-action card prioritizes reviewing existing drafts, then importing POS, then confirming item units. Bill entry is hidden behind Add/Edit; existing bills expand individually before accounting actions. The JSON pilot importer is an advanced tool. Daily reconciliation is collapsed; sales-minus-purchases is removed from the primary view to avoid confusion with profit. No accounting formula, permissions, stored transactions or posting behavior changes.
+
+
 Verification: 73 unit tests and production build passed; 29 isolated PostgreSQL access/lifecycle checks passed (including idempotent migration). Browser checks use a local mock backend and the actual January XLSX: 237 bakery rows, 246 sale units, 13,485 baht; draft/post confirmation, explicit unit mapping and mobile overflow checked, screenshots inspected. These checks do not claim authenticated production UI validation.
 
 - `/expenses/bakery` is linked from Expenses for active admin/co-admin with Expenses and Reports access. Edit permission is required for mutations, enforced again in database RPCs. Staff workflows stay unchanged.

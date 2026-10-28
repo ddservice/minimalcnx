@@ -20,7 +20,13 @@ export default function BakeryClient({ month, invoices, imported, mappings, sale
   const [preview, setPreview] = useState(null), [pilot, setPilot] = useState([]);
   const [branchConfirmed, setBranchConfirmed] = useState(false);
   const [mapping, setMapping] = useState({ key: '', supplier: '', purchase_name: '', factor: '', confirmed: false });
-  const [tab, setTab] = useState('invoices');
+  const [tab, setTab] = useState('summary');
+  const [editing, setEditing] = useState(false);
+  const [showMapping, setShowMapping] = useState(false);
+  const drafts = invoices.filter(i => i.status === 'draft');
+  const active = invoices.filter(i => i.status !== 'void');
+  const receivedTotal = active.reduce((sum, i) => sum + Number(i.net_total), 0);
+  const monthLabel = new Intl.DateTimeFormat('th-TH', { month: 'long', year: 'numeric' }).format(new Date(`${month}-01T12:00:00`));
   const report = bakeryReview(invoices, imported?.rows || [], mappings, sales);
   let calc = null;
   try { calc = computeInvoice(invoice); } catch { /* Incomplete form is retained. */ }
@@ -69,19 +75,27 @@ export default function BakeryClient({ month, invoices, imported, mappings, sale
   const choices = [...new Map(invoices.filter(i => i.status === 'posted').flatMap(i => i.lines.map(l => [
     `${i.supplier}|${l.name}`, { supplier: i.supplier, name: l.name, unit: l.unit },
   ]))).values()];
+  const known = report.items.filter(i => i.cost != null).length;
+  const matchedDays = report.daily.filter(d => d.saved_quantity != null && Number(d.saved_quantity) === d.pos_quantity && d.difference === 0).length;
+  function openMapping(key = '') {
+    const saved = mappings.find(m => m.pos_key === key);
+    setMapping({ key, supplier: saved?.supplier || '', purchase_name: saved?.purchase_name || '', factor: saved?.factor || '', confirmed: false });
+    setShowMapping(true);
+    setTimeout(() => document.getElementById('bakery-mapping')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  }
   return <div className="bakery-review">
-    <div className="bakery-heading"><p>รับบิลตามวันที่ส่งขนม เก็บส่วนลดจริง แล้วเทียบรายการขายจาก POS โดยไม่ต้องให้พนักงานกรอกซ้ำ</p>
-      <label>เดือนที่ตรวจ<DateField type="month" value={month} loading={pending} onChange={m => transition(() => router.push(`/expenses/bakery?month=${m}`))} /></label><Link href="/expenses">กลับรายจ่าย</Link></div>
-    <p className="muted">ฉบับร่างยังไม่ใช่รายจ่าย · ใบวางบิล/ใบเสร็จเป็นหลักฐานอ้างอิง ไม่ลงต้นทุนซ้ำ · ใช้ทีละสาขา</p>
-    <div className="bakery-actions" role="group" aria-label="ขั้นตอนตรวจต้นทุน">{[['invoices', '1. บิลซื้อขนม'], ['pos', '2. นำเข้า POS'], ['margin', '3. จับคู่และกำไร']].map(([k, text]) => <button className={`btn ${tab === k ? 'btn-coffee' : ''}`} type="button" key={k} onClick={() => setTab(k)} aria-pressed={tab === k}>{text}</button>)}</div>
+    <div className="bakery-heading"><div><h2>{monthLabel}</h2><p className="muted">ดูยอดขาย ตรวจบิลซื้อ แล้วค่อยยืนยันต้นทุนขนมทีละชนิด</p></div>
+      <label>เลือกเดือน<DateField type="month" value={month} loading={pending} onChange={m => transition(() => router.push(`/expenses/bakery?month=${m}`))} /></label><Link href="/expenses">กลับรายจ่าย</Link></div>
+    <nav className="bakery-tabs" aria-label="ต้นทุนขนม">{[['summary', 'ภาพรวมและสิ่งที่ต้องทำ'], ['invoices', `บิลซื้อ (${active.length})`], ['pos', 'ยอดขายจาก POS']].map(([k, text]) => <button className={`btn ${tab === k ? 'btn-coffee' : ''}`} type="button" key={k} onClick={() => setTab(k)} aria-pressed={tab === k}>{text}</button>)}</nav>
     {message && <p role="status" className={message.ok ? 'bakery-success' : 'bakery-error'}>{message.text}</p>}
     <fieldset disabled={busy || pending} className="bakery-fieldset">
     {tab === 'invoices' && <>
-      {canManage && <section className="card"><div className="card-body"><h2>{invoice.id ? `แก้ฉบับร่าง ${invoice.invoice_no}` : 'เพิ่มใบส่งสินค้า / บิลซื้อ'}</h2>
+      {canManage && !editing && <div className="bakery-actions"><button type="button" className="btn btn-coffee" onClick={() => { setInvoice(blankInvoice(month)); setEditing(true); }}>เพิ่มบิลซื้อ</button><span className="muted">บันทึกเป็นฉบับร่างก่อนตรวจเสมอ</span></div>}
+      {canManage && editing && <section className="card"><div className="card-body"><div className="bakery-heading"><h2>{invoice.id ? `แก้ฉบับร่าง ${invoice.invoice_no}` : 'เพิ่มใบส่งสินค้า / บิลซื้อ'}</h2><button type="button" className="btn" onClick={() => setEditing(false)}>ปิดแบบฟอร์ม</button></div>
         <p className="muted">ราคาต่อหน่วยก่อนลดตามบิล ถ้าราคาหลังลดแล้วใช้ส่วนลด 0% ไม่หัก VAT เพิ่มโดยอัตโนมัติ</p>
-        <label>เปิดชุดบิลที่ถอดจากเอกสาร (.json)<input type="file" accept=".json" onChange={e => readPilot(e.target.files?.[0])} /></label>
+        <details className="bakery-advanced"><summary>นำเข้าชุดบิลที่เตรียมไว้ (สำหรับผู้ดูแล)</summary><label>เปิดชุดบิลที่ถอดจากเอกสาร (.json)<input type="file" accept=".json" onChange={e => readPilot(e.target.files?.[0])} /></label>
         {pilot.length > 0 && <label>เลือกบิลมาตรวจ<select value="" onChange={e => setInvoice(pilot[Number(e.target.value)])}><option value="">เลือกใบส่งสินค้า</option>{pilot.map((p, i) => <option key={p.invoice_no} value={i}>{p.received_on} · {p.invoice_no} · {fmt(p.expected_total)} บาท</option>)}</select></label>}
-        <form onSubmit={e => { e.preventDefault(); perform(() => saveInvoiceAction(invoice), () => setInvoice(blankInvoice(month))); }}>
+        </details><form onSubmit={e => { e.preventDefault(); perform(() => saveInvoiceAction(invoice), () => { setInvoice(blankInvoice(month)); setEditing(false); }); }}>
           <div className="bakery-fields">
             <label>ผู้ขาย<input required value={invoice.supplier} maxLength={100} onChange={e => field('supplier', e.target.value)} placeholder="เช่น Queen" /></label>
             <label>เลขใบส่งสินค้า<input required value={invoice.invoice_no} maxLength={100} onChange={e => field('invoice_no', e.target.value)} /></label>
@@ -104,22 +118,22 @@ export default function BakeryClient({ month, invoices, imported, mappings, sale
           <div className="bakery-actions"><button className="btn btn-coffee" type="submit">เก็บฉบับร่างก่อนตรวจ</button><button className="btn" type="button" onClick={() => setInvoice(blankInvoice(month))}>เริ่มบิลใหม่</button></div>
         </form>
       </div></section>}
-      <section className="card"><div className="card-body"><h2>บิลเดือนนี้ ({invoices.length})</h2>{!invoices.length && <p>เริ่มด้วยใบส่งสินค้า 1 ใบ หรือเปิดชุดตรวจมกราคม แล้วตรวจยอดก่อนลงรายจ่าย</p>}
+      <section className="card"><div className="card-body"><h2>บิลเดือนนี้ ({invoices.length})</h2>{!invoices.length && <p>เดือนนี้ยังไม่มีบิลซื้อ กด “เพิ่มบิลซื้อ” แล้วกรอกตามวันที่รับขนม</p>}
         {invoices.map(inv => <article className="bakery-saved" key={inv.id}><h3>{inv.invoice_no} · {inv.supplier} <span className="muted">{inv.status === 'draft' ? 'ฉบับร่าง' : inv.status === 'posted' ? 'ลงรายจ่ายแล้ว' : 'ยกเลิก'}</span></h3>
           <p>{inv.received_on} · ลด {inv.discount_pct}% · สุทธิ {fmt(inv.net_total)} บาท{inv.due_on ? ` · กำหนดชำระ ${inv.due_on}` : ''}</p>
-          <details><summary>ตรวจรายการ {inv.lines.length} รายการ</summary><ul>{computeInvoice(inv).lines.map((l, i) => <li key={i}>{l.name} · {l.quantity} {l.unit} × {fmt(l.unit_price)} → หลังลด {fmt(l.net)} บาท</li>)}</ul><p>{inv.note}</p></details>
+          <details><summary>เปิดตรวจบิล · {inv.lines.length} รายการ</summary><ul>{computeInvoice(inv).lines.map((l, i) => <li key={i}>{l.name} · {l.quantity} {l.unit} × {fmt(l.unit_price)} → หลังลด {fmt(l.net)} บาท</li>)}</ul><p className="muted">{inv.note}</p>
           {inv.status === 'void' && <p>เหตุผล: {inv.void_reason}</p>}
           {canManage && inv.status === 'void' && <button type="button" className="btn" onClick={() => perform(() => changeInvoiceAction(inv.id, inv.version, 'reopen'))}>เปิดฉบับร่างเพื่อแก้ไข</button>}
-          {canManage && inv.status === 'draft' && <div className="bakery-actions"><button type="button" className="btn" onClick={() => { setInvoice({ ...inv, due_on: inv.due_on || '' }); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>แก้ฉบับร่าง</button>
+          {canManage && inv.status === 'draft' && <div className="bakery-actions"><button type="button" className="btn" onClick={() => { setInvoice({ ...inv, due_on: inv.due_on || '' }); setEditing(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>แก้ฉบับร่าง</button>
             <button type="button" className="btn btn-coffee" disabled={Number(inv.net_total) !== Number(inv.expected_total)} onClick={() => {
               if (window.confirm(`ยืนยันว่าเป็นบิลของร้านนี้และยังไม่ลงรายจ่ายซ้ำ?\n${inv.invoice_no} · ${inv.received_on} · ${fmt(inv.net_total)} บาท\nจะเพิ่มรายจ่ายสุทธิหนึ่งบิลในวันที่รับขนม`)) perform(() => changeInvoiceAction(inv.id, inv.version, 'post'));
             }}>ตรวจแล้ว ลงรายจ่ายจริง</button></div>}
           {canManage && inv.status !== 'void' && <button type="button" className="btn" onClick={() => { const reason = window.prompt('เหตุผลยกเลิก (จะถอนรายจ่ายที่ผูกบิลนี้ด้วย ถ้าลงไว้แล้ว)'); if (reason) perform(() => changeInvoiceAction(inv.id, inv.version, 'void', reason)); }}>ยกเลิกพร้อมเหตุผล</button>}
-        </article>)}
+        </details></article>)}
       </div></section>
     </>}
     {tab === 'pos' && <>
-      <section className="card"><div className="card-body"><h2>ตรวจและเก็บ POS เดือน {month}</h2><p>ใช้รายงานยอดขายแยกตามรายละเอียดบิล อ่านเฉพาะ BAKERY เก็บแยกจากยอดขายเดิม ไม่รวมสองไฟล์ซ้ำกัน</p><p className="muted">ไม่ส่งชื่อลูกค้าหรือเบอร์โทรขึ้นเซิร์ฟเวอร์ เก็บเฉพาะวันที่ เลขบิล ขนม จำนวน ยอดเงิน และช่องทาง</p>
+      <section className="card"><div className="card-body"><h2>{imported ? "มีข้อมูลยอดขายเดือนนี้แล้ว" : "นำเข้ายอดขายเดือนนี้"}</h2><p>ส่งออก “รายงานยอดขายแยกตามรายละเอียดบิล” จาก Wongnai เป็น Excel แล้วเลือกไฟล์ด้านล่าง ระบบอ่านเฉพาะขนมให้ พนักงานไม่ต้องกรอกใหม่</p><p className="muted">นำเข้าเดือนละชุด หากเลือกไฟล์ใหม่จะขอยืนยันก่อนแทนที่ชุดเดิม ยอดขายรายวันเดิมยังอยู่ครบ</p>
         {imported && <p>ไฟล์ที่เก็บไว้: {imported.source_name} · สาขา {imported.branch} · รุ่น {imported.version}</p>}
         {canManage && <label>ไฟล์รายละเอียดบิล .xlsx<input type="file" accept=".xlsx" onChange={e => readPOS(e.target.files?.[0])} /></label>}
         {preview && <div><p>พบขนม {preview.rows.length} แถว · สาขา {preview.branches.join(', ') || 'ไม่ระบุ'} · ข้อมูล {preview.days.length} วัน</p>
@@ -130,16 +144,27 @@ export default function BakeryClient({ month, invoices, imported, mappings, sale
             perform(() => savePOSAction({ ...preview, branch: preview.branches[0], version: imported?.version || 0 }), () => setPreview(null));
           }}>ยืนยันเก็บชุด POS {imported ? 'แทนชุดเดิม' : ''}</button></div>}
       </div></section>
-      <section className="card"><div className="card-body"><h2>เทียบกับยอดขนมรายวันที่กรอกเดิม</h2>{!imported ? <p>เก็บชุด POS ก่อน จึงจะเทียบจำนวนและยอดเงินรายวันได้</p> : <div className="bakery-scroll"><table><thead><tr>{['วันที่', 'POS หน่วย', 'เดิม ชิ้น', 'POS บาท', 'เดิม บาท', 'ต่าง บาท', 'ราคา 0'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{report.daily.map(r => <tr key={r.date}><td>{r.date}</td><td>{r.pos_quantity}</td><td>{r.saved_quantity ?? 'ไม่มีข้อมูล'}</td><td>{fmt(r.pos_revenue)}</td><td>{r.saved_revenue == null ? 'ไม่มีข้อมูล' : fmt(r.saved_revenue)}</td><td>{r.difference == null ? '—' : fmt(r.difference)}</td><td>{r.zero_quantity || '—'}</td></tr>)}</tbody></table></div>}</div></section>
+      <section className="card"><div className="card-body"><h2>เทียบกับยอดขนมที่กรอกไว้</h2>{imported && <p>{matchedDays === report.daily.length ? `ตรงกันครบ ${matchedDays} วัน ทั้งจำนวนและยอดเงิน` : `ตรงกัน ${matchedDays} จาก ${report.daily.length} วัน เปิดรายละเอียดเพื่อตรวจวันที่ต่างกัน`}</p>}<details><summary>ดูรายละเอียดรายวัน</summary>{!imported ? <p>เก็บชุด POS ก่อน จึงจะเทียบจำนวนและยอดเงินรายวันได้</p> : <div className="bakery-scroll"><table><thead><tr>{['วันที่', 'POS หน่วย', 'เดิม ชิ้น', 'POS บาท', 'เดิม บาท', 'ต่าง บาท', 'ราคา 0'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{report.daily.map(r => <tr key={r.date}><td>{r.date}</td><td>{r.pos_quantity}</td><td>{r.saved_quantity ?? 'ไม่มีข้อมูล'}</td><td>{fmt(r.pos_revenue)}</td><td>{r.saved_revenue == null ? 'ไม่มีข้อมูล' : fmt(r.saved_revenue)}</td><td>{r.difference == null ? '—' : fmt(r.difference)}</td><td>{r.zero_quantity || '—'}</td></tr>)}</tbody></table></div>}</details></div></section>
     </>}
-    {tab === 'margin' && <>
-      <section className="card"><div className="card-body"><h2>ยอดขายเทียบยอดซื้อ และกำไรขั้นต้นประมาณการ</h2><p>ต้นทุนซื้อที่ลงรายจ่ายแล้ว <strong>{fmt(report.purchaseTotal)} บาท</strong> · ยอดขาย POS {fmt(report.revenue)} บาท</p>
-        {imported && <><p>ส่วนต่างยอดขาย − ยอดซื้อ <strong>{fmt(report.revenue - report.purchaseTotal)} บาท</strong> เป็นการเทียบยอดสองฝั่ง ยังไม่ใช่กำไรของที่ขายจริง</p><p>ครอบคลุมต้นทุนยอดขาย {fmt(report.coveredRevenue)} / {fmt(report.revenue)} บาท · {report.items.filter(i => i.cost != null).length}/{report.items.length} ชนิด</p><p><strong>{report.complete ? 'กำไรขั้นต้นประมาณการ' : 'กำไรประมาณการเฉพาะรายการที่ยืนยันต้นทุนแล้ว'}: {report.items.some(i => i.cost != null) ? `${fmt(report.coveredMargin)} บาท` : 'ยังคำนวณไม่ได้ — ต้องยืนยันคู่สินค้าและหน่วย'}</strong></p></>}
-        <p className="muted">ใช้ต้นทุนซื้อเฉลี่ยถ่วงน้ำหนักภายในเดือน ก่อนหักค่าแรง ค่าเช่า ค่าธรรมเนียมขาย และของเสีย ไม่ใช่สต๊อกจริง รายการราคา 0 ยังไม่นำมาคำนวณกำไรจนกว่าจะตรวจสถานะ</p>
-        {!imported ? <p>เริ่มจากเก็บ POS แล้วจับคู่ชนิดขนมกับหน่วยในใบซื้อ</p> : <div className="bakery-scroll"><table><thead><tr>{['ขนม POS', 'หน่วยขาย', 'รายได้', 'ต้นทุนประมาณการ', 'กำไรประมาณการ', 'สถานะ'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{report.items.map(i => <tr key={i.key}><td>{i.name}</td><td>{i.quantity}</td><td>{fmt(i.revenue)}</td><td>{i.cost == null ? 'ยังคำนวณไม่ได้' : fmt(i.cost)}</td><td>{i.margin == null ? '—' : fmt(i.margin)}</td><td>{i.reason || 'จับคู่แล้ว'}</td></tr>)}</tbody></table></div>}
+    {tab === 'summary' && <>
+      <div className="bakery-kpis">
+        <section className="card"><div className="card-body"><p className="muted">ยอดขายขนมจาก POS</p><strong className="bakery-value">{imported ? `${fmt(report.revenue)} บาท` : 'ยังไม่มีข้อมูล'}</strong><p>{imported ? `${fmt(report.quantity)} หน่วยขาย · ${report.items.length} ชนิด` : 'นำเข้า Excel จาก Wongnai เพื่อเริ่มตรวจ'}</p></div></section>
+        <section className="card"><div className="card-body"><p className="muted">ยอดซื้อขนมตามบิล</p><strong className="bakery-value">{active.length ? `${fmt(receivedTotal)} บาท` : 'ยังไม่มีบิล'}</strong><p>{active.length} บิล · รอตรวจ {drafts.length} บิล</p><small className="muted">ลงรายจ่ายแล้ว {fmt(report.purchaseTotal)} บาท · ฉบับร่างยังไม่เข้ารายจ่าย</small></div></section>
+        <section className="card"><div className="card-body"><p className="muted">{report.complete ? 'กำไรขั้นต้นประมาณการ' : known ? 'กำไรเฉพาะรายการที่ตรวจแล้ว' : 'กำไรขั้นต้นประมาณการ'}</p><strong className="bakery-value">{known ? `${fmt(report.coveredMargin)} บาท` : 'รอตรวจต้นทุน'}</strong><p>คำนวณได้ {known} จาก {report.items.length} ชนิด</p><small className="muted">ก่อนค่าแรง ค่าเช่า ค่าธรรมเนียมขาย และของเสีย</small></div></section>
+      </div>
+      <section className="card bakery-next"><div className="card-body"><h2>ทำอะไรต่อดี?</h2>
+        {!active.length ? <><p>เริ่มจากเพิ่มบิลซื้อ ตามวันที่รับขนมจริง ระบบจะเก็บส่วนลดและยอดสุทธิให้</p>{canManage && <button type="button" className="btn btn-coffee" onClick={() => { setTab('invoices'); setEditing(true); }}>เพิ่มบิลซื้อใบแรก</button>}</>
+        : drafts.length ? <><p>มีบิลซื้อรอตรวจ <strong>{drafts.length} ใบ</strong> เปิดตรวจชื่อขนม จำนวน หน่วย และส่วนลดกับเอกสาร แล้วจึงลงรายจ่ายจริง</p><button type="button" className="btn btn-coffee" onClick={() => setTab('invoices')}>ตรวจบิลที่เตรียมไว้ ({drafts.length})</button><p className="muted">ยังไม่ต้องกรอกบิลเดิมซ้ำ ไม่ใช้ใบวางบิลหรือใบเสร็จเพิ่มต้นทุนอีกรอบ</p></>
+        : !imported ? <><p>บิลซื้อพร้อมแล้ว ต่อไปนำเข้าไฟล์ยอดขายจาก Wongnai ของเดือนนี้</p><button type="button" className="btn btn-coffee" onClick={() => setTab('pos')}>นำเข้าไฟล์ยอดขาย</button></>
+        : !report.complete ? <><p>เลือกขนมที่ยังไม่มีต้นทุนด้านล่าง แล้วยืนยันว่าตรงกับรายการซื้อใดและขายเป็นหน่วยเดียวกันหรือแบ่งขาย ระบบจะจำไว้ใช้ครั้งต่อไป</p>{canManage && <button type="button" className="btn btn-coffee" onClick={() => openMapping(report.items.find(i => i.cost == null)?.key)}>ตรวจขนมรายการถัดไป</button>}</>
+        : <p>คำนวณต้นทุนได้ครบทุกชนิดในไฟล์แล้ว ดูกำไรประมาณการแยกรายการด้านล่างได้เลย</p>}
       </div></section>
-      {canManage && imported && <section className="card"><div className="card-body"><h2>ยืนยันคู่ขนมและหน่วย</h2><p>ราคาคล้ายกันช่วยเสนอคู่ได้ แต่ไม่พิสูจน์ว่าขายทั้งแพ็กหรือแบ่งขาย หน่วย “ชุด” ต้องตรวจจากสินค้าจริงหรือผู้ขาย</p>
-        <form onSubmit={e => { e.preventDefault(); perform(() => saveMappingAction(mapping), () => setMapping({ ...mapping, confirmed: false })); }}><div className="bakery-fields">
+      <section className="card"><div className="card-body"><div className="bakery-heading"><h2>ขนมที่ขายเดือนนี้</h2>{canManage && imported && <button type="button" className="btn" onClick={() => openMapping()}>ตั้งค่าคู่สินค้า</button>}</div>
+        <p className="muted">ใช้ต้นทุนเฉลี่ยจากบิลที่ลงรายจ่ายแล้วในเดือนนี้ หากยังไม่แน่ใจหน่วย ระบบจะรอตรวจและไม่แสดงเป็นกำไร</p>
+        <details open={!drafts.length}><summary>ดูขนมที่ขาย {report.items.length} ชนิด และสถานะต้นทุน</summary>{!imported ? <p>นำเข้าไฟล์ยอดขายก่อน จึงจะแสดงรายการขนมที่ขายได้</p> : <div className="bakery-scroll"><table><thead><tr>{['ขนม POS', 'หน่วยขาย', 'รายได้', 'ต้นทุนประมาณการ', 'กำไรประมาณการ', 'สถานะ'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{report.items.map(i => <tr key={i.key}><td>{i.name}</td><td>{i.quantity}</td><td>{fmt(i.revenue)}</td><td>{i.cost == null ? 'ยังคำนวณไม่ได้' : fmt(i.cost)}</td><td>{i.margin == null ? '—' : fmt(i.margin)}</td><td>{i.reason || 'ตรวจแล้ว'}{canManage && i.cost == null && !drafts.length && <button type="button" className="btn" onClick={() => openMapping(i.key)}>ตรวจ {i.name}</button>}</td></tr>)}</tbody></table></div>}</details>
+      </div></section>
+      {canManage && imported && showMapping && <section className="card" id="bakery-mapping"><div className="card-body"><div className="bakery-heading"><h2>ยืนยันต้นทุนของขนม</h2><button type="button" className="btn" onClick={() => setShowMapping(false)}>ปิดการจับคู่</button></div><p>ราคาคล้ายกันช่วยเสนอคู่ได้ แต่ไม่พิสูจน์ว่าขายทั้งแพ็กหรือแบ่งขาย หน่วย “ชุด” ต้องตรวจจากสินค้าจริงหรือผู้ขาย</p>
+        {!choices.length && <p className="bakery-error">ต้องตรวจบิลซื้อและลงรายจ่ายก่อน จึงจะมีรายการต้นทุนให้เลือก</p>}<form onSubmit={e => { e.preventDefault(); perform(() => saveMappingAction(mapping), () => setMapping({ ...mapping, confirmed: false })); }}><div className="bakery-fields">
           <label>ขนมจาก POS<select aria-label="ขนมจาก POS" required value={mapping.key} onChange={e => { const saved = mappings.find(m => m.pos_key === e.target.value); setMapping({ key: e.target.value, supplier: saved?.supplier || '', purchase_name: saved?.purchase_name || '', factor: saved?.factor || '', confirmed: false }); }}><option value="">เลือกขนม</option>{report.items.map(i => <option key={i.key} value={i.key}>{i.name}</option>)}</select></label>
           <label>รายการซื้อต้นทุน<select aria-label="รายการซื้อต้นทุน" required value={mapping.purchase_name ? `${mapping.supplier}|${mapping.purchase_name}` : ''} onChange={e => { const c = choices.find(c => `${c.supplier}|${c.name}` === e.target.value); setMapping(v => ({ ...v, supplier: c?.supplier || '', purchase_name: c?.name || '', confirmed: false })); }}><option value="">เลือกผู้ขายและชื่อขนมในบิล</option>{choices.map(c => <option key={`${c.supplier}|${c.name}`} value={`${c.supplier}|${c.name}`}>{c.supplier} · {c.name} · {c.unit}{normalizeName(c.name) === mapping.key ? ' · ชื่อตรง POS' : ''}</option>)}</select></label>
           <label>1 หน่วยขาย ใช้กี่หน่วยตามบิลซื้อ<NumberInput required value={mapping.factor} onChange={v => setMapping(m => ({ ...m, factor: v, confirmed: false }))} placeholder="ต้องยืนยันก่อน เช่น 1" /></label>
