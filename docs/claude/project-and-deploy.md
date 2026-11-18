@@ -1,5 +1,13 @@
 # Project, working copy, deploy, repo layout (moved verbatim from CLAUDE.md 2026-10-12)
 
+## Runtime upgrade (2026-11-18)
+
+Upgrade-only release: Next.js 16.4.6, Node.js 26.13.1 LTS (Lithium), all Docker stages pinned to node:26.13.1-alpine and local .nvmrc set to 26.13.1. Rename middleware.js to proxy.js and its exported handler to proxy without changing session handling or the matcher. Build uses Webpack, retaining the previous bundler; remove the unsupported next lint command. The lockfile resolves React/React DOM 19.2.7 and fixes brace-expansion; the ExcelJS-scoped uuid 11.1.1 override is covered by three Excel compatibility checks.
+
+Validation uses an ignored snapshot under .next/upgrade-validation built from committed HEAD plus only the upgrade files. Uncommitted sales, loyalty, formulas and SQL work is excluded from that snapshot and release and remains intact in the working tree. On Windows with Node.js 26.13.1: clean npm ci succeeded with zero audit findings, npm test passed 76/76, then npm run build passed against loopback Supabase settings. Sandbox process-spawn restrictions required elevated test/build execution. The standalone HTTP script passed 21/21 checks covering login, anonymous access, a forged role cookie and public assets. Authenticated business flows were not tested.
+
+Pre-deploy safety: VPS HEAD was 13a486e with a clean working tree. Latest encrypted R2 backup was minimalcnx/daily/2026-11-17/minimalcnx-20261117T130001Z.dump.age. Download/decryption and pg_restore --list succeeded with TABLE DATA entries for sales_daily, expenses, customers and point_transactions. No restore or SQL was executed; archive readability passed. A full restore drill was not performed. Original running image sha256:3f54f1b3a1d9f16d2e8e695f1489e1b7b2e0548b5d7992f0a9944192ed3528e8 is retained as minimalcnx:rollback-before-runtime-20261118. Deployment is app-only, with read-only HTTP checks and no production database changes.
+
 **Product name (one name everywhere):** `minimalcnx` — local folder, npm package, Docker image/container, VPS path `~/apps/minimalcnx`, GitHub `ddservice/minimalcnx`, prod domain `minimalcnx.ddserviceth.com`. The only intentional legacy string left is the auth email realm `@marim69.internal` (changing it would break existing logins).
 
 ## Two apps, one database

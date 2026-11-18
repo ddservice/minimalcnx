@@ -1,11 +1,12 @@
 # ── Stage 1: ติดตั้ง dependencies ──────────────────────────────
-FROM node:22-alpine AS deps
+ARG NODE_IMAGE=node:26.13.1-alpine
+FROM ${NODE_IMAGE} AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
 # ── Stage 2: build ─────────────────────────────────────────────
-FROM node:22-alpine AS builder
+FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -22,7 +23,7 @@ ENV NEXT_PUBLIC_APP_SLUG=$NEXT_PUBLIC_APP_SLUG
 RUN npm run build
 
 # ── Stage 3: runtime (เล็กที่สุด) ──────────────────────────────
-FROM node:22-alpine AS runner
+FROM ${NODE_IMAGE} AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
