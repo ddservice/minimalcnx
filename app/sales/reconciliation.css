@@ -1,0 +1,24 @@
+.recon-card { padding: 20px; margin-block: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.recon-card h2 { margin: 0 0 12px; font-size: var(--fs-xl); }
+.recon-card h3 { font-size: var(--fs-lg); }
+.recon-card fieldset { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+.recon-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,220px),1fr)); gap: 16px; margin-block: 16px; }
+.recon-field { display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-base); min-width: 0; }
+.recon-field input, .recon-field textarea, .recon-field select { width: 100%; min-width: 0; box-sizing: border-box; padding: 10px 12px; font: inherit; font-size: var(--fs-lg); color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.recon-field input:disabled, .recon-field textarea:disabled { color: var(--text); opacity: .8; }
+.recon-totals { padding: 16px; border-radius: var(--radius-sm); background: var(--color-surface-2); font-variant-numeric: tabular-nums; }
+.recon-totals strong { display: block; margin-top: 6px; font-size: var(--fs-xl); }
+.recon-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 16px; gap: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; text-decoration: none; }
+.recon-primary { background: var(--coffee); color: var(--surface); border-color: var(--coffee); }
+.recon-button:disabled { opacity: .6; cursor: wait; }
+.recon-button:focus-visible, .recon-card summary:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+.recon-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-block: 16px; }
+.recon-message { padding: 12px; border: 1px solid currentColor; border-radius: var(--radius-sm); overflow-wrap: anywhere; }
+.recon-danger { color: var(--color-danger); }
+.recon-success { color: var(--color-success); }
+.recon-warning { color: var(--color-info); }
+.recon-void { margin-block: 12px; }
+.recon-card summary { cursor: pointer; padding-block: 12px; min-height: 44px; box-sizing: border-box; }
+.recon-card .muted { line-height: 1.7; }
+.recon-card td { overflow-wrap: anywhere; }
+.recon-badge { display: inline-block; border-radius: var(--radius-full); border: 1px solid currentColor; padding: 4px 10px; font-size: var(--fs-sm); }

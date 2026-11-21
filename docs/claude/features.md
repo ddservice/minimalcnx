@@ -1,5 +1,11 @@
 # Feature status, history, incident notes (moved verbatim from CLAUDE.md 2026-10-12)
 
+## Daily closing and platform settlements (2026-11-21)
+
+After saving sales, use the separate closing evidence panel to attach a photo or PDF to the date. Staff can upload for a daily sales row they recorded that day. Sales editors can attach evidence to historical records they can access.
+
+`/sales` shows expected POS net (cash + transfer + LINE MAN), all-channel gross, and estimated all-channel net after GP. Daily closing persists printed POS, opening float, cash counted and drawer movements separately from sales. Differences and corrections require a reason; saved sales snapshots flag a closing as stale after sales edits. Managers with Reports view can use /sales/settlements to record platform statements, partial bank receipts and audited voids. Statement deductions use document amounts rather than estimated GP. Commands enforce optimistic versions and request retry IDs; none of these workflows create expenses or change sales.
+
 ## Bakery invoice / POS pilot (2026-10-28)
 
 Usability follow-up: `/expenses/bakery` opens the latest month with stored invoices/POS when no month is selected, then shows a monthly overview first: POS sales, total active purchase bills (drafts explicitly included), and available estimated profit. A single next-action card prioritizes reviewing existing drafts, then importing POS, then confirming item units. Bill entry is hidden behind Add/Edit; existing bills expand individually before accounting actions. The JSON pilot importer is an advanced tool. Daily reconciliation is collapsed; sales-minus-purchases is removed from the primary view to avoid confusion with profit. No accounting formula, permissions, stored transactions or posting behavior changes.

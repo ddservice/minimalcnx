@@ -10,6 +10,13 @@ Maintained by Claude. This file is the **short core** loaded every session. Deta
 - Single shop for sales/expenses/OPEX/reports; multi-branch applies to loyalty only.
 - **One repo, several shops:** each shop is a separate install with its own Supabase project (`deploy/NEW-INSTANCE.md`). Shop name comes from `lib/brand.js` (`APP_NAME`) — never hardcode it. Numbers that belong to the original shop only are gated by `IS_ORIGINAL_SHOP`. Second shop: `mamasaidno` (different legal entity).
 
+## Release status (2026-11-21)
+
+- Production baseline last confirmed: `555643a`, Next.js 16.4.6 and Node.js 26.13.1 LTS. The runtime upgrade did not apply SQL migrations.
+- Daily sales closing and platform settlements (`/sales/settlements`) are prepared for release. The isolated sales-only snapshot passed 85 tests, a standalone production build, authenticated Staff/manager browser flows and attachment checks on Node.js 26.13.1. Browser checks use PGlite with fixture Auth/Storage, not a separate hosted Supabase instance.
+- The sales release depends on `sql/add_sales_close_evidence.sql` and `sql/add_sales_reconciliation.sql`. See `docs/claude/migrations.md` for order and verification. Keep the pending loyalty changes out of the sales release.
+- Deployment is blocked: read-only production API inspection on 2026-11-21 found the new bucket, reconciliation tables and RPCs missing. No production SQL or data changes were made. Backup/archive checks and rollback details are recorded in `docs/claude/project-and-deploy.md`.
+
 ## Where the detail lives
 
 | Read this | Before working on |

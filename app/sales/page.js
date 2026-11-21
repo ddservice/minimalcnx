@@ -2,6 +2,10 @@ import { requirePage } from '../../lib/session';
 import AppShell from '../../components/app-shell';
 import PageHeader from '../../components/page-header';
 import SalesForm from './sales-form';
+import ClosingForm from './closing-form';
+import Link from 'next/link';
+import { readClosing } from '../../lib/reconciliation-store';
+import './reconciliation.css';
 import { canDeleteOnPage } from '../../lib/perms';
 import { readBusinessConfig } from '../../lib/config-store';
 
@@ -9,7 +13,7 @@ import { redirect } from 'next/navigation';
 import { bangkokToday, canEditExistingSales } from '../../lib/sales-policy';
 
 export default async function SalesPage({ searchParams }) {
-  const { supabase, role, name, isAdmin, allowed, caps, perms } = await requirePage('/sales');
+  const { supabase, user, role, name, isAdmin, allowed, caps, perms } = await requirePage('/sales');
 
   const sp = await searchParams;
   const today = bangkokToday();
@@ -22,10 +26,15 @@ export default async function SalesPage({ searchParams }) {
     role === 'staff' ? supabase.rpc('fn_can_edit_sales_today') : Promise.resolve({ data: false }),
   ]);
   const defaultCoffeePrice = Number(bizInfo?.free_cup_cost) || 55;
+  const closeState = await readClosing(supabase, date);
+  const canManage = ['admin', 'co-admin', 'manager'].includes(role);
+  const canClose = canManage ? caps['/sales'].edit
+    : caps['/sales'].create && existing?.recorded_by === user.id;
 
   return (
     <AppShell role={role} name={name} isAdmin={isAdmin} allowed={allowed}>
       <PageHeader icon="ti-cash" title="บันทึกยอดขายรายวัน" />
+      {canManage && caps['/reports'].view && <Link className="recon-button" href="/sales/settlements">กระทบยอดเงินรับจากแพลตฟอร์ม</Link>}
       {/* key={date} → บังคับ remount ตอนเปลี่ยนวันที่ ไม่งั้น useState ที่ initialize จาก existing
           จะรันแค่ครั้งแรกตอน mount เท่านั้น เปลี่ยนวันที่แล้ว props เปลี่ยนแต่ state ค้างของวันเก่า */}
       <SalesForm
@@ -37,6 +46,9 @@ export default async function SalesPage({ searchParams }) {
         todayOnly={role === 'staff'}
         canDelete={canDeleteOnPage(role, '/sales', perms)}
       />
+      <ClosingForm key={`${date}:${closeState.closing?.version || 0}`} date={date} sales={existing}
+        state={closeState} canCreate={canClose} canAttach={canClose}
+        canEdit={canClose && canEditExistingSales(role, caps['/sales'], todayEditGranted)} />
     </AppShell>
   );
 }

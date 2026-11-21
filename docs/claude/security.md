@@ -1,5 +1,9 @@
 # Security model, audit, input sanitization (moved verbatim from CLAUDE.md 2026-10-12)
 
+Closing evidence uses the private `sales-close-evidence` bucket. Sales editors and the staff member who recorded today's sales can attach files. Reads follow sales RLS. Downloads use 60-second signed URLs. Storage sets a 5 MiB limit and a MIME allowlist.
+
+Reconciliation tables reject direct authenticated writes. Definer RPCs validate active profiles, page capabilities, sales ownership/date, optimistic versions, request IDs and money. Platform statements and receipts require manager or above, Sales edit and Reports view for writes. Closing edits preserve the original sales snapshot and leave sales/expenses untouched.
+
 ## Bakery invoice / POS boundary (2026-10-28)
 
 `sql/add_bakery_cost_review.sql` makes bakery invoice/POS/mapping tables SELECT-only for authenticated users passing `fn_bakery_access`: active admin/co-admin plus Expenses view and Reports view. All writes are definer RPCs with `search_path=''` and an Expenses edit check; anonymous execution and direct table writes are revoked. No service key is used by the app. Invoice math is independently validated in PostgreSQL; client totals are not authoritative. Invoice versions and a normalized supplier+number unique index prevent stale writes/double posting. POS uses a monthly version, advisory lock and content hash; replacement does not touch `sales_daily`. Customer names/phones are discarded in the browser before persistence.

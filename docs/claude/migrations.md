@@ -1,5 +1,9 @@
 # SQL migrations and cutover checklists (moved verbatim from CLAUDE.md 2026-10-12)
 
+Apply `sql/add_sales_close_evidence.sql` after sales staff hardening on each shop. Before staff start uploading, configure the encrypted storage sync for `STORAGE_BUCKET=sales-close-evidence` following the existing private documents backup setup.
+
+For daily closing and platform settlements, the installer runs `sql/add_sales_reconciliation.sql` after sales-day edit grants and the private evidence bucket migration. Verify the `add_sales_reconciliation` column in `sql/check_migrations.sql` before enabling the workflow. Run `node scripts/verify-reconciliation.cjs` with `PGLITE_MODULE_PATH` pointing to an external PGlite installation to check migration replay, daily closing, stale closing after a sales edit, request retries, platform receipts, and staff versus manager permissions using synthetic data.
+
 ## Bakery pilot — 2026-10-28
 
 Included in `scripts/install-schema.sh` after sales-day grants and before new-instance finalization. January pilot data must remain drafts and separate POS review rows until the owner verifies units, supplier identity and existing expense entries.

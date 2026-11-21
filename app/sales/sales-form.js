@@ -3,7 +3,7 @@ import Icon from '../../components/icon';
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { gpNet, computeNetRevenue } from '../../lib/gp';
+import { gpNet, computeSalesReconciliation } from '../../lib/gp';
 import { createClient } from '../../lib/supabase/client';
 import DateField from '../../components/date-field';
 import NumberInput from '../../components/number-input';
@@ -17,7 +17,10 @@ const MAX_EVIDENCE_MB = 5;
 const fmt = (n) =>
   Number(n || 0).toLocaleString('th-TH', { maximumFractionDigits: 2 });
 
-export default function SalesForm({ date, existing, defaultCoffeePrice = 55, access = {}, canDelete = false, todayOnly = false }) {
+export default function SalesForm({
+  date, existing, defaultCoffeePrice = 55, access = {}, canDelete = false,
+  todayOnly = false,
+}) {
   const canCreate = !!access.create;
   const canEdit = !!access.edit;
   const hasExisting = !!existing;
@@ -87,7 +90,7 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
   const shopeeNet = gpNet('shopee', f.shopee_before_gp);
   const grabNet = gpNet('grab', f.grab_before_gp);
   const linemanNet = gpNet('lineman', f.lineman_before_gp);
-  const netRevenue = computeNetRevenue(f);
+  const { expectedPos, gross, net: netRevenue } = computeSalesReconciliation(f);
   const freeCupCost =
     Math.round((Number(f.free_cups) || 0) * (Number(f.coffee_price) || 0) * 100) /
     100;
@@ -157,6 +160,14 @@ export default function SalesForm({ date, existing, defaultCoffeePrice = 55, acc
         )}
       </div>
 
+      <div style={card}>
+        <h2 style={h2}>ภาพรวมยอดขายก่อนบันทึก</h2>
+        <div style={grid}>
+          <div>ยอดที่คาดใน POS <strong>{fmt(expectedPos)} บาท</strong></div>
+          <div>ทุกช่องทางก่อน GP <strong>{fmt(gross)} บาท</strong></div>
+          <div>ทุกช่องทางหลัง GP <strong>{fmt(netRevenue)} บาท</strong></div>
+        </div>
+      </div>
       <fieldset disabled={readOnly || saving || isPending || uploading} style={{ border: 0, padding: 0, margin: 0, minInlineSize: 0 }}>
 
       {/* ยอดขายหน้าร้าน */}

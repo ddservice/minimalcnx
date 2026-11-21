@@ -1,5 +1,7 @@
 # Domain formulas (moved verbatim from CLAUDE.md 2026-10-12)
 
+Sales reconciliation uses whole satang for expected POS (cash + transfer + LINE MAN) and gross (expected POS + Shopee + Grab). Estimated net reuses `computeNetRevenue`. Use the POS figure only for shifts with the channel layout verified for the Mae Rim sample; platform settlement may differ from estimated GP. Expected cash = opening float + recorded cash sales + other drawer inflows - drawer outflows. Differences = actual - expected. Statement net = gross + additions - commission - fees - discounts - refunds - withholding - deductions; receipt balance = statement net - non-void receipts. PostgreSQL recomputes authoritative totals in whole satang precision.
+
 ## Bakery cost review (2026-10-28)
 
 - Gross line = round(quantity × printed unit price, 2). Net invoice = round(sum(gross lines) × (1 − invoice discount percent/100), 2). Discount is explicit (0 is valid); no fixed Queen rate and no automatic VAT. Allocate satang rounding residue to the last line so line costs equal the invoice net. PostgreSQL independently validates and recomputes official total; JS previews the same formula.

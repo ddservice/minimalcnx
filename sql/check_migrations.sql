@@ -4,6 +4,7 @@
 -- true = รันแล้ว / false = ยังไม่ได้รัน
 -- ================================================================
 select
+  exists (select 1 from storage.buckets where id = 'sales-close-evidence' and not public) as add_sales_close_evidence,
   (to_regclass('public.sales_day_edit_grants') is not null and exists
     (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public'
       and p.proname = 'fn_guard_sales_day' and p.prosrc like '%fn_can_edit_sales_today%')) as add_sales_day_edit_grants,
@@ -74,6 +75,13 @@ select
   -- แปลว่าตอนรันมีใบเสร็จซ้ำค้างอยู่ ไฟล์เลยข้ามการสร้าง index ให้ (ดู NOTICE ตอนรัน)
   exists (select 1 from pg_indexes where schemaname = 'public'
             and indexname = 'uidx_point_tx_earn_receipt')                                    as receipt_unique_index,
+  (to_regclass('public.sales_closings') is not null
+    and to_regclass('public.platform_settlements') is not null
+    and to_regclass('public.platform_receipts') is not null
+    and to_regclass('public.reconciliation_commands') is not null
+    and to_regprocedure('public.sales_closing_state(date)') is not null
+    and to_regprocedure('public.platform_reconciliation_state(date)') is not null
+    and to_regprocedure('public.reconciliation_command(text,jsonb,uuid)') is not null)       as add_sales_reconciliation,
   (to_regclass('public.bakery_invoices') is not null
     and to_regclass('public.bakery_pos_imports') is not null
     and to_regclass('public.bakery_item_mappings') is not null
