@@ -1,6 +1,10 @@
 # Project, working copy, deploy, repo layout (moved verbatim from CLAUDE.md 2026-10-12)
 
-## Sales release validation and deployment hold (2026-11-21)
+## Sales release validation and deployment (2026-11-21)
+
+Follow-up: the owner applied the migrations. GET API inspection confirmed all four reconciliation tables, the three RPCs and `sales-close-evidence` in project `vrmaquzhehbfqlfvrsxj`. The bucket is private, has a 5 MiB limit and allows JPEG, PNG, WebP and PDF. The deployment hold is cleared. The agent executed no production SQL or business-data writes.
+
+The previous running image is retained as `minimalcnx:rollback-before-sales-20261121`, with ID `sha256:88e1e345e45b5eb5eb2a0b67498c05a134d571999db34d2a435335034deba863`. Encrypted evidence backup is scheduled at 20:35 Asia/Bangkok through `STORAGE_BUCKET=sales-close-evidence bash scripts/sync-storage-to-r2.sh`; existing cron jobs were preserved and the original crontab was saved outside the repository. The backup archive below was rechecked successfully. Deployment ships sales application commit `c97e9a8` plus this status documentation; pending loyalty work remains excluded. Rollback recreates the retained image on `127.0.0.1:3011` and keeps the additive schema and stored evidence.
 
 Prepared a sales-only snapshot from HEAD plus an explicit file list under ignored `.next/sales-release/source`. Loyalty action and migration changes remain in the working tree, including their installer, migration-check and documentation entries. The release index excludes those entries and unrelated runtime-security documentation. No `git add -A` was used.
 

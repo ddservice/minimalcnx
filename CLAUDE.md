@@ -12,10 +12,10 @@ Maintained by Claude. This file is the **short core** loaded every session. Deta
 
 ## Release status (2026-11-21)
 
-- Production baseline last confirmed: `555643a`, Next.js 16.4.6 and Node.js 26.13.1 LTS. The runtime upgrade did not apply SQL migrations.
-- Daily sales closing and platform settlements (`/sales/settlements`) are prepared for release. The isolated sales-only snapshot passed 85 tests, a standalone production build, authenticated Staff/manager browser flows and attachment checks on Node.js 26.13.1. Browser checks use PGlite with fixture Auth/Storage, not a separate hosted Supabase instance.
+- Sales release application commit: `c97e9a8`, Next.js 16.4.6 and Node.js 26.13.1 LTS; previous production baseline: `555643a`.
+- Daily sales closing and platform settlements (`/sales/settlements`) passed 85 tests, a standalone production build, authenticated Staff/manager browser flows and attachment checks in an isolated sales-only snapshot on Node.js 26.13.1. Browser checks use PGlite with fixture Auth/Storage, not a separate hosted Supabase instance.
 - The sales release depends on `sql/add_sales_close_evidence.sql` and `sql/add_sales_reconciliation.sql`. See `docs/claude/migrations.md` for order and verification. Keep the pending loyalty changes out of the sales release.
-- Deployment is blocked: read-only production API inspection on 2026-11-21 found the new bucket, reconciliation tables and RPCs missing. No production SQL or data changes were made. Backup/archive checks and rollback details are recorded in `docs/claude/project-and-deploy.md`.
+- Deployment preflight cleared on 2026-11-21 after the owner applied migrations: GET API inspection confirmed the reconciliation tables/RPCs and private evidence bucket. The agent sent no production SQL or business-data writes. Encrypted evidence backup is scheduled and the previous production image is retained; details are recorded in `docs/claude/project-and-deploy.md`.
 
 ## Where the detail lives
 
